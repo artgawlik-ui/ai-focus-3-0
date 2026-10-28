@@ -35,8 +35,18 @@ with sync_playwright() as p:
         assert page.locator('meta[name="apple-mobile-web-app-capable"]').get_attribute('content')=='yes'
         page.evaluate('navigator.serviceWorker.ready')
         assert page.evaluate('navigator.serviceWorker.controller !== null')
-        context.set_offline(True);page.reload();page.get_by_role('heading',name='Jesteś offline').wait_for()
-        context.set_offline(False);page.goto(origin);page.get_by_role('heading',name='Dzień dobry, Weryfikacja.').wait_for()
+        network_flag=os.getenv('FOCUS_TEST_OFFLINE_FLAG') if label=='webkit-iphone' else None
+        if network_flag: Path(network_flag).touch()
+        else: context.set_offline(True)
+        try:
+            try: page.reload(wait_until='domcontentloaded')
+            except Exception:
+                if label!='webkit-iphone': raise
+            page.get_by_role('heading',name='Jesteś offline').wait_for()
+        finally:
+            if network_flag: Path(network_flag).unlink(missing_ok=True)
+            else: context.set_offline(False)
+        page.goto(origin);page.get_by_role('heading',name='Dzień dobry, Weryfikacja.').wait_for()
         assert not errors,errors
         results.append({'browser':label,'login':True,'crm_read':True,'crm_write_on_isolated_copy':isolated,'no_horizontal_scroll':True,'pwa_manifest_icons':True,'apple_standalone_meta':True,'service_worker_offline_fallback':True,'javascript_errors':errors})
         context.close();browser.close();print(label+': PASS')
