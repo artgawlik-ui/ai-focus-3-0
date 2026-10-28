@@ -14,3 +14,9 @@ Po zgodnym odtworzeniu sprawdź logowanie, wybrane salony, historię i wizyty w 
 Test 2026-10-28: PostgreSQL 17, syntetyczne dane CRM, sesje i historia; szyfrowanie → odtworzenie do oddzielnej bazy → zgodność liczebności i skrótów. Powtórne odtworzenie do niepustego celu prawidłowo odrzucone. Nie wykonano kopii ani migracji Focus 1.0/2.0; ich źródło produkcyjne nie zostało zweryfikowane.
 
 Docelowy harmonogram: codzienna kopia poza hostem, retencja 30 dni, cotygodniowe odtworzenie testowe i alert o niepowodzeniu. To wymaganie operacyjne, a nie już aktywna usługa.
+
+## Aktualny stan platformy
+
+Nowa baza produkcyjna Focus 3.0 korzysta z płatnego planu PostgreSQL. Render dokumentuje dla płatnych baz ciągłe kopie PITR poza serwerem aplikacji, z oknem 3 dni na Hobby i 7 na Pro+. Nie wykonano natywnego PITR, bo utworzyłoby dodatkową płatną instancję. Szyfrowany dump z produkcji odtworzono lokalnie i porównano SHA-256. Ten dump nie zastępuje świeżej kopii wymaganej przed kolejnym wdrożeniem po wyłączeniu konta technicznego.
+
+Automatyczna długoterminowa rotacja osobnych, szyfrowanych plików w zewnętrznym magazynie oraz alerty wymagają podłączenia takiego magazynu. Nie są oznaczane jako aktywne.

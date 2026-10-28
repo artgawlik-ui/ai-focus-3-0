@@ -1,5 +1,7 @@
 # Ai Focus 3.0
 
+Status wydania i blokady bezpieczeństwa: [docs/AUDIT.md](docs/AUDIT.md). CRM działa przez HTTPS; ta gałąź jest kandydatem i nie jest wdrożona.
+
 Osobny CRM sprzedaży NAK Hair / muk Haircare. React 19 + TypeScript, FastAPI, SQLAlchemy, PostgreSQL 17, Alembic. Polskie UI, responsywna PWA, indywidualne konta menedżera i handlowców. Bez automatycznej wysyłki wiadomości.
 
 ## Funkcje zaimplementowane
@@ -47,9 +49,9 @@ API: `/docs`; gotowość: `/api/health`.
 
 ## Render
 
-`render.yaml` definiuje WYŁĄCZNIE nowe zasoby `ai-focus-3-0`, `ai-focus-3-0-agent`, `ai-focus-3-0-db`, Frankfurt. Zatwierdzony budżet: około 20 USD/mies. za compute, bez dodatkowego zużycia i podatków. Schemat Blueprint zweryfikowano; platformowa walidacja wymaga logowania Render CLI.
+`render.yaml` definiuje usługę `ai-focus-3-0` we Frankfurcie i odwołuje się do już istniejącej, odizolowanej bazy `ai-focus-3-0-db`. API i agent to osobne procesy nadzorowane w jednej usłudze. Zatwierdzony koszt bazowy: około 13 USD/mies. (7 web + 6 PostgreSQL), bez dodatkowego zużycia i podatków. Nie twórz drugiej bazy ani nie zmieniaj Focus 1.0/2.0.
 
-Sekrety początkowego konta ustaw w bezpiecznym interfejsie Render, nigdy w repozytorium ani wiadomości. Po utworzeniu konta usuń `BOOTSTRAP_PASSWORD` ze środowiska. Nie ma hasła domyślnego. Produkcja wymaga PostgreSQL; SQLite jest odrzucane.
+Blueprint generuje hasło początkowego konta w bezpiecznym środowisku Render. Nie ma hasła domyślnego; wartości nie wolno publikować w repozytorium ani wiadomości. Konto techniczne zostało wyłączone. Właściciel może odczytać początkowy sekret w oficjalnym panelu Render i zmienić hasło w aplikacji. Produkcja wymaga PostgreSQL; SQLite jest odrzucane.
 
 `APP_ORIGIN` musi odpowiadać rzeczywistemu adresowi HTTPS. PostgreSQL ma pustą listę dostępu zewnętrznego i komunikuje się z nowymi usługami w sieci prywatnej. Worker ponawia połączenie podczas migracji bazy. Sygnał SIGTERM kończy pętlę po bieżącym zadaniu; przerwane zadanie można odzyskać po 5 minutach.
 

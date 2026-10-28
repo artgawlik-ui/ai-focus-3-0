@@ -82,3 +82,14 @@ Instalacja: otwórz HTTPS w Safari → Udostępnij → Do ekranu początkowego. 
 3. Nie wykonywano instalacji na fizycznym iPhonie.
 
 Focus 1.0 i Focus 2.0: **bez zmian w repozytoriach, usługach, konfiguracji sieciowej i danych**. Zmiany wykonywano wyłącznie w nowym repozytorium/projekcie, nowej bazie Focus 3.0 i lokalnych kopiach testowych.
+
+## Zmienione pliki kandydata
+
+- `requirements.txt`, `frontend/package.json`, `frontend/package-lock.json`: warianty aktualizacji zależności; brak wdrożenia wersji głównych.
+- `backend/limits.py`, `backend/main.py`: limity żądań przed parserem i serializacja ochrony ostatniego menedżera.
+- `scripts/backup.py`: odczyt spójnego snapshotu i poprawne rozpoznawanie tabel również przy odtwarzaniu starszego schematu.
+- `tests/test_api.py`, `tests/production_browser_check.py`, `tests/ci_e2e.py`: regresja bezpieczeństwa, jawny test wylogowania/cache i syntetyczne E2E dla CI.
+- `.github/workflows/tests.yml`: uruchamianie regresji, Chromium/WebKit i audytów; czerwony audyt blokuje zielony wynik wydania.
+- `README.md`, `docs/STATUS.md`, `docs/RECOVERY.md`, `docs/AUDIT.md`, `docs/audit/*`: status, ryzyka, procedury i dowody.
+
+Obecna gałąź z nowymi głównymi wersjami jest wyłącznie przetestowaną propozycją do przeglądu; nie została scalona do main ani wdrożona.

@@ -49,7 +49,13 @@ with sync_playwright() as p:
             if network_flag: Path(network_flag).unlink(missing_ok=True)
             else: context.set_offline(False)
         page.goto(origin);page.get_by_role('heading',name='Dzień dobry, Weryfikacja.').wait_for()
+        cache_urls=page.evaluate('''async()=>{const urls=[];for(const name of await caches.keys()){const cache=await caches.open(name);for(const request of await cache.keys())urls.push(request.url);}return urls;}''')
+        assert cache_urls and all(url.endswith('/offline.html') for url in cache_urls),cache_urls
+        if label=='webkit-iphone':page.get_by_label('Otwórz menu').click()
+        page.get_by_label('Wyloguj',exact=True).click()
+        page.get_by_role('heading',name='Zaloguj się do Ai Focus').wait_for()
+        assert page.request.get(origin+'/api/salons').status==401
         assert not errors,errors
-        results.append({'browser':label,'login':True,'crm_read':True,'crm_write_on_isolated_copy':isolated,'no_horizontal_scroll':True,'pwa_manifest_icons':True,'apple_standalone_meta':True,'service_worker_offline_fallback':True,'javascript_errors':errors})
+        results.append({'browser':label,'login':True,'logout':True,'private_data_not_in_service_worker_cache':True,'crm_read':True,'crm_write_on_isolated_copy':isolated,'no_horizontal_scroll':True,'pwa_manifest_icons':True,'apple_standalone_meta':True,'service_worker_offline_fallback':True,'javascript_errors':errors})
         context.close();browser.close();print(label+': PASS')
 Path('test-results/production-browser-check.json').write_text(json.dumps(results,indent=2))
