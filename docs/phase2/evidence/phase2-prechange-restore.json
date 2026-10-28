@@ -1,0 +1,7 @@
+{
+  "status": "PASS",
+  "fresh_backup_after_technical_account_cleanup": true,
+  "counts_and_sha256_match_all_tables": 10,
+  "restored_only_to_local_disposable_database": true,
+  "no_production_database_writes": true
+}

@@ -1,3 +1,5 @@
+> Raport historyczny wydania 0c44401. Aktualne wdrożenie i wyniki faz 1–2: [phase2/REPORT.md](phase2/REPORT.md).
+
 # Ai Focus 3.0 — raport wdrożenia, 2026-10-28
 
 CRM działa: https://ai-focus-3-0.onrender.com. Zweryfikowano zakres CRM; pełna platforma autonomicznej sprzedaży i wszystkie wymagania operacyjne nie są jeszcze ukończone.

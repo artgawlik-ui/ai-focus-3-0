@@ -1,0 +1,15 @@
+{
+  "service": "srv-dbh1rk6tlv9c73dloq20",
+  "deploy": "dep-dbh643d09sns738hqbe0",
+  "status": "live",
+  "finished_at": "2026-10-28T21:00:07.926987Z",
+  "commit": "df78fd7802c7e93d007b92ab0093ba7d33df8fee",
+  "duplicate_deploy": "dep-dbh64l0cuclc73cus7dg",
+  "duplicate_status": "canceled_before_release",
+  "postgres": "dpg-dbh1b0gm7kps73f0p2m0-a",
+  "postgres_status": "available",
+  "postgres_plan": "0.1c-256mb",
+  "external_ip_allowlist": [],
+  "error_logs_returned": 0,
+  "audit_log_entries_sampled": 3
+}

@@ -1,77 +1,71 @@
-# Ai Focus 3.0 — raport wdrożenia, 2026-10-28
+# Ai Focus 3.0 — fazy 1–2, raport końcowy 2026-10-28
 
-CRM działa: https://ai-focus-3-0.onrender.com. Zweryfikowano zakres CRM; pełna platforma autonomicznej sprzedaży i wszystkie wymagania operacyjne nie są jeszcze ukończone.
+**CRM i nowy silnik rekomendacji wdrożone i zweryfikowane. Fazy 3–6 nie zostały rozpoczęte. Automatyczne kopie offsite są przygotowane, lecz nieaktywne; pełna gotowość operacyjna nie jest deklarowana.**
 
-## Wdrożenie i autoryzacja
+Aplikacja: https://ai-focus-3-0.onrender.com . Wersja API 3.0.1, faktycznie uruchomiony commit **df78fd7802c7e93d007b92ab0093ba7d33df8fee**. Render: `dep-dbh643d09sns738hqbe0`, live od 21:00:07 UTC. Punkt powrotu: `0c44401d2b8ef2b7d11813e35aed69ab3b0de6fe` / `dep-dbh4jsd9el5s73ap7n50`. Rollback nie był konieczny ani ćwiczony. Aktualizacja konfiguracji wywołała wdrożenie; drugie zbędne wdrożenie tego samego commita anulowano przed publikacją. Nie było nowej aplikacji ani bazy.
 
-Render: `srv-dbh1rk6tlv9c73dloq20`, deploy `dep-dbh4jsd9el5s73ap7n50`, **live**, zakończony 19:16:58 UTC. Faktycznie uruchomiony commit: `0c44401d2b8ef2b7d11813e35aed69ab3b0de6fe`. Późniejsze zmiany raportów nie zmieniają wersji uruchomionej aplikacji. Właściciel wyraźnie zatwierdził odstępstwo dla głównych wersji Starlette i cryptography („Zezwalam”).
+## Warunki startowe i hasło
 
-Przed wdrożeniem: zielone testy i powtórzony audyt, świeża zaszyfrowana kopia i udane odtworzenie. Punkt powrotu: `e0e6b50339f5abf94b62e79a92fb3450e4e7170d`, deploy `dep-dbh341ghpmmc738m6tn0`. Rollback nie był potrzebny ani przećwiczony. Nie zmieniano schematu produkcji. Blueprint validation: valid=true, totalActions=0. Auto-deploy wyłączony.
+Przed pracą Render potwierdził oczekiwany live commit 0c44401, zamknięty audyt zależności oraz nieaktywne konto techniczne. Świeża zaszyfrowana kopia przed planowaną zmianą hasła została pobrana i odtworzona do pustej lokalnej bazy, zgodność wszystkich 10 tabel. Osobną świeżą kopię wykonano bezpośrednio przed wdrożeniem; zachowano wcześniejszą kopię. Obie pozostają prywatne, poza Git i raportem.
 
-Ta sama baza: `ai-focus-3-0-db`, `dpg-dbh1b0gm7kps73f0p2m0-a`, PostgreSQL 17, Frankfurt, 1 GB, pusta zewnętrzna allowlista. Koszt bazowy około 13 USD/mies. plus podatki/ponadlimitowe zużycie; brak nowych płatnych zasobów.
+Właściciel **samodzielnie potwierdził instalację PWA na fizycznym iPhonie i logowanie do swojego konta**. To potwierdzenie właściciela, nie test fizycznego urządzenia wykonany przez Codex. Hasła nie zmieniano ani nie ujawniano. Właściciel zmienia je w aplikacji: Ustawienia i integracje → Bezpieczeństwo konta, podając stare hasło. Argon2id, minimum 12 znaków, odrzucanie wybranych banalnych haseł, blokada po 8 błędnych próbach logowania/15 min oraz osobna blokada po 8 błędnych próbach obecnego hasła. Zmiana unieważnia pozostałe sesje. Zalecana unikalna fraza 16+ znaków. MFA nie jest jeszcze dostępne w CRM.
 
-## Testy i bezpieczeństwo — dowody
+## Faza 1 — działa / przygotowane
 
-Pełne CI uruchomionego commita: [main SUCCESS](https://github.com/artgawlik-ui/ai-focus-3-0/actions/runs/40752621425), [kandydat SUCCESS](https://github.com/artgawlik-ui/ai-focus-3-0/actions/runs/40750756186).
+**Działa:** dotychczasowy CRM, role i przypisania, historia mutacji; nowe logi dostępu API z kontem, szablonem trasy, czasem i wynikiem, bez body, sekretów i parametrów wyszukiwania. Produkcyjna próbka logów Render zawiera 3 nowe wpisy audytowe. Logi platformy nie są niezmiennym, niezależnym archiwum audytu.
 
-| Kontrola | Polecenie / dowód | Wynik |
+**Przygotowane:** codzienny szyfrowany backup pg_dump/AES-GCM do prywatnego S3 przez HTTPS i Signature V4, uruchamiany jako opcjonalny proces istniejącej usługi. Bez dodatkowego Render cron. Test uploadu wykorzystuje syntetyczne zaszyfrowane bajty i atrapę transportu, sprawdza brak przekierowań i usunięcie pliku tymczasowego. Nie przeprowadzono rzeczywistego uploadu, weryfikacji lifecycle ani alertów zewnętrznych. OFFSITE_BACKUP_ENABLED=false. Zdalny magazyn i jego koszt wymagają decyzji właściciela, bez przekazywania sekretów w rozmowie; szczegóły bezpiecznej konfiguracji: [BACKUPS.md](BACKUPS.md).
+
+[PRIVACY.md](PRIVACY.md) opisuje źródła/daty danych, minimalizację, wymagane podstawy prawne komunikacji handlowej i przetwarzania, sprzeciw/do_not_contact, obsługę praw osób oraz proponowaną retencję. Automatyczne usuwanie danych i pełny rejestr zgód nie są wdrożone. Dokumentacja wspiera administratora danych, nie zastępuje jego oceny prawnej i polityk.
+
+## Faza 2 — faktycznie działa
+
+- Punktacja 0–100, sugestie A+/A/B/C i jawne kryteria oparte na zapisach CRM: specjalizacja, deklarowany potencjał, etap lejka i region Głogowa. Każde kryterium ma źródło; wynik ma wersję reguł, datę, wykaz braków i źródła. Braki to „brak informacji”, nie domysły. To heurystyka do walidacji, nie prognoza rzeczywistych zakupów.
+- Szkice korzystające ze specjalizacji CRM, historia kontaktów i rekomendacja odczekania po niedawnym kontakcie. Swobodna treść operatora jest niezweryfikowana i nie podnosi punktacji.
+- Wstępne etykiety ręcznie zapisanych odpowiedzi: możliwa rezygnacja, możliwe zainteresowanie wizytą, przegląd ręczny. Potencjalna rezygnacja blokuje szkic. Proste reguły mogą się mylić; nie ma aktywnego monitorowania skrzynki ani Instagrama.
+- Rekomendacja sprawdzenia dostępności przed wizytą; żadnego samodzielnego rezerwowania. Wynik i źródła w trwałym zadaniu, wpis w historii relacji, priorytet/uzasadnienia/źródła w mobilnym panelu agenta. Każda wiadomość i wizyta wymagają zatwierdzenia właściciela. Brak endpointu wysyłki; sent=false.
+- Naprawa kontroli dostępu po zmianie opiekuna: poprzedni handlowiec traci dostęp do zadań i wizyt salonu, worker ponownie sprawdza aktywność i przypisanie przed analizą. Agent nie zmienia automatycznie priorytetu ani lejka CRM.
+
+AGENT_V2_ENABLED=true; rozszerzoną punktację można wyłączyć. W razie regresji pełny powrót kodu do punktu 0c44401, bez migracji wstecz. Fazy 1–2 nie dodają ani nie zmieniają schematu.
+
+## Testy i bezpieczeństwo
+
+| Kontrola | Dowód / komenda | Wynik |
 |---|---|---|
-| Backend/API na izolowanym PostgreSQL | `python -m pytest -q`, backend-major-candidate.xml | 14 passed |
-| Frontend | `npm ci --prefix frontend`; `npm run build --prefix frontend` | PASS, TypeScript + Vite |
-| E2E Chromium i WebKit/iPhone 13 | `python -m tests.ci_e2e`; `python -m tests.isolated_release_check` | oba silniki PASS, zapisy tylko na kopii |
-| Restart API i osobnego workera | `python -m tests.system_check` | CRM, historia i zadanie przetrwały restart |
-| Python dependencies | `pip-audit -r requirements.txt` | 0 znanych podatności |
-| Frontend dependencies | `npm audit --prefix frontend` | 0 podatności |
-| HTTPS, gotowość, konta, integralność | final-production-readonly-audit.json | PASS, GET health 200, anonimowy CRM 401 |
-| Świeża kopia i odtworzenie | fresh-backup-restore.json | zgodne liczby i SHA-256 wszystkich 10 tabel |
+| Faza 1 | `pytest -q tests/test_api.py tests/test_offsite_backup.py` na izolowanej focus3_test | 20 passed w punkcie fazy 1 |
+| Pełna regresja fazy 2 | `pytest -q --junitxml=test-results/phase2-tests.xml` na izolowanej PostgreSQL | **29 passed** |
+| Frontend | `npm run build --prefix frontend` | PASS, TypeScript/Vite |
+| E2E | `python -m tests.ci_e2e` | Chromium + WebKit/iPhone 13 PASS, dane syntetyczne |
+| Restart | `AGENT_V2_ENABLED=true python -m tests.system_check` | PASS, dane i wynik przetrwały restart API/workera |
+| Audyty | `pip-audit -r requirements.txt`; `npm audit --prefix frontend` | **0 znanych podatności**, powtórzone przed wdrożeniem |
+| Skan zmian | phase2-secret-scan.json | 30 zmienionych plików względem starego wydania, 0 dopasowań sprawdzanych wzorców sekretów |
+| Produkcyjne HTTPS/UI | phase2-production-ui.json | Chromium + WebKit PASS, 0 mutacji, 0 błędów JavaScript |
+| Dane i gotowość | phase2-production-readonly-audit.json | 10 tabel zgodnych, health 200, wersja 3.0.1, anonimowy CRM 401 |
 
-Wdrożone: FastAPI 0.162.0, Starlette 1.3.1, cryptography 50.0.2, python-multipart 0.0.32, Vite 6.4.5. Log instalacji Render potwierdza wersje backendu. Wariant bez zmiany wersji głównych miał 9 unikalnych GHSA: 5 high, 3 medium, 1 low; nie został wdrożony. Historyczne wyniki i identyfikatory są w `docs/audit/pip-audit-compatible.json` i `advisory-severities.json`; aktualny zerowy wynik w `pip-audit-major-candidate.json`. Zero znanych podatności nie jest gwarancją braku przyszłych podatności.
+[Pełne CI gałęzi, przed wdrożeniem: SUCCESS](https://github.com/artgawlik-ui/ai-focus-3-0/actions/runs/40767508671). [CI main tego samego commita: SUCCESS](https://github.com/artgawlik-ui/ai-focus-3-0/actions/runs/40768004448). Zależności nie zmieniły wersji w tym etapie. Dwa ostrzeżenia deprecacji bibliotek testowych nie powodują błędów; wymagają przyszłej aktualizacji narzędzi testowych. Skan wzorców nie dowodzi braku każdego możliwego sekretu.
 
-Testy obejmują login/logout i sesje, zmianę hasła, Origin/CSRF, role i ownership, ostatniego menedżera, deaktywację, CRM tworzenie/edycję/historię/duplikaty/optimistic locking, Excel i ochronę formuł, wizyty/kolizje, agent bez wysyłki, KPI, szkolenia, backup i limity żądań również chunked. Brak wildcard CORS. Hasła Argon2; cookies Secure/HttpOnly/SameSite=Strict; HSTS/CSP; API no-store. Limity ciała żądania działają przed parserami.
+E2E obejmują dotychczasowy login/logout, formularz CRM, sesję, PWA/offline/cache oraz nowe zlecenie agenta, wyświetlenie priorytetu i źródeł. WebKit offline sprawdzano przez kontrolowane zerwanie sieci lokalnego proxy, nie przełącznik trybu samolotowego fizycznego iPhone'a. Produkcyjne odczyty przeprowadzono z aktywną weryfikacją TLS po skonfigurowaniu zaufania do CA proxy środowiska testowego.
 
-Skan historycznych blobów Git wykrył 0 dopasowań sprawdzanych wzorców tokenów i produkcyjnych URL PostgreSQL (`docs/audit/secret-scan.json`). To ograniczony skan wzorców. Sekrety i kopie nie są śledzone przez Git. Przegląd logów błędów Render po wdrożeniu zwrócił pustą listę.
+## Integralność i kopie
 
-Końcowy test produkcyjnego UI: Chromium desktop i WebKit/iPhone 13 — PASS; 0 żądań modyfikujących, 0 błędów JavaScript, wyłącznie publiczny offline.html w cache. Dowód: `final-production-ui.json`. Po tych testach ponownie potwierdzono wszystkie 10 skrótów.
+Baza pozostaje `ai-focus-3-0-db`, `dpg-dbh1b0gm7kps73f0p2m0-a`, available, plan 0.1c-256mb; zewnętrzna allowlista pusta. Liczebności i SHA-256 wszystkich **10 tabel zgodne przed/po wdrożeniu i po końcowym odczycie UI**: activities 6, alembic_version 1, appointments 1, integration_links 0, jobs 1, login_attempts 0, salons 1, sessions 2, trainings 0, users 2. Skróty: [evidence/integrity-baseline.json](evidence/integrity-baseline.json). Konto właściciela aktywne, jego sesja przetrwała wdrożenie, techniczne nieaktywne. Liczba sesji została utrwalona w nowym punkcie odniesienia — nie porównywano jej ze starszą sesją sprzed logowania właściciela na iPhonie.
 
-## Dane po wdrożeniu
+Nie dodano klientów demo ani rzeczywistych testowych wiadomości/wizyt na produkcji. Zachowano wcześniejszy, oznaczony rekord techniczny; nie usuwano danych. Deklarowane 118 salonów nadal nie zostało zweryfikowane ani zmigrowane.
 
-Odczyt z tą samą sesją właściciela: **liczby i SHA-256 wszystkich 10 tabel identyczne ze świeżym punktem odniesienia sprzed wdrożenia**. Dowód: `final-production-readonly-audit.json`. Konto właściciela zalogowane poprawnie i sesja przetrwała wdrożenie. Konto `verification@focus.invalid` nieaktywne, jego sesje unieważnione; poprzednia sesja zwracała 401. Sekret aktywacji technicznej wyłączony.
+Świeże kopie odtworzono tylko do lokalnych pustych baz i usunięto wyłącznie te tymczasowe bazy. `alembic upgrade head` na odtworzonej kopii nie zmienił jej integralności. Kopii nie odtwarzano na produkcji. Render PITR pozostaje mechanizmem platformy; nie uruchamiano jego natywnego odtworzenia do dodatkowej płatnej instancji. Procedura odzyskiwania: [../RECOVERY.md](../RECOVERY.md). Automatyczny offsite, retencja magazynu, alerty i cykliczne realne testy odtwarzania pozostają otwartym zadaniem operacyjnym.
 
-| Tabela | Rekordy |
-|---|---:|
-| activities | 6 |
-| alembic_version | 1 |
-| appointments | 1 |
-| integration_links | 0 |
-| jobs | 1 |
-| login_attempts | 0 |
-| salons | 1 |
-| sessions | 1 |
-| trainings | 0 |
-| users | 2 |
+## AI, integracje, koszty i następne decyzje
 
-Jedyny salon jest nieaktywnym, jawnie oznaczonym rekordem technicznym; wizyta anulowana, zakończony szkic ma sent=false. **Nie zmigrowano 118 salonów** — źródło tej liczby pozostaje niezweryfikowane. Nie odtwarzano kopii na produkcji i nie modyfikowano klientów w końcowych testach.
+Silnik lokalny działa, OpenAI jest **nieaktywne**: AI_PAID_PROCESSING_APPROVED=false. Adapter i test transportu przygotowane. Minimalny kontekst nie zawiera nazw, danych kontaktowych, historii ani swobodnego tekstu. Szczegóły przetwarzania/DPA/retencji i źródła cennika: [AI.md](AI.md). Szacunek dla gpt-4.1-mini: ok. 0,64 USD / 1000 analiz po 400 tokenów wejścia i 300 wyjścia, przed podatkami. To nie jest uruchomiony koszt ani zaakceptowany limit. Nie wykonano płatnego wywołania.
 
-## PWA i iPhone
+Koszt bazowy Render pozostaje około 13 USD/mies. plus podatki/zużycie ponad limity; **nowe płatne zasoby: 0**. Koszt magazynu kopii zależy od dostawcy i wymaga osobnej akceptacji. Przed aktywacją: właściciel wybiera prywatny magazyn/region/retencję i budżet AI, następnie konfiguracja sekretów wyłącznie przez oficjalne panele. Niczego nie trzeba przesyłać w rozmowie.
 
-Chromium i WebKit z profilem iPhone 13: login/logout, utrzymanie sesji, CRM, formularz edycji na kopii, brak poziomego przewijania, manifest, ikony, metadane Apple, service worker, ekran offline i cache zawierający wyłącznie publiczny offline.html — PASS. WebKit offline sprawdzono przez zerwanie połączenia w lokalnym proxy; natywny przełącznik testowy zwracał błąd silnika. Nie wykonano testu na fizycznym iPhonie ani rzeczywistej instalacji z Safari.
+Meta/Instagram, Google Calendar OAuth, Livespace i dalszy moduł zespołowy nie były realizowane w tym uruchomieniu — fazy 3–6 wymagają kolejnej zgody. Dotychczasowy ręczny link Calendar i CRM zachowane. Automatyczna wysyłka wyłączona. Brak MFA i kompletnej automatyzacji retencji/DSR pozostają ograniczeniami.
 
-Instalacja: otwórz adres HTTPS w Safari → Udostępnij → Do ekranu początkowego. CRM wymaga internetu; offline dostępny jest bezpieczny ekran informacyjny, bez prywatnych danych.
+## Pliki i niezależność
 
-## Kopie i ryzyka operacyjne
+Zmiany funkcjonalne faz 1–2: backend/main.py, backend/security.py, backend/schemas.py, backend/qualification.py, backend/worker.py, scripts/offsite_backup.py, scripts/supervise.py, frontend/src/main.tsx, render.yaml; testy: tests/test_api.py, tests/test_offsite_backup.py, tests/test_agent_v2.py, tests/test_qualification.py, tests/ci_e2e.py, tests/production_browser_check.py; dokumentacja: docs/phase2/*.md, evidence/* oraz aktualizacje README/statusów.
 
-Świeża kopia pg_dump zaszyfrowana AES-256-GCM/scrypt została pobrana przed wdrożeniem, odtworzona do nowej lokalnej bazy i porównana dla wszystkich 10 tabel. Odmowa odtwarzania do niepustego celu także przetestowana. Procedura: [RECOVERY.md](RECOVERY.md).
+Commity faz: `40ea76c7eeda79d22059a48c92c07e8589d5686b` (faza 1), `df78fd7802c7e93d007b92ab0093ba7d33df8fee` (faza 2). Późniejszy commit raportu nie oznacza kolejnego wdrożenia aplikacji.
 
-Render dokumentuje ciągłe PITR płatnego PostgreSQL (3 dni Hobby / 7 Pro+); natywnego PITR nie uruchamiano, ponieważ wymaga dodatkowej instancji. **Długoterminowy automatyczny harmonogram szyfrowanych plików offsite, retencja i alerty nie są skonfigurowane.** To otwarta luka operacyjna, nie ukończona funkcja. Brak MFA/resetu e-mail; RODO wymaga dalszych zasad zgód, podstaw kontaktu, retencji i obsługi praw osób.
-
-## Zakres działający i dalsza implementacja
-
-Działa: CRM, role, historia, Excel import/podgląd/eksport, wizyty i kolizje, lokalny kalendarz, ręczne linki Google Calendar/Maps, KPI/lejek/prognozy potencjału, szkolenia, trwała kolejka agenta i regułowe szkice, PWA oraz szyfrowana kopia logiczna. Nie ma księgi rzeczywistego przychodu.
-
-Niepodłączone lub nieukończone: płatny model AI, Meta/Instagram OAuth/API/webhooki i analiza odpowiedzi, Google Calendar OAuth/synchronizacja, Livespace adapter, optymalizacja tras według ruchu, push/e-mail, automatyczne offsite backupy. Kod odkrywania salonów przez publiczny OSM/Overpass istnieje, ale dostępności zewnętrznego dostawcy nie potwierdzono w końcowym audycie. Agent niczego nie wysyła i nie umawia autonomicznie wizyt. Nie wysłano wiadomości klientom.
-
-## Zmienione pliki wydania względem poprzedniej produkcji
-
-`requirements.txt`, `frontend/package.json`, `frontend/package-lock.json`, `backend/limits.py`, `backend/main.py`, `scripts/backup.py`, `tests/test_api.py`, `tests/production_browser_check.py`, `tests/ci_e2e.py`, `.github/workflows/tests.yml`, `README.md`, `docs/AUDIT.md`, `docs/STATUS.md`, `docs/RECOVERY.md`, `docs/audit/account-cleanup.json`, `docs/audit/advisory-severities.json`, `docs/audit/npm-audit.json`, `docs/audit/pip-audit-compatible.json`, `docs/audit/pip-audit-major-candidate.json`, `docs/audit/secret-scan.json`. Końcowy raport dodaje wyłącznie dokumentację i odfiltrowane dowody.
-
-Focus 1.0 i Focus 2.0: **nie zmieniano ich repozytoriów, usług, konfiguracji ani danych**. Wszystkie zmiany ograniczono do Focus 3.0 i odizolowanych lokalnych kopii. Nie są wymagane dodatkowe autoryzacje do zakończonego wdrożenia CRM; przyszłe integracje wymagają osobnej konfiguracji w oficjalnych panelach.
+**Focus 1.0 i Focus 2.0: bez zmian w kodzie, usługach, konfiguracji i danych.** Nie wysłano żadnych rzeczywistych wiadomości klientom i nie utworzono rzeczywistych spotkań. Zakończono ten zakres prac; fazy 3–6 zatrzymane.

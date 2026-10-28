@@ -1,0 +1,45 @@
+{
+  "tables": {
+    "activities": {
+      "count": 6,
+      "sha256": "e75259ce741827a32e119d9e5a4185aaac2ea2f35b53d5883850ce1be700cbcf"
+    },
+    "alembic_version": {
+      "count": 1,
+      "sha256": "034ecf3d5756352564135f11f8944e0b0a0daeb01833650a9d66b957d1fa86ae"
+    },
+    "appointments": {
+      "count": 1,
+      "sha256": "17b3690c58680adb4cd2a3134c2e87b41028b0d7fe8b159d8975835d1eebef9a"
+    },
+    "integration_links": {
+      "count": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "jobs": {
+      "count": 1,
+      "sha256": "a87770bd3303e064cab4e222bd4ef42c3833b82d009333bd239daf6f6750d697"
+    },
+    "login_attempts": {
+      "count": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "salons": {
+      "count": 1,
+      "sha256": "7a187fd6ced0670a2a2294e51631ca1205f37bf538e2f67b9c3ac6359dcfdae0"
+    },
+    "sessions": {
+      "count": 2,
+      "sha256": "05afb5c27ccad7dbc5a605f79ba6713ec96f37495cb54cdfdb8226bd3d09bd22"
+    },
+    "trainings": {
+      "count": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "users": {
+      "count": 2,
+      "sha256": "61b30dbfe16f84c8c0502927d7074c7c5190fd515d7bcc82f980dd15fb5c5158"
+    }
+  },
+  "postdeploy_all_match": true
+}

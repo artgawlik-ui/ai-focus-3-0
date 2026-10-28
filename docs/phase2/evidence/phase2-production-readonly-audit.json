@@ -1,0 +1,33 @@
+{
+  "status": "PASS",
+  "https": true,
+  "owner_session_survives_deployment": true,
+  "owner_role": "manager",
+  "technical_account_inactive": true,
+  "postgres_health": "ok",
+  "tables_count": 10,
+  "all_counts_and_sha256_match_predeploy": true,
+  "schema_unchanged": true,
+  "agent_sent_false": true,
+  "pwa_manifest_and_icons": true,
+  "hsts": true,
+  "private_api_cache_control": "no-store",
+  "unauthenticated_crm_denied": true,
+  "counts": {
+    "activities": 6,
+    "alembic_version": 1,
+    "appointments": 1,
+    "integration_links": 0,
+    "jobs": 1,
+    "login_attempts": 0,
+    "salons": 1,
+    "sessions": 2,
+    "trainings": 0,
+    "users": 2
+  },
+  "version": "3.0.1",
+  "commit": "df78fd7802c7e93d007b92ab0093ba7d33df8fee",
+  "qualification_enabled": true,
+  "paid_ai_enabled": false,
+  "automatic_outbound_enabled": false
+}
