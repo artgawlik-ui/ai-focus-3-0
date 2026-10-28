@@ -1,0 +1,92 @@
+[
+  {
+    "id": "GHSA-537c-gmf6-5ccf",
+    "severity": "high",
+    "cvss": {
+      "vector_string": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:H",
+      "score": 7.5
+    },
+    "summary": "Vulnerable OpenSSL included in cryptography wheels",
+    "url": "https://github.com/advisories/GHSA-537c-gmf6-5ccf"
+  },
+  {
+    "id": "GHSA-82w8-qh3p-5jfq",
+    "severity": "high",
+    "cvss": {
+      "vector_string": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:H",
+      "score": 7.5
+    },
+    "summary": "Starlette: request.form() limits silently ignored for application/x-www-form-urlencoded enable DoS",
+    "url": "https://github.com/advisories/GHSA-82w8-qh3p-5jfq"
+  },
+  {
+    "id": "GHSA-86qp-5c8j-p5mr",
+    "severity": "medium",
+    "cvss": {
+      "vector_string": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:L/I:L/A:N",
+      "score": 6.5
+    },
+    "summary": "Starlette has missing Host header validation that poisons request.url.path, bypassing path-based security checks",
+    "url": "https://github.com/advisories/GHSA-86qp-5c8j-p5mr"
+  },
+  {
+    "id": "GHSA-g6cj-pr64-35w5",
+    "severity": "high",
+    "cvss": {
+      "vector_string": null,
+      "score": null
+    },
+    "summary": "cryptography: PKCS#7 EnvelopedData decryption exposes a Bleichenbacher oracle through distinguishable errors and timing",
+    "url": "https://github.com/advisories/GHSA-g6cj-pr64-35w5"
+  },
+  {
+    "id": "GHSA-jp82-jpqv-5vv3",
+    "severity": "low",
+    "cvss": {
+      "vector_string": "CVSS:3.1/AV:N/AC:H/PR:N/UI:N/S:U/C:N/I:L/A:N",
+      "score": 3.7
+    },
+    "summary": "Starlette: Unvalidated request path concatenated into authority poisons request.url.hostname",
+    "url": "https://github.com/advisories/GHSA-jp82-jpqv-5vv3"
+  },
+  {
+    "id": "GHSA-jwv3-5hgf-82ww",
+    "severity": "high",
+    "cvss": {
+      "vector_string": null,
+      "score": null
+    },
+    "summary": "python-cryptography: Duplicate self-signed intermediates can cause exponential path-building",
+    "url": "https://github.com/advisories/GHSA-jwv3-5hgf-82ww"
+  },
+  {
+    "id": "GHSA-m2h6-j472-rp4c",
+    "severity": "medium",
+    "cvss": {
+      "vector_string": null,
+      "score": null
+    },
+    "summary": "python-cryptography verifier accepts wildcard DNS names allowing escape from permittedSubtrees",
+    "url": "https://github.com/advisories/GHSA-m2h6-j472-rp4c"
+  },
+  {
+    "id": "GHSA-wqp7-x3pw-xc5r",
+    "severity": "high",
+    "cvss": {
+      "vector_string": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:N/A:N",
+      "score": 7.5
+    },
+    "summary": "Starlette: SSRF and NTLM credential theft via UNC paths in StaticFiles on Windows",
+    "url": "https://github.com/advisories/GHSA-wqp7-x3pw-xc5r"
+  },
+  {
+    "id": "GHSA-x746-7m8f-x49c",
+    "severity": "medium",
+    "cvss": {
+      "vector_string": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:L/A:N",
+      "score": 5.3
+    },
+    "summary": "Starlette: Arbitrary HTTP method dispatched to `HTTPEndpoint` attributes via `getattr`",
+    "url": "https://github.com/advisories/GHSA-x746-7m8f-x49c"
+  }
+]

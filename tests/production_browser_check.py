@@ -4,17 +4,19 @@ from pathlib import Path
 from playwright.sync_api import sync_playwright
 origin=os.getenv('FOCUS_TEST_ORIGIN','https://ai-focus-3-0.onrender.com')
 isolated=origin.startswith('http://127.0.0.1:')
-credentials=json.loads(Path('.render-auth/verification.json').read_text())
+credentials=json.loads(Path(os.getenv('FOCUS_TEST_CREDENTIAL_FILE','.render-auth/verification.json')).read_text())
 results=[]
 with sync_playwright() as p:
-    cases=[('chromium-desktop',p.chromium,{'viewport':{'width':1440,'height':1050}},'/usr/bin/chromium'),('webkit-iphone',p.webkit,p.devices['iPhone 13'],'/workspace/ai-focus-3-0/.tools/run-webkit.sh')]
+    cases=[('chromium-desktop',p.chromium,{'viewport':{'width':1440,'height':1050}},os.getenv('FOCUS_TEST_CHROMIUM_EXECUTABLE','/usr/bin/chromium')),('webkit-iphone',p.webkit,p.devices['iPhone 13'],os.getenv('FOCUS_TEST_WEBKIT_EXECUTABLE','/workspace/ai-focus-3-0/.tools/run-webkit.sh'))]
     for label,engine,options,executable in cases:
-        browser=engine.launch(executable_path=executable,headless=True,args=['--no-sandbox'] if label.startswith('chromium') else [])
+        browser=engine.launch(executable_path=executable if Path(executable).exists() else None,headless=True,args=['--no-sandbox'] if label.startswith('chromium') else [])
         context=browser.new_context(**options)
         page=context.new_page();errors=[]
         page.on('pageerror',lambda err:errors.append(str(err)))
         page.goto(origin);page.get_by_label('Adres e-mail').fill(credentials['email']);page.get_by_label('Hasło',exact=True).fill(credentials['password']);page.get_by_role('button',name='Wejdź do swojej przestrzeni').click()
         page.get_by_role('heading',name='Dzień dobry, Weryfikacja.').wait_for()
+        page.get_by_role('heading',name='Przegląd sprzedaży').wait_for()
+        page.get_by_text('Salony w bazie',exact=True).wait_for()
         assert page.evaluate('document.documentElement.scrollWidth<=innerWidth')
         page.screenshot(path='test-results/'+label+'-production-dashboard.png',full_page=True)
         if label=='webkit-iphone':page.get_by_label('Otwórz menu').click()

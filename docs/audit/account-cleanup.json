@@ -1,0 +1,6 @@
+{
+  "technical_account_deactivated": true,
+  "technical_sessions_revoked": true,
+  "owner_manager_was_active_before_cleanup": true,
+  "bootstrap_verification_secret_disabled": true
+}

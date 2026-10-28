@@ -5,7 +5,6 @@ from datetime import datetime, timezone
 import psycopg
 from cryptography.hazmat.primitives.ciphers.aead import AESGCM
 from cryptography.hazmat.primitives.kdf.scrypt import Scrypt
-from backend.db import Base
 
 def pg_env(url):
     info=psycopg.conninfo.conninfo_to_dict(url.replace('postgresql+psycopg://','postgresql://'))
@@ -19,11 +18,11 @@ def fingerprint(url, include_metadata=False):
     result={}
     with psycopg.connect(url.replace('postgresql+psycopg://','postgresql://')) as db:
         db.execute('SET TRANSACTION ISOLATION LEVEL REPEATABLE READ READ ONLY')
-        tables=list(Base.metadata.tables)
-        if include_metadata and db.execute("SELECT to_regclass('public.alembic_version')").fetchone()[0]:
-            tables.append('alembic_version')
-        for table in sorted(tables):
-            rows=db.execute('SELECT row_to_json(t)::text FROM "'+table+'" t').fetchall()
+        from psycopg import sql
+        tables=[row[0] for row in db.execute("SELECT tablename FROM pg_tables WHERE schemaname='public' ORDER BY tablename")]
+        if not include_metadata: tables=[name for name in tables if name!='alembic_version']
+        for table in tables:
+            rows=db.execute(sql.SQL('SELECT row_to_json(t)::text FROM {} t').format(sql.Identifier(table))).fetchall()
             canonical=sorted(json.dumps(json.loads(row[0]),sort_keys=True,ensure_ascii=False,separators=(',',':')) for row in rows)
             result[table]={'count':len(rows),'sha256':hashlib.sha256('\n'.join(canonical).encode()).hexdigest()}
     return result

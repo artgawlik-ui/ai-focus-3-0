@@ -16,6 +16,8 @@ from backend.schemas import *
 logging.basicConfig(level=logging.INFO)
 log = logging.getLogger('focus')
 app = FastAPI(title='Ai Focus 3.0', version='3.0.0')
+from backend.limits import BodyLimitMiddleware
+app.add_middleware(BodyLimitMiddleware)
 uid = lambda: str(uuid.uuid4())
 
 @app.exception_handler(IntegrityError)
@@ -293,6 +295,7 @@ def add_training(payload:TrainingIn,user=Depends(manager),db=Depends(database)):
 
 @app.post('/api/users/{id}/deactivate')
 def deactivate_user(id:str,user=Depends(manager),db=Depends(database)):
+    list(db.scalars(select(User.id).where(User.role=='manager').order_by(User.id).with_for_update()))
     target=db.get(User,id)
     if not target: raise HTTPException(404,'Brak użytkownika')
     if target.role=='manager' and target.active:

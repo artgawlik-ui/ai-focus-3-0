@@ -135,3 +135,9 @@ def test_backup_permission_and_passphrase_validation():
 def test_integrity_is_manager_only():
     assert TestClient(app).get('/api/admin/integrity').status_code==401
     assert client('rep1').get('/api/admin/integrity').status_code==403
+
+def test_body_limits_before_parser():
+    c=TestClient(app)
+    assert c.post('/api/auth/login',content=b'x'*(256*1024+1),headers={'Content-Type':'application/json'}).status_code==413
+    assert c.post('/api/import',content=b'x',headers={'Content-Length':str(7*1024*1024)}).status_code==413
+    assert c.post('/api/auth/login',content=iter([b'x'*150000,b'x'*150000]),headers={'Content-Type':'application/json'}).status_code==413
