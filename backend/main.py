@@ -15,7 +15,7 @@ from backend.schemas import *
 
 logging.basicConfig(level=logging.INFO)
 log = logging.getLogger('focus')
-app = FastAPI(title='Ai Focus 3.0', version='3.0.0')
+app = FastAPI(title='Ai Focus 3.0', version='3.0.1')
 from backend.limits import BodyLimitMiddleware
 app.add_middleware(BodyLimitMiddleware)
 uid = lambda: str(uuid.uuid4())
@@ -62,7 +62,7 @@ async def headers(request: Request, call_next):
 @app.get('/api/health')
 def health(db=Depends(database)):
     db.execute(select(func.count()).select_from(User))
-    return {'status':'ok','version':'3.0.0'}
+    return {'status':'ok','version':'3.0.1'}
 
 @app.post('/api/auth/login')
 def login(payload:LoginIn, request:Request, response:Response, db=Depends(database)):
@@ -79,6 +79,7 @@ def login(payload:LoginIn, request:Request, response:Response, db=Depends(databa
     if not valid or not user or not user.active:
         db.add(LoginAttempt(id=uid(),key=bucket,at=now())); db.commit()
         raise HTTPException(401,'Nieprawidłowy e-mail lub hasło')
+    request.state.audit_user_id=user.id
     token=secrets.token_urlsafe(48); csrf=secrets.token_urlsafe(32)
     db.add(LoginSession(token_hash=digest(token),user_id=user.id,csrf=csrf,expires=expires()))
     db.commit()
@@ -189,7 +190,7 @@ async def import_excel(file:UploadFile=File(...),dry_run:bool=True,user=Depends(
 @app.get('/api/appointments')
 def appointments(day:str='',user=Depends(current),db=Depends(database)):
     stmt=select(Appointment,Salon).join(Salon,Salon.id==Appointment.salon_id)
-    if user.role!='manager': stmt=stmt.where(Appointment.user_id==user.id)
+    if user.role!='manager': stmt=stmt.where(Appointment.user_id==user.id,Salon.owner_id==user.id)
     if day:
         try: date.fromisoformat(day)
         except ValueError: raise HTTPException(422,'Nieprawidłowy dzień')
@@ -213,6 +214,7 @@ def add_appointment(payload:AppointmentIn,user=Depends(current),db=Depends(datab
 def appointment_status(id:str,payload:AppointmentStatus,user=Depends(current),db=Depends(database)):
     a=db.get(Appointment,id)
     if not a or (user.role!='manager' and a.user_id!=user.id): raise HTTPException(404,'Brak wizyty')
+    salon_access(db,a.salon_id,user)
     db.scalar(select(User).where(User.id==a.user_id).with_for_update())
     if payload.status in ('confirmed','proposed'):
         overlap=db.scalar(select(Appointment).where(Appointment.id!=id,Appointment.user_id==a.user_id,Appointment.status.in_(['proposed','confirmed']),Appointment.starts_at<a.ends_at,Appointment.ends_at>a.starts_at))
@@ -240,7 +242,7 @@ def dashboard(days:int=Query(30,ge=1,le=366),user=Depends(current),db=Depends(da
     return {'total':len(salons),'active':sum(s.status=='active' for s in salons),'potential':sum(s.potential for s in salons),'weighted_forecast':round(sum(s.potential*weights[s.stage] for s in salons)),'forecast_note':'Model orientacyjny: stałe wagi etapów, bez danych zamówień. Potencjał miesięczny w PLN.','pipeline':pipeline,'activities':len(activities),'days':days,'conversion':round(100*pipeline['won']/max(1,pipeline['won']+pipeline['lost']),1),'follow_ups':due,'team':[{'name':u.name,'salons':sum(s.owner_id==u.id for s in salons),'activities':sum(a.user_id==u.id for a in activities)} for u in db.scalars(select(User).where(User.active==1))] if user.role=='manager' else []}
 @app.get('/api/integrations')
 def integrations(user=Depends(current)):
-    return {'instagram':{'connected':False,'outbound':False},'google_calendar':{'connected':False,'mode':'manual_link'},'livespace':{'connected':False,'mode':'adapter_schema_ready'},'agent':{'mode':'openai' if os.getenv('OPENAI_API_KEY') else 'rules','outbound':False},'discovery':{'provider':'OpenStreetMap','connected':True,'note':'Publiczne wpisy wymagają weryfikacji; nie stanowią zgody na kontakt.'}}
+    return {'instagram':{'connected':False,'outbound':False},'google_calendar':{'connected':False,'mode':'manual_link'},'livespace':{'connected':False,'mode':'adapter_schema_ready'},'agent':{'mode':'openai' if os.getenv('AI_PAID_PROCESSING_APPROVED','false').lower()=='true' and os.getenv('OPENAI_API_KEY') else 'rules','qualification_enabled':os.getenv('AGENT_V2_ENABLED','false').lower()=='true','outbound':False},'discovery':{'provider':'OpenStreetMap','connected':True,'note':'Publiczne wpisy wymagają weryfikacji; nie stanowią zgody na kontakt.'}}
 @app.post('/api/agent/jobs',status_code=202)
 def queue_job(payload:JobIn,user=Depends(current),db=Depends(database)):
     salon=salon_access(db,payload.salon_id,user)
@@ -252,7 +254,7 @@ def queue_job(payload:JobIn,user=Depends(current),db=Depends(database)):
 @app.get('/api/agent/jobs')
 def jobs(user=Depends(current),db=Depends(database)):
     stmt=select(Job)
-    if user.role!='manager': stmt=stmt.where(Job.user_id==user.id)
+    if user.role!='manager': stmt=stmt.join(Salon,Salon.id==Job.salon_id).where(Job.user_id==user.id,Salon.owner_id==user.id)
     return [serial(j) for j in db.scalars(stmt.order_by(Job.created_at.desc()).limit(100))]
 @app.get('/api/discovery')
 def discovery(city:str=Query(min_length=2,max_length=80),user=Depends(current)):
@@ -268,8 +270,15 @@ def discovery(city:str=Query(min_length=2,max_length=80),user=Depends(current)):
 
 @app.post('/api/auth/password')
 def password_change(payload:PasswordIn,request:Request,user=Depends(current),db=Depends(database)):
+    bucket=digest('password-change:'+user.id)
+    cutoff=(datetime.now(timezone.utc)-timedelta(minutes=15)).isoformat()
+    failures=db.scalar(select(func.count()).select_from(LoginAttempt).where(LoginAttempt.key==bucket,LoginAttempt.at>cutoff))
+    if failures>=8:raise HTTPException(429,'Zbyt wiele prób. Spróbuj za 15 minut.')
     try: ph.verify(user.password_hash,payload.current_password)
-    except (VerifyMismatchError,InvalidHashError): raise HTTPException(403,'Nieprawidłowe obecne hasło')
+    except (VerifyMismatchError,InvalidHashError):
+        db.add(LoginAttempt(id=uid(),key=bucket,at=now()));db.commit()
+        raise HTTPException(403,'Nieprawidłowe obecne hasło')
+    if payload.current_password==payload.new_password:raise HTTPException(422,'Nowe hasło musi różnić się od obecnego')
     user.password_hash=ph.hash(payload.new_password)
     from sqlalchemy import delete
     active_hash=digest(request.cookies['focus_session'])
@@ -309,7 +318,7 @@ def deactivate_user(id:str,user=Depends(manager),db=Depends(database)):
 @app.get('/api/admin/integrity')
 def database_integrity(user=Depends(manager)):
     from scripts.backup import fingerprint
-    return {'tables':fingerprint(os.environ['DATABASE_URL'],include_metadata=True),'version':'3.0.0'}
+    return {'tables':fingerprint(os.environ['DATABASE_URL'],include_metadata=True),'version':'3.0.1'}
 
 @app.post('/api/admin/backup')
 def download_backup(payload:BackupIn,user=Depends(manager)):

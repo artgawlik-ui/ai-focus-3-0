@@ -159,3 +159,11 @@ def test_password_session_revocation_and_private_access_audit(caplog):
     with Session() as db:
         u=db.get(User,'manager');assert u.password_hash.startswith('$argon2id$')
         assert 'NewPrivatePassword42!' not in u.password_hash
+
+def test_password_change_throttles_and_rejects_trivial_passwords():
+    c=client()
+    for weak in ['aaaaaaaaaaaa','password123!','123456789012']:
+        assert c.post('/api/auth/password',json={'current_password':'TestPassword123!','new_password':weak}).status_code==422
+    for _ in range(8):
+        assert c.post('/api/auth/password',json={'current_password':'wrong','new_password':'NewPrivatePhrase42!'}).status_code==403
+    assert c.post('/api/auth/password',json={'current_password':'TestPassword123!','new_password':'NewPrivatePhrase42!'}).status_code==429

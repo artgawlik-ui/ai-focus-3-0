@@ -14,7 +14,7 @@ credential_fd,credential_name=tempfile.mkstemp(prefix='focus3-ci-',suffix='.json
 os.close(credential_fd)
 credential_path=Path(credential_name)
 try:
-    env={**os.environ,'DATABASE_URL':url,'APP_ENV':'test','PORT':'8005','APP_ORIGIN':'http://127.0.0.1:8006','FOCUS_TEST_ORIGIN':'http://127.0.0.1:8006','FOCUS_TEST_OFFLINE_FLAG':'/tmp/focus3-test-network-down','FOCUS_TEST_CREDENTIAL_FILE':str(credential_path)}
+    env={**os.environ,'AGENT_V2_ENABLED':'true','AI_PAID_PROCESSING_APPROVED':'false','DATABASE_URL':url,'APP_ENV':'test','PORT':'8005','APP_ORIGIN':'http://127.0.0.1:8006','FOCUS_TEST_ORIGIN':'http://127.0.0.1:8006','FOCUS_TEST_OFFLINE_FLAG':'/tmp/focus3-test-network-down','FOCUS_TEST_CREDENTIAL_FILE':str(credential_path)}
     os.environ.update({k:env[k] for k in ['DATABASE_URL','APP_ENV']})
     subprocess.run([sys.executable,'-m','alembic','upgrade','head'],env=env,check=True)
     from backend.db import Session,User,Salon

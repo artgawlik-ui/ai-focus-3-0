@@ -9,6 +9,12 @@ services:
     healthCheckPath: /api/health
     autoDeployTrigger: 'off'
     envVars:
+      - key: AGENT_V2_ENABLED
+        value: "true"
+      - key: AI_PAID_PROCESSING_APPROVED
+        value: "false"
+      - key: OFFSITE_BACKUP_ENABLED
+        value: "false"
       - key: APP_ENV
         value: production
       - key: APP_ORIGIN

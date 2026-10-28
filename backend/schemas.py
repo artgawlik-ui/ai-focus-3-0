@@ -61,6 +61,12 @@ class AssignmentIn(BaseModel):
 class PasswordIn(BaseModel):
     current_password: str = Field(max_length=200)
     new_password: str = Field(min_length=12,max_length=200)
+    @field_validator('new_password')
+    @classmethod
+    def reject_trivial(cls,value):
+        if len(set(value))<5 or value.casefold() in {'password123!','testpassword123!','qwerty123456','123456789012'}:
+            raise ValueError('Wybierz unikalną frazę; łatwe do odgadnięcia hasła są zabronione')
+        return value
 class TrainingIn(BaseModel):
     title: str = Field(min_length=2,max_length=160)
     starts_at: datetime

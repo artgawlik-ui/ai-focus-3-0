@@ -51,6 +51,15 @@ with sync_playwright() as p:
         page.goto(origin);page.get_by_role('heading',name='Dzień dobry, Weryfikacja.').wait_for()
         cache_urls=page.evaluate('''async()=>{const urls=[];for(const name of await caches.keys()){const cache=await caches.open(name);for(const request of await cache.keys())urls.push(request.url);}return urls;}''')
         assert cache_urls and all(url.endswith('/offline.html') for url in cache_urls),cache_urls
+        if isolated:
+            if label=='webkit-iphone':page.get_by_label('Otwórz menu').click()
+            page.get_by_role('button',name='Agent sprzedaży',exact=False).click()
+            page.locator('select[name="salon_id"]').select_option(label='[TEST TECHNICZNY] Ai Focus 3.0 · Głogów')
+            page.get_by_role('button',name='Zleć analizę i szkic').click()
+            page.get_by_text('Proponowany priorytet:',exact=True).first.wait_for(timeout=20000)
+            page.get_by_text('Kolejny krok:',exact=True).first.wait_for()
+            page.get_by_text('Źródła analizy',exact=False).first.wait_for()
+            assert page.evaluate('document.documentElement.scrollWidth<=innerWidth')
         if label=='webkit-iphone':page.get_by_label('Otwórz menu').click()
         page.get_by_label('Wyloguj',exact=True).click()
         page.get_by_role('heading',name='Zaloguj się do Ai Focus').wait_for()
