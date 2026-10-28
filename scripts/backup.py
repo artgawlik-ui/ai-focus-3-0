@@ -18,6 +18,7 @@ def pg_env(url):
 def fingerprint(url):
     result={}
     with psycopg.connect(url.replace('postgresql+psycopg://','postgresql://')) as db:
+        db.execute('SET TRANSACTION ISOLATION LEVEL REPEATABLE READ READ ONLY')
         for table in sorted(Base.metadata.tables):
             rows=db.execute('SELECT row_to_json(t)::text FROM "'+table+'" t').fetchall()
             canonical=sorted(json.dumps(json.loads(row[0]),sort_keys=True,ensure_ascii=False,separators=(',',':')) for row in rows)
