@@ -1,0 +1,16 @@
+.env
+.venv/
+__pycache__/
+.pytest_cache/
+node_modules/
+frontend/dist/
+*.db
+*.sqlite3
+backups/
+test-results/
+playwright-report/
+
+.tools/
+*.tsbuildinfo
+
+.render-auth/
