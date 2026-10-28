@@ -1,4 +1,5 @@
-# Approved budget: approximately $13/month. API and agent use independent supervised processes.
+# Existing ai-focus-3-0-db is reused; no new database is created by this Blueprint.
+# Approved base cost: web $7/mo + existing PostgreSQL $6/mo.
 services:
   - type: web
     name: ai-focus-3-0
@@ -11,20 +12,17 @@ services:
       - key: APP_ENV
         value: production
       - key: APP_ORIGIN
-        sync: false
+        fromService:
+          name: ai-focus-3-0
+          type: web
+          envVarKey: RENDER_EXTERNAL_URL
       - key: DATABASE_URL
         fromDatabase:
           name: ai-focus-3-0-db
           property: connectionString
       - key: BOOTSTRAP_EMAIL
-        sync: false
+        value: art.gawlik@gmail.com
+      - key: BOOTSTRAP_NAME
+        value: Menedżer
       - key: BOOTSTRAP_PASSWORD
-        sync: false
-databases:
-  - name: ai-focus-3-0-db
-    databaseName: ai_focus_3_0
-    user: ai_focus_3_0
-    plan: 0.1c-256mb
-    region: frankfurt
-    postgresMajorVersion: '17'
-    ipAllowList: []
+        generateValue: true
