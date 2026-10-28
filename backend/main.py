@@ -306,7 +306,7 @@ def deactivate_user(id:str,user=Depends(manager),db=Depends(database)):
 @app.get('/api/admin/integrity')
 def database_integrity(user=Depends(manager)):
     from scripts.backup import fingerprint
-    return {'tables':fingerprint(os.environ['DATABASE_URL']),'version':'3.0.0'}
+    return {'tables':fingerprint(os.environ['DATABASE_URL'],include_metadata=True),'version':'3.0.0'}
 
 @app.post('/api/admin/backup')
 def download_backup(payload:BackupIn,user=Depends(manager)):

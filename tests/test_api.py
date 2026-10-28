@@ -131,3 +131,7 @@ def test_deactivate_sessions_and_protect_last_manager():
 def test_backup_permission_and_passphrase_validation():
     assert client('rep1').post('/api/admin/backup',json={'passphrase':'x'*30}).status_code==403
     assert client().post('/api/admin/backup',json={'passphrase':'short'}).status_code==422
+
+def test_integrity_is_manager_only():
+    assert TestClient(app).get('/api/admin/integrity').status_code==401
+    assert client('rep1').get('/api/admin/integrity').status_code==403

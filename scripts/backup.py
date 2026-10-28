@@ -15,11 +15,14 @@ def pg_env(url):
         if env: result[env]=str(v)
     return result
 
-def fingerprint(url):
+def fingerprint(url, include_metadata=False):
     result={}
     with psycopg.connect(url.replace('postgresql+psycopg://','postgresql://')) as db:
         db.execute('SET TRANSACTION ISOLATION LEVEL REPEATABLE READ READ ONLY')
-        for table in sorted(Base.metadata.tables):
+        tables=list(Base.metadata.tables)
+        if include_metadata and db.execute("SELECT to_regclass('public.alembic_version')").fetchone()[0]:
+            tables.append('alembic_version')
+        for table in sorted(tables):
             rows=db.execute('SELECT row_to_json(t)::text FROM "'+table+'" t').fetchall()
             canonical=sorted(json.dumps(json.loads(row[0]),sort_keys=True,ensure_ascii=False,separators=(',',':')) for row in rows)
             result[table]={'count':len(rows),'sha256':hashlib.sha256('\n'.join(canonical).encode()).hexdigest()}
