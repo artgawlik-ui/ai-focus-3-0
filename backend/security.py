@@ -21,6 +21,7 @@ def current(request: Request, db=Depends(database)):
     if request.method not in ('GET','HEAD','OPTIONS'):
         if not secrets.compare_digest(request.headers.get('X-CSRF-Token',''), session.csrf):
             raise HTTPException(403, 'Nieprawidłowy token CSRF')
+    request.state.audit_user_id=user.id
     return user
 
 def manager(user=Depends(current)):

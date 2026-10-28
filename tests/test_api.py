@@ -141,3 +141,21 @@ def test_body_limits_before_parser():
     assert c.post('/api/auth/login',content=b'x'*(256*1024+1),headers={'Content-Type':'application/json'}).status_code==413
     assert c.post('/api/import',content=b'x',headers={'Content-Length':str(7*1024*1024)}).status_code==413
     assert c.post('/api/auth/login',content=iter([b'x'*150000,b'x'*150000]),headers={'Content-Type':'application/json'}).status_code==413
+
+def test_password_session_revocation_and_private_access_audit(caplog):
+    import logging
+    owner=client();other=client()
+    with caplog.at_level(logging.INFO,logger='focus'):
+        assert owner.get('/api/salons').status_code==200
+    lines=[r.message for r in caplog.records if r.message.startswith('audit ')]
+    event=__import__('json').loads(lines[-1][6:])
+    assert event['user_id']=='manager' and event['route']=='/api/salons'
+    assert 'TestPassword' not in str(lines)
+    assert owner.post('/api/auth/password',json={'current_password':'incorrect','new_password':'NewPrivatePassword42!'}).status_code==403
+    assert owner.post('/api/auth/password',json={'current_password':'TestPassword123!','new_password':'short'}).status_code==422
+    assert owner.post('/api/auth/password',json={'current_password':'TestPassword123!','new_password':'NewPrivatePassword42!'}).status_code==200
+    assert other.get('/api/auth/me').status_code==401
+    assert owner.get('/api/auth/me').status_code==200
+    with Session() as db:
+        u=db.get(User,'manager');assert u.password_hash.startswith('$argon2id$')
+        assert 'NewPrivatePassword42!' not in u.password_hash

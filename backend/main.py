@@ -56,7 +56,7 @@ async def headers(request: Request, call_next):
     response.headers.update({'X-Request-ID':request_id,'X-Content-Type-Options':'nosniff','X-Frame-Options':'DENY','Referrer-Policy':'strict-origin-when-cross-origin','Permissions-Policy':'camera=(), microphone=(), geolocation=()','Content-Security-Policy':"default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; connect-src 'self'; object-src 'none'; base-uri 'self'; frame-ancestors 'none'; form-action 'self'"})
     if request.url.path.startswith('/api'): response.headers['Cache-Control']='no-store'
     if secure: response.headers['Strict-Transport-Security']='max-age=31536000; includeSubDomains'
-    log.info('request id=%s method=%s status=%s',request_id,request.method,response.status_code)
+    log.info('audit %s',json.dumps({'request_id':request_id,'user_id':getattr(request.state,'audit_user_id',None),'method':request.method,'route':getattr(request.scope.get('route'),'path','unmatched'),'status':response.status_code,'at':now()}))
     return response
 
 @app.get('/api/health')

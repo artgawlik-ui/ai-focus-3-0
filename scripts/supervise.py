@@ -13,6 +13,8 @@ signal.signal(signal.SIGTERM,shutdown)
 signal.signal(signal.SIGINT,shutdown)
 children.append(subprocess.Popen([sys.executable,'-m','uvicorn','backend.main:app','--host','0.0.0.0','--port',os.getenv('PORT','8000'),'--proxy-headers','--forwarded-allow-ips',os.getenv('TRUSTED_PROXY_IPS','127.0.0.1')]))
 children.append(subprocess.Popen([sys.executable,'-m','backend.worker']))
+if os.getenv('OFFSITE_BACKUP_ENABLED','false').lower()=='true':
+    children.append(subprocess.Popen([sys.executable,'-m','scripts.offsite_backup']))
 exit_code=0
 try:
     while not stopping:
