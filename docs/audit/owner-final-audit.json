@@ -1,0 +1,24 @@
+{
+  "owner_login_verified": true,
+  "owner_manager_active": true,
+  "technical_account_inactive": true,
+  "fresh_encrypted_backup_bytes": 23307,
+  "tables_captured": 10,
+  "durable_tables_unchanged_since_pre_cleanup": 8,
+  "expected_changed_tables": [
+    "users",
+    "sessions"
+  ],
+  "counts": {
+    "activities": 6,
+    "alembic_version": 1,
+    "appointments": 1,
+    "integration_links": 0,
+    "jobs": 1,
+    "login_attempts": 0,
+    "salons": 1,
+    "sessions": 1,
+    "trainings": 0,
+    "users": 2
+  }
+}

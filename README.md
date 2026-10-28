@@ -1,6 +1,6 @@
 # Ai Focus 3.0
 
-Status wydania i blokady bezpieczeństwa: [docs/AUDIT.md](docs/AUDIT.md). CRM działa przez HTTPS; ta gałąź jest kandydatem i nie jest wdrożona.
+Status wdrożenia, dowody testów i ograniczenia: [docs/AUDIT.md](docs/AUDIT.md). CRM działa przez HTTPS na zatwierdzonym wydaniu 0c44401; integracje zewnętrzne i automatyczne kopie offsite wymagają dalszych prac.
 
 Osobny CRM sprzedaży NAK Hair / muk Haircare. React 19 + TypeScript, FastAPI, SQLAlchemy, PostgreSQL 17, Alembic. Polskie UI, responsywna PWA, indywidualne konta menedżera i handlowców. Bez automatycznej wysyłki wiadomości.
 

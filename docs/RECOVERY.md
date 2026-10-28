@@ -17,6 +17,6 @@ Docelowy harmonogram: codzienna kopia poza hostem, retencja 30 dni, cotygodniowe
 
 ## Aktualny stan platformy
 
-Nowa baza produkcyjna Focus 3.0 korzysta z płatnego planu PostgreSQL. Render dokumentuje dla płatnych baz ciągłe kopie PITR poza serwerem aplikacji, z oknem 3 dni na Hobby i 7 na Pro+. Nie wykonano natywnego PITR, bo utworzyłoby dodatkową płatną instancję. Szyfrowany dump z produkcji odtworzono lokalnie i porównano SHA-256. Ten dump nie zastępuje świeżej kopii wymaganej przed kolejnym wdrożeniem po wyłączeniu konta technicznego.
+Nowa baza produkcyjna Focus 3.0 korzysta z płatnego planu PostgreSQL. Render dokumentuje dla płatnych baz ciągłe kopie PITR poza serwerem aplikacji, z oknem 3 dni na Hobby i 7 na Pro+. Nie wykonano natywnego PITR, bo utworzyłoby dodatkową płatną instancję. Szyfrowany dump z produkcji odtworzono lokalnie i porównano SHA-256. Przed wdrożeniem 0c44401 wykonano dodatkową świeżą zaszyfrowaną kopię po wyłączeniu konta technicznego; odtworzenie do nowej lokalnej bazy potwierdziło zgodność liczebności i SHA-256 wszystkich 10 tabel.
 
 Automatyczna długoterminowa rotacja osobnych, szyfrowanych plików w zewnętrznym magazynie oraz alerty wymagają podłączenia takiego magazynu. Nie są oznaczane jako aktywne.
