@@ -27,8 +27,8 @@ def fingerprint(url):
 def derive(passphrase,salt):
     return Scrypt(salt=salt,length=32,n=2**15,r=8,p=1).derive(passphrase.encode())
 
-def backup(path):
-    url=os.environ['DATABASE_URL']; phrase=os.environ['BACKUP_PASSPHRASE']
+def backup(path, url=None, phrase=None):
+    url=url or os.environ['DATABASE_URL']; phrase=phrase or os.environ['BACKUP_PASSPHRASE']
     if len(phrase)<20: raise ValueError('Backup passphrase requires 20+ characters')
     # Short maintenance lock ensures the dump and verification manifest see identical data.
     with psycopg.connect(url.replace('postgresql+psycopg://','postgresql://')) as lock:

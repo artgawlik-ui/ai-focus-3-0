@@ -119,3 +119,15 @@ def test_training_manager_permissions():
     assert r.post('/api/trainings',json=payload).status_code==403
     assert m.post('/api/trainings',json=payload).status_code==201
     assert r.get('/api/trainings').json()[0]['title']==payload['title']
+
+def test_deactivate_sessions_and_protect_last_manager():
+    m=client(); r=client('rep1')
+    assert r.post('/api/users/rep2/deactivate').status_code==403
+    assert m.post('/api/users/manager/deactivate').status_code==409
+    assert m.post('/api/users/rep1/deactivate').status_code==200
+    assert r.get('/api/auth/me').status_code==401
+    assert r.post('/api/auth/login',json={'email':'rep1@focus.test','password':'TestPassword123!'}).status_code==401
+
+def test_backup_permission_and_passphrase_validation():
+    assert client('rep1').post('/api/admin/backup',json={'passphrase':'x'*30}).status_code==403
+    assert client().post('/api/admin/backup',json={'passphrase':'short'}).status_code==422

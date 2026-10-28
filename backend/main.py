@@ -291,6 +291,32 @@ def add_training(payload:TrainingIn,user=Depends(manager),db=Depends(database)):
     t=Training(id=uid(),title=payload.title,starts_at=payload.starts_at.astimezone(timezone.utc).isoformat(),minutes=payload.minutes,notes=payload.notes,created_by=user.id)
     db.add(t); db.commit(); return serial(t)
 
+@app.post('/api/users/{id}/deactivate')
+def deactivate_user(id:str,user=Depends(manager),db=Depends(database)):
+    target=db.get(User,id)
+    if not target: raise HTTPException(404,'Brak użytkownika')
+    if target.role=='manager' and target.active:
+        active_managers=db.scalar(select(func.count()).select_from(User).where(User.role=='manager',User.active==1))
+        if active_managers<=1: raise HTTPException(409,'Nie można wyłączyć ostatniego menedżera')
+    target.active=0
+    from sqlalchemy import delete
+    db.execute(delete(LoginSession).where(LoginSession.user_id==id));db.commit()
+    return {'ok':True}
+
+@app.post('/api/admin/backup')
+def download_backup(payload:BackupIn,user=Depends(manager)):
+    import tempfile, shutil
+    from starlette.background import BackgroundTask
+    from scripts.backup import backup
+    if not os.getenv('DATABASE_URL','').startswith(('postgres://','postgresql://','postgresql+psycopg://')):
+        raise HTTPException(409,'Kopie bazy wymagają PostgreSQL')
+    directory=tempfile.mkdtemp(prefix='focus3-backup-'); path=Path(directory)/'focus3.enc'
+    try: backup(str(path),phrase=payload.passphrase)
+    except Exception:
+        shutil.rmtree(directory,ignore_errors=True)
+        raise HTTPException(503,'Kopia nie powiodła się. Sprawdź klienta PostgreSQL i dostępność bazy.')
+    return FileResponse(path,filename='focus3-backup.enc',media_type='application/octet-stream',background=BackgroundTask(shutil.rmtree,directory,ignore_errors=True),headers={'Cache-Control':'no-store'})
+
 DIST=Path(__file__).resolve().parent.parent/'frontend'/'dist'
 if DIST.exists():
     app.mount('/assets',StaticFiles(directory=DIST/'assets'),name='assets')

@@ -66,3 +66,6 @@ class TrainingIn(BaseModel):
     starts_at: datetime
     minutes: int = Field(default=60,ge=15,le=480)
     notes: str = Field(default='',max_length=4000)
+
+class BackupIn(BaseModel):
+    passphrase: str = Field(min_length=20,max_length=200)
