@@ -325,7 +325,7 @@ async def privacy_callback(kind,request,db):
             db.execute(update(MetaMessage).where(MetaMessage.conversation_id.in_(conversation_ids)).values(body_ciphertext=''))
             row.username='';row.business_id='';row.subject_id='erased:'+digest(row.subject_id)
             row.expires_at=''
-    item=MetaPrivacyRequest(id=uid(),request_hash=request_hash,subject_hash=hmac.new(os.environ['META_APP_SECRET'].encode(),data['user_id'].encode(),hashlib.sha256).hexdigest(),kind=kind,status='content_erased_review_pending' if rows else 'pending_identity_review')
+    item=MetaPrivacyRequest(id=uid(),request_hash=request_hash,subject_hash=hmac.new(os.environ['META_APP_SECRET'].encode(),data['user_id'].encode(),hashlib.sha256).hexdigest(),kind=kind,status=('content_erased_review_pending' if kind=='deletion' else 'disconnected_review_pending') if rows else 'pending_identity_review')
     try:
         with db.begin_nested():db.add(item);db.flush()
     except IntegrityError:item=db.scalar(select(MetaPrivacyRequest).where(MetaPrivacyRequest.request_hash==request_hash))

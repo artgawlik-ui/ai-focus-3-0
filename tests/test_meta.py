@@ -203,3 +203,12 @@ def test_retention_continues_with_feature_disabled(monkeypatch):
     monkeypatch.setenv('META_ENABLED','false')
     assert maintain_meta_once()
     with Session() as db:assert db.get(MetaMessage,message_id).body_ciphertext==''
+
+def test_deauthorize_revokes_without_falsely_claiming_message_deletion(monkeypatch):
+    from backend.meta_models import MetaPrivacyRequest
+    c=client();authorize(c,monkeypatch);webhook(c,event())
+    assert c.post('/api/meta/deauthorize',data={'signed_request':signed()}).status_code==200
+    with Session() as db:
+        assert db.get(MetaCredential,'90001').revoked
+        assert db.scalar(select(MetaPrivacyRequest)).status=='disconnected_review_pending'
+        assert db.scalar(select(MetaMessage)).body_ciphertext
