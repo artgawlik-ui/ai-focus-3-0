@@ -1,3 +1,4 @@
+from backend import meta_models  # schema compatibility; no Meta integration is enabled
 from alembic import context
 from backend.db import Base, engine
 with engine.connect() as connection:

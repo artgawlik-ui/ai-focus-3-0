@@ -1,3 +1,4 @@
+from backend import meta_models  # schema compatibility; no Meta integration is enabled
 import io, os, json, secrets, uuid, logging, hashlib, unicodedata
 from datetime import datetime, timezone, timedelta, date
 from pathlib import Path

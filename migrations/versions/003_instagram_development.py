@@ -1,0 +1,13 @@
+"""Immutable additive schema for the disabled-by-default Meta integration."""
+from alembic import op
+import sqlalchemy as sa
+revision='003'
+down_revision='002'
+def upgrade():
+    op.create_table('meta_oauth_states',sa.Column('state_hash',sa.String(64),primary_key=True),sa.Column('code_hash',sa.String(64),unique=True,nullable=True),sa.Column('nonce_hash',sa.String(64),nullable=False),sa.Column('session_hash',sa.String(64),nullable=False),sa.Column('user_id',sa.String(36),sa.ForeignKey('users.id'),nullable=False),sa.Column('expires_at',sa.String(40),nullable=False),sa.Column('consumed',sa.Integer(),nullable=False))
+    op.create_table('meta_conversations',sa.Column('id',sa.String(36),primary_key=True),sa.Column('account_id',sa.String(100),nullable=False),sa.Column('peer_id',sa.String(100),nullable=False),sa.Column('salon_id',sa.String(36),sa.ForeignKey('salons.id'),nullable=True),sa.Column('last_inbound_at',sa.String(40),nullable=False),sa.Column('opted_out',sa.Integer(),nullable=False),sa.Column('created_at',sa.String(40),nullable=False),sa.UniqueConstraint('account_id','peer_id'))
+    op.create_table('meta_messages',sa.Column('id',sa.String(36),primary_key=True),sa.Column('conversation_id',sa.String(36),sa.ForeignKey('meta_conversations.id'),nullable=False),sa.Column('external_id',sa.String(250),nullable=True),sa.Column('status',sa.String(40),nullable=False),sa.Column('direction',sa.String(20),nullable=False),sa.Column('body_ciphertext',sa.Text(),nullable=False),sa.Column('occurred_at',sa.String(40),nullable=False),sa.Column('created_at',sa.String(40),nullable=False),sa.Column('approved_by',sa.String(36),sa.ForeignKey('users.id'),nullable=True),sa.UniqueConstraint('conversation_id','external_id'))
+    op.create_table('meta_credentials',sa.Column('account_id',sa.String(100),primary_key=True),sa.Column('business_id',sa.String(100),nullable=False),sa.Column('subject_id',sa.String(100),nullable=False),sa.Column('username',sa.String(100),nullable=False),sa.Column('config_id',sa.String(100),nullable=False),sa.Column('token_ciphertext',sa.Text(),nullable=False),sa.Column('expires_at',sa.String(40),nullable=False),sa.Column('checked_at',sa.String(40),nullable=False),sa.Column('revoked',sa.Integer(),nullable=False))
+    op.create_table('meta_privacy_requests',sa.Column('id',sa.String(36),primary_key=True),sa.Column('request_hash',sa.String(64),unique=True,nullable=False),sa.Column('subject_hash',sa.String(64),nullable=False),sa.Column('kind',sa.String(30),nullable=False),sa.Column('status',sa.String(30),nullable=False),sa.Column('created_at',sa.String(40),nullable=False))
+def downgrade():
+    raise RuntimeError('Destructive downgrade disabled; roll back code with Meta disabled, preserving data')
