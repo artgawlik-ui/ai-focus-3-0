@@ -9,6 +9,14 @@ services:
     healthCheckPath: /api/health
     autoDeployTrigger: 'off'
     envVars:
+      - key: META_ENABLED
+        value: "false"
+      - key: META_MODE
+        value: development
+      - key: META_CONFIG_ID
+        value: "2380634476006078"
+      - key: META_REDIRECT_URI
+        value: https://ai-focus-3-0.onrender.com/api/meta/oauth/callback
       - key: AGENT_V2_ENABLED
         value: "true"
       - key: AI_PAID_PROCESSING_APPROVED

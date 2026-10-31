@@ -1,7 +1,7 @@
 """Explainable CRM-only qualification. Inputs are data, never instructions."""
 from datetime import datetime, timedelta, timezone
 
-RULE_VERSION='glogow-b2b-1'
+RULE_VERSION='glogow-b2b-2'
 
 def analyze(salon, history, evidence='', *, at=None):
     at=at or datetime.now(timezone.utc)
@@ -25,7 +25,7 @@ def analyze(salon, history, evidence='', *, at=None):
         sources.append({'id':'operator_evidence','type':'unverified_operator_text','acquired_at':at.isoformat(),'verification':'unverified','used_for_scoring':False})
     reply_reviews=[]
     for activity in history:
-        if activity.kind!='email_received':continue
+        if activity.kind not in ('email_received','instagram_received'):continue
         text=activity.body.casefold()
         category='opt_out_review' if any(t in text for t in ('nie kontakt','usuń moje','usun moje','nie życzę','nie zycze')) else 'meeting_interest_review' if any(t in text for t in ('spotkanie','termin','wizyta')) else 'needs_human_review'
         reply_reviews.append({'category':category,'source':'activity:'+activity.id,'requires_owner_review':True,'automatic_crm_change':False})
@@ -36,7 +36,7 @@ def analyze(salon, history, evidence='', *, at=None):
     if blocked:priority='C'
     next_step='Uszanuj rezygnację; nie kontaktuj się.' if blocked else 'Odczekaj: przejrzyj historię; kontakt w ostatnich 7 dniach — nie ponawiaj bez decyzji właściciela.' if recent else 'Potwierdź potrzeby i podstawę prawną kontaktu; przygotuj propozycję rozmowy do zatwierdzenia.'
     if blocked:criterion('contact_opt_out',0,optout_reviews[0]['source'] if optout_reviews else 'crm:'+salon.id,'Zakaz kontaktu lub potencjalna rezygnacja wymagają przeglądu; szkic zablokowany.')
-    draft='' if blocked else ('Dzień dobry! Reprezentuję NAK Hair i muk Haircare. '+('Chętnie porozmawiam o potrzebach związanych ze specjalizacją wpisaną w naszym CRM: '+specialization+'. ' if specialization else '')+'Czy byliby Państwo otwarci na krótką rozmowę o potrzebach salonu '+salon.name+'? Termin dopasujemy do Państwa dostępności.')
+    draft='' if blocked else ('Dzień dobry! Reprezentuję NAK Hair i muk Haircare. Chętnie poznam potrzeby salonu '+salon.name+(' związane ze specjalizacją: '+specialization if specialization else '')+'. Czy możemy umówić krótką, 15–20-minutową wizytę handlową w dogodnym dla Państwa terminie?')
     return {'reply_reviews':reply_reviews,'appointment_recommendation':{'status':'needs_owner_approval','source':'crm:'+salon.id,'next_step':'Zapytaj o dostępność i sprawdź kalendarz przed proponowaniem terminu.','creates_event':False},'engine':'rules','rules_version':RULE_VERSION,'generated_at':at.isoformat(),'priority_suggestion':priority,'score':score,'criteria':reasons,'sources':sources,'missing_information':[k for k,v in [('specialization',specialization),('source_url',salon.source_url),('purchase_potential',potential)] if not v],'unknown_value':'brak informacji','evidence_status':'provided_unverified' if evidence else 'crm_only','next_step':next_step,'next_step_sources':['crm:'+salon.id]+['activity:'+a.id for a in recent],'draft':draft,'draft_status':'draft','requires_owner_approval':True,'sent':False,'appointment_created':False,'warning':'Szkic i rekomendacja. Dane CRM wymagają weryfikacji. Wysyłka i wizyta wymagają zgody właściciela.'}
 
 def minimal_model_context(analysis):

@@ -15,7 +15,9 @@ os.close(credential_fd)
 credential_path=Path(credential_name)
 try:
     env={**os.environ,'AGENT_V2_ENABLED':'true','AI_PAID_PROCESSING_APPROVED':'false','DATABASE_URL':url,'APP_ENV':'test','PORT':'8005','APP_ORIGIN':'http://127.0.0.1:8006','FOCUS_TEST_ORIGIN':'http://127.0.0.1:8006','FOCUS_TEST_OFFLINE_FLAG':'/tmp/focus3-test-network-down','FOCUS_TEST_CREDENTIAL_FILE':str(credential_path)}
-    os.environ.update({k:env[k] for k in ['DATABASE_URL','APP_ENV']})
+    from cryptography.fernet import Fernet
+    env.update({'META_ENABLED':'true','META_MODE':'development','META_APP_ID':'123456','META_CONFIG_ID':'ci-synthetic','META_APP_SECRET':uuid.uuid4().hex,'META_VERIFY_TOKEN':uuid.uuid4().hex,'META_ENCRYPTION_KEY':Fernet.generate_key().decode(),'META_TEST_ACCOUNT_ID':'90001','META_REDIRECT_URI':'https://test.invalid/api/meta/oauth/callback','BOOTSTRAP_EMAIL':'verification@focus.invalid'})
+    os.environ.update({k:env[k] for k in ['DATABASE_URL','APP_ENV']+list(k for k in env if k.startswith('META_'))})
     subprocess.run([sys.executable,'-m','alembic','upgrade','head'],env=env,check=True)
     from backend.db import Session,User,Salon
     from backend.security import ph
@@ -25,6 +27,15 @@ try:
     with Session() as db:
         db.add(User(id='ci-manager',email='verification@focus.invalid',name='Weryfikacja techniczna',role='manager',password_hash=ph.hash(password)));db.flush()
         db.add(Salon(id=str(uuid.uuid4()),owner_id='ci-manager',name='[TEST TECHNICZNY] Ai Focus 3.0',city='Głogów',notes='Synthetic CI data',dedup_key=key('[TEST TECHNICZNY] Ai Focus 3.0','Głogów')));db.commit()
+    from backend.meta_models import MetaConversation,MetaMessage,MetaCredential
+    from backend.meta import seal
+    from backend.db import now
+    with Session() as db:
+        salon=db.query(Salon).first()
+        conversation=MetaConversation(id=str(uuid.uuid4()),account_id='90001',peer_id='90002',salon_id=salon.id,last_inbound_at=now());db.add(conversation);db.flush()
+        db.add(MetaMessage(id=str(uuid.uuid4()),conversation_id=conversation.id,external_id='ci-message',status='received',direction='inbound',body_ciphertext=seal('message','Syntetyczna odpowiedź: proszę o termin wizyty.'),occurred_at=now()))
+        db.add(MetaCredential(account_id='90001',business_id='ci-business',subject_id='ci-subject',username='synthetic_test',config_id='ci-synthetic',token_ciphertext=seal('token','synthetic-never-call-api'),expires_at='',checked_at=now()))
+        db.commit()
     credential_path.write_text(json.dumps({'email':'verification@focus.invalid','password':password}));credential_path.chmod(0o600)
     child=subprocess.Popen([sys.executable,'-m','scripts.supervise'],env=env,stdout=subprocess.DEVNULL,stderr=subprocess.DEVNULL)
     for _ in range(80):

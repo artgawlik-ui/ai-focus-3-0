@@ -24,6 +24,8 @@ def run_once():
             if not requester or not requester.active or (requester.role!='manager' and salon.owner_id!=requester.id):raise ValueError('Access revoked')
             if salon.status=='do_not_contact': raise ValueError('Kontakt zablokowany')
             history=list(db.scalars(select(Activity).where(Activity.salon_id==salon.id).order_by(Activity.created_at.desc()).limit(15)))
+            from backend.meta import agent_replies
+            history.extend(agent_replies(db,salon.id))
             recent=any(a.kind in ('call','visit','follow_up') and a.created_at>(datetime.now(timezone.utc)-timedelta(days=7)).isoformat() for a in history)
             from backend.qualification import analyze, minimal_model_context
             analysis=analyze(salon,history,job.evidence)
@@ -55,8 +57,15 @@ if __name__=='__main__':
         global running
         running=False
     signal.signal(signal.SIGTERM,stop); signal.signal(signal.SIGINT,stop)
+    last_cleanup=-3600
     while running:
         try:
+            from backend.meta import enabled,expire_content,maintain_credentials
+            if enabled() and time.monotonic()-last_cleanup>3600:
+                with Session() as db:
+                    expire_content(db)
+                    maintain_credentials(db)
+                last_cleanup=time.monotonic()
             if not run_once(): time.sleep(2)
         except Exception:
             log.warning('Queue unavailable; retrying after database readiness check')
