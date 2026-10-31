@@ -50,6 +50,19 @@ def run_once():
             db.rollback(); job=db.get(Job,job.id); job.status='failed'; job.result=json.dumps({'error':'Analiza nie powiodła się. Sprawdź konfigurację dostawcy i ponów zadanie.'}); job.updated_at=now(); db.commit(); log.warning('Job failed id=%s',job.id)
         return True
 
+def maintain_meta_once():
+    # A missing/invalid optional integration must never starve the CRM queue.
+    from backend.meta import enabled,expire_content,maintain_credentials
+    if not enabled():return False
+    try:
+        with Session() as db:
+            expire_content(db)
+            maintain_credentials(db)
+        return True
+    except Exception:
+        log.warning('Meta maintenance deferred; CRM queue continues; no customer action performed')
+        return False
+
 if __name__=='__main__':
     import signal
     running=True
@@ -60,11 +73,8 @@ if __name__=='__main__':
     last_cleanup=-3600
     while running:
         try:
-            from backend.meta import enabled,expire_content,maintain_credentials
-            if enabled() and time.monotonic()-last_cleanup>3600:
-                with Session() as db:
-                    expire_content(db)
-                    maintain_credentials(db)
+            if time.monotonic()-last_cleanup>3600:
+                maintain_meta_once()
                 last_cleanup=time.monotonic()
             if not run_once(): time.sleep(2)
         except Exception:

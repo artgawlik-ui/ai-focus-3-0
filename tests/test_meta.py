@@ -185,3 +185,12 @@ def test_wrong_encryption_key_never_exposes_token_or_breaks_crm(monkeypatch):
     r=c.get('/api/meta/status');assert r.status_code==503 and 'synthetic-token' not in r.text
     assert c.get('/api/integrations').status_code==200 and c.get('/api/integrations').json()['instagram']['mode']=='needs_configuration'
     assert c.get('/api/salons').status_code==200
+
+def test_broken_optional_meta_config_does_not_starve_crm_jobs(monkeypatch):
+    from backend.worker import maintain_meta_once,run_once
+    monkeypatch.delenv('META_APP_SECRET',raising=False)
+    c=client();s=add(c)
+    c.post('/api/agent/jobs',json={'salon_id':s['id']})
+    assert maintain_meta_once() is False
+    assert run_once()
+    assert c.get('/api/agent/jobs').json()[0]['status']=='completed'
