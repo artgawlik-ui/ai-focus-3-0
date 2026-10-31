@@ -1,0 +1,20 @@
+{
+  "service": "srv-dbh1rk6tlv9c73dloq20",
+  "deployment": "dep-dbj59qff3r2c73f077u0",
+  "commit": "cd22a44415732a1e25b558bfec38cf498115b90f",
+  "status": "live",
+  "finished_at": "2026-10-31T20:52:37.691068Z",
+  "candidate_ci": "https://github.com/artgawlik-ui/ai-focus-3-0/actions/runs/41240408027",
+  "candidate_ci_conclusion": "success",
+  "rollback_commit": "4c2eedf7f934daa2fe7c2a860d3366d72860b649",
+  "rollback_ci": "https://github.com/artgawlik-ui/ai-focus-3-0/actions/runs/41239153730",
+  "rollback_ci_conclusion": "success",
+  "postgres": "dpg-dbh1b0gm7kps73f0p2m0-a",
+  "postgres_status": "available",
+  "external_ip_allowlist": [],
+  "error_logs_after_final_deploy": 0,
+  "meta_connected": false,
+  "outbound": false,
+  "main_ci": "https://github.com/artgawlik-ui/ai-focus-3-0/actions/runs/41240820174",
+  "main_ci_conclusion": "success"
+}

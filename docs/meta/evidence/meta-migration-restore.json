@@ -1,0 +1,10 @@
+{
+  "rollback_schema_compatibility": true,
+  "restored_encrypted_backup": true,
+  "all_pre_migration_fingerprints_match": true,
+  "migration_003_pass": true,
+  "original_crm_tables_unchanged": 9,
+  "new_tables_empty": 5,
+  "metadata_consistent": true,
+  "target": "isolated_local_database"
+}

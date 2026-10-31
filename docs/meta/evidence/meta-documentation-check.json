@@ -1,0 +1,20 @@
+[
+  {
+    "url": "https://developers.facebook.com/docs/development/create-an-app/app-dashboard/data-deletion-callback/",
+    "http_status": 200,
+    "retrieved_on": "2026-10-31",
+    "sha256": "0546408fde8fb39ab384b33de307906f0d1952c91ad8eeccb612bf523b2eae85"
+  },
+  {
+    "url": "https://developers.facebook.com/docs/facebook-login/guides/advanced/manual-flow/",
+    "http_status": 200,
+    "retrieved_on": "2026-10-31",
+    "sha256": "25a15960537a9bc9037585135f12c1ba4ddb0f5c959b9b8db8f161cd27c50851"
+  },
+  {
+    "url": "https://developers.facebook.com/docs/instagram-platform/instagram-api-with-instagram-login/messaging-api/",
+    "http_status": 200,
+    "retrieved_on": "2026-10-31",
+    "sha256": "a7ee1659d3f496eb93c592c524b16b98f7dd4dc4491df29b779a69cc5f474ee1"
+  }
+]

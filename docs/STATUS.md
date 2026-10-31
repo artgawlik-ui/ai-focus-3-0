@@ -1,7 +1,9 @@
 # Aktualny status
 
-CRM i silnik rekomendacji działają: https://ai-focus-3-0.onrender.com, wersja 3.0.1, commit `df78fd7802c7e93d007b92ab0093ba7d33df8fee`.
+CRM działa przez HTTPS: https://ai-focus-3-0.onrender.com, wersja 3.0.2, commit `cd22a44415732a1e25b558bfec38cf498115b90f`.
 
-29 testów, Chromium/WebKit, oba audyty: PASS. Wszystkie 10 tabel zgodne po wdrożeniu. PWA i logowanie na fizycznym iPhonie potwierdzone przez właściciela. Backup offsite przygotowany, nieaktywny; model płatny wyłączony; fazy 3–6 nie rozpoczęte.
+49 testów, Chromium/WebKit i audyty: PASS. Wszystkie 15 tabel zgodne po końcowym wdrożeniu; migracja 003 przetestowana na kopii.
 
-[Pełny raport, dowody, ograniczenia i zmienione pliki](phase2/REPORT.md).
+Meta Unified Login przygotowane i wdrożone za wyłączoną flagą; rzeczywiste połączenie czeka na konfigurację i osobistą autoryzację konta testowego. Wysyłka API nie istnieje.
+
+[Raport, dokładne URL-e, zmienne i źródła Meta](meta/REPORT.md).

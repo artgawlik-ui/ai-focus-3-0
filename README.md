@@ -1,6 +1,6 @@
 # Ai Focus 3.0
 
-Aktualny raport faz 1–2: [docs/phase2/REPORT.md](docs/phase2/REPORT.md). CRM działa przez HTTPS na wydaniu df78fd7 (3.0.1); integracje zewnętrzne i automatyczne kopie offsite wymagają dalszych prac.
+Aktualny raport integracji Meta: [docs/meta/REPORT.md](docs/meta/REPORT.md). CRM działa przez HTTPS na wydaniu cd22a44 (3.0.2); integracje zewnętrzne i automatyczne kopie offsite wymagają dalszych prac.
 
 Osobny CRM sprzedaży NAK Hair / muk Haircare. React 19 + TypeScript, FastAPI, SQLAlchemy, PostgreSQL 17, Alembic. Polskie UI, responsywna PWA, indywidualne konta menedżera i handlowców. Bez automatycznej wysyłki wiadomości.
 
@@ -58,7 +58,7 @@ Blueprint generuje hasło początkowego konta w bezpiecznym środowisku Render. 
 ## Granice integracji
 
 - Google Calendar: działa ręczne otwieranie formularza, brak OAuth i synchronizacji dwukierunkowej.
-- Instagram: przechowywanie profilu, brak autoryzacji Meta i wysyłki.
+- Instagram: adapter Unified Login i podpisane webhooki wdrożone za wyłącznikiem; rzeczywista autoryzacja konta testowego czeka na właściciela. Brak transportu wysyłki.
 - Livespace: przygotowana tabela mapowania zewnętrznych ID/kursora z unikalnością; brak aktywnej synchronizacji i adaptera sieciowego. Wymaga uzgodnienia źródła prawdy i API.
 - OpenAI: adapter przygotowany, domyślnie nieaktywny, brak testu realnego modelu bez autoryzowanego sekretu i zgody kosztowej.
 - Planowanie trasy: kolejność godzin, nie optymalizacja odległości ani ruchu.

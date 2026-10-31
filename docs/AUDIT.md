@@ -1,4 +1,4 @@
-> Raport historyczny wydania 0c44401. Aktualne wdrożenie i wyniki faz 1–2: [phase2/REPORT.md](phase2/REPORT.md).
+> Raport historyczny wydania 0c44401. Aktualne wdrożenie i wyniki Meta: [meta/REPORT.md](meta/REPORT.md).
 
 # Ai Focus 3.0 — raport wdrożenia, 2026-10-28
 

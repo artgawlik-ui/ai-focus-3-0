@@ -23,7 +23,7 @@ Konfiguracja domyślna Meta może zawierać dodatkowo comments, content_publish,
 | Data deletion callback POST | https://ai-focus-3-0.onrender.com/api/meta/data-deletion |
 | Privacy Policy URL | https://ai-focus-3-0.onrender.com/api/meta/privacy |
 
-OAuth rozpoczyna wyłącznie właściciel przez uwierzytelniony POST /api/meta/oauth/start z CSRF. State ważny 10 minut, związany z aktywną sesją właściciela i osobnym ciasteczkiem Secure/HttpOnly/SameSite=Lax. Oryginalna sesja CRM pozostaje SameSite=Strict. Callback akceptuje powrót bez ciasteczka Strict, weryfikując zachowaną sesję w bazie i nonce Lax; odrzuca powtórkę state i ponowny hash kodu. Obsługuje error/error_reason, usuwa końcówkę #_ z kodu i nie zwraca tokenów. Brak kodu/anulowanie nie inicjują wywołania Meta.
+OAuth rozpoczyna wyłącznie właściciel przez uwierzytelniony POST /api/meta/oauth/start z CSRF. State ważny 10 minut, związany z aktywną sesją właściciela i osobnym ciasteczkiem Secure/HttpOnly/SameSite=Lax. Oryginalna sesja CRM pozostaje SameSite=Strict. Pierwszą autoryzację wykonuj w tej samej karcie Safari, w której jesteś zalogowany do CRM; przejście między samodzielną PWA a Safari może rozdzielić ciasteczka. Rzeczywisty OAuth Meta na fizycznym iPhonie nie został sprawdzony. Callback akceptuje powrót bez ciasteczka Strict, weryfikując zachowaną sesję w bazie i nonce Lax; odrzuca powtórkę state i ponowny hash kodu. Obsługuje error/error_reason, usuwa końcówkę #_ z kodu i nie zwraca tokenów. Brak kodu/anulowanie nie inicjują wywołania Meta.
 
 ## Render — wyłącznie nazwy zmiennych
 
@@ -43,7 +43,7 @@ Wartości nie trafiają do rozmowy, repozytorium ani raportów. Token uzyskany w
 
 Wymagane: aplikacja należąca do business portfolio, use case Manage messaging & content on Instagram i konfiguracja kompatybilna z Instagram Login, typu System-user access token. Unified Login nie wymaga Facebook Page. Konto musi być zawodowe: business lub creator, w odpowiednim portfolio. Nie ustalono typu @artur_uluru_hair ani jego uprawnień — brak autoryzowanego dostępu do ustawień.
 
-Pozostawić Development. Standard Access służy osobom z rolami aplikacji. Do testów potrzebne rzeczywiste, odrębne profesjonalne konto Instagram dodane jako Instagram Tester i zaakceptowane zaproszenie: Instagram web → Settings → Website permissions → Apps and websites → Tester Invites. Oficjalny przewodnik Unified Login wskazuje, że zwykłe Meta Test Users nie są obsługiwane. Kod odrzuca autoryzację nazwy konta docelowego artur_uluru_hair.
+Pozostawić Development. Standard Access służy osobom z rolami aplikacji. Przewodnik Webhooks Setup wymaga opublikowanej aplikacji/Live dla notyfikacji użytkowników; w Development nie gwarantujemy rzeczywistej dostawy rozmów. Dostępny jest test podpisanych payloadów i weryfikacji callbacka, a przejście Live wymaga odrębnej zgody. Do testów potrzebne rzeczywiste, odrębne profesjonalne konto Instagram dodane jako Instagram Tester i zaakceptowane zaproszenie: Instagram web → Settings → Website permissions → Apps and websites → Tester Invites. Oficjalny przewodnik Unified Login wskazuje, że zwykłe Meta Test Users nie są obsługiwane. Kod odrzuca autoryzację nazwy konta docelowego artur_uluru_hair.
 
 Konfiguracja: App Dashboard → Use cases → Manage messaging & content on Instagram → Customize → API setup with Unified login → Configure your app → konfiguracja 2380634476006078 → Redirect URL. Ustawić dokładny adres z tabeli. W preview sprawdzić typ i czas życia tokenu, a w Edit permissions pozostawić minimalny zakres. Osobno Configure webhooks: callback z tabeli i verify token z bezpiecznej konfiguracji; subskrypcja tylko messages. Dopiero jawny przycisk właściciela subskrybuje konto testowe; webhook nigdy nie uruchamia odpowiedzi.
 
@@ -77,3 +77,6 @@ Testy transportu Meta są atrapami na danych syntetycznych. Rzeczywiste wydanie 
 6. https://developers.facebook.com/documentation/instagram-platform/webhooks/setup — podpisy, callbacki i wymagania produkcyjne.
 7. https://developers.facebook.com/documentation/instagram-platform/webhooks/examples — formaty wiadomości i identyfikatory.
 8. https://developers.facebook.com/docs/instagram-platform/instagram-api-with-instagram-login/messaging-api/ — ograniczenia inicjowania, okien i długości wiadomości; nie jest źródłem wyboru OAuth dla Unified Login.
+
+9. https://developers.facebook.com/docs/development/create-an-app/app-dashboard/data-deletion-callback/ — signed_request i wymagany format url/confirmation_code.
+10. https://developers.facebook.com/docs/facebook-login/guides/advanced/manual-flow/ — obsługa powrotu OAuth i callbacków.
