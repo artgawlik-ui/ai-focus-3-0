@@ -194,3 +194,12 @@ def test_broken_optional_meta_config_does_not_starve_crm_jobs(monkeypatch):
     assert maintain_meta_once() is False
     assert run_once()
     assert c.get('/api/agent/jobs').json()[0]['status']=='completed'
+
+def test_retention_continues_with_feature_disabled(monkeypatch):
+    from backend.worker import maintain_meta_once
+    c=client();webhook(c,event())
+    with Session() as db:
+        item=db.scalar(select(MetaMessage));item.occurred_at=(datetime.now(timezone.utc)-timedelta(days=31)).isoformat();db.commit();message_id=item.id
+    monkeypatch.setenv('META_ENABLED','false')
+    assert maintain_meta_once()
+    with Session() as db:assert db.get(MetaMessage,message_id).body_ciphertext==''

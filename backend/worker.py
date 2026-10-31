@@ -53,11 +53,11 @@ def run_once():
 def maintain_meta_once():
     # A missing/invalid optional integration must never starve the CRM queue.
     from backend.meta import enabled,expire_content,maintain_credentials
-    if not enabled():return False
     try:
         with Session() as db:
+            # Retention continues even while ingest/OAuth are disabled.
             expire_content(db)
-            maintain_credentials(db)
+            if enabled():maintain_credentials(db)
         return True
     except Exception:
         log.warning('Meta maintenance deferred; CRM queue continues; no customer action performed')
