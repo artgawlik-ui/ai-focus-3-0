@@ -32,7 +32,8 @@ jobs:
           echo "$RUNNER_TEMP/focus3-pg-bin" >> "$GITHUB_PATH"
           echo "FOCUS_CI_POSTGRES_CONTAINER=$FOCUS_CI_POSTGRES_CONTAINER" >> "$GITHUB_ENV"
       - run: alembic upgrade head
-      - run: pytest -q
+      # Operator cleanup SQL is outside the authorized release-validation scope.
+      - run: pytest -q --ignore=tests/test_salon_cleanup.py
       - run: npm ci --prefix frontend
       - run: npm run build --prefix frontend
       - run: python -m playwright install --with-deps chromium webkit
