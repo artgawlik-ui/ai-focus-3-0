@@ -1,0 +1,63 @@
+{
+  "baseline": {
+    "passed": 49,
+    "failed": 0,
+    "errors": 0,
+    "skipped": 0
+  },
+  "final_backend": {
+    "tests": 80,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0
+  },
+  "implementation_commit": "3616328f56d38baf53bd1ab5d8d3117a7bc6bfb3",
+  "test_commit": "a42f0f711f5248feafa63a970e37444c819202f4",
+  "frontend_build": "PASS",
+  "production_deployed": false,
+  "real_meta_api_calls": 0,
+  "production_writes": 0,
+  "known_vulnerabilities": {
+    "frontend": 0,
+    "backend": 0
+  },
+  "browsers": [
+    {
+      "browser": "chromium-desktop",
+      "login": true,
+      "logout": true,
+      "private_data_not_in_service_worker_cache": true,
+      "crm_read": true,
+      "crm_write_on_isolated_copy": true,
+      "no_horizontal_scroll": true,
+      "pwa_manifest_icons": true,
+      "apple_standalone_meta": true,
+      "service_worker_offline_fallback": true,
+      "javascript_errors": []
+    },
+    {
+      "browser": "webkit-iphone",
+      "login": true,
+      "logout": true,
+      "private_data_not_in_service_worker_cache": true,
+      "crm_read": true,
+      "crm_write_on_isolated_copy": true,
+      "no_horizontal_scroll": true,
+      "pwa_manifest_icons": true,
+      "apple_standalone_meta": true,
+      "service_worker_offline_fallback": true,
+      "javascript_errors": []
+    }
+  ],
+  "resources": {
+    "rss_kib": 368080,
+    "threads": 19,
+    "rss_mib": 359.45,
+    "wall_seconds": 12.8,
+    "process_cpu_seconds": 2,
+    "webhooks": 20,
+    "processed": 20,
+    "max_ack_ms": 39.44,
+    "scope": "local supervisor + API + existing agent; not Render quota, no backup process, no real Meta API"
+  }
+}

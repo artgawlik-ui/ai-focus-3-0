@@ -57,3 +57,30 @@ class MetaPrivacyRequest(Base):
     kind:Mapped[str]=mapped_column(String(30))
     status:Mapped[str]=mapped_column(String(30))
     created_at:Mapped[str]=mapped_column(String(40),default=now)
+
+class MetaWebhookInbox(Base):
+    __tablename__='meta_webhook_inbox'
+    id:Mapped[str]=mapped_column(String(36),primary_key=True)
+    dedup_key:Mapped[str]=mapped_column(String(64),unique=True)
+    account_id:Mapped[str]=mapped_column(String(100))
+    payload_ciphertext:Mapped[str]=mapped_column(Text,default='')
+    status:Mapped[str]=mapped_column(String(20),default='pending',index=True)
+    attempts:Mapped[int]=mapped_column(Integer,default=0)
+    next_attempt_at:Mapped[str]=mapped_column(String(40),default='')
+    lease_until:Mapped[str]=mapped_column(String(40),default='')
+    lease_token:Mapped[str]=mapped_column(String(36),default='')
+    created_at:Mapped[str]=mapped_column(String(40),default=now)
+    updated_at:Mapped[str]=mapped_column(String(40),default=now)
+    processed_at:Mapped[str]=mapped_column(String(40),default='')
+    last_error:Mapped[str]=mapped_column(String(40),default='')
+    dead_letter:Mapped[int]=mapped_column(Integer,default=0)
+
+class MetaRefreshState(Base):
+    __tablename__='meta_refresh_states'
+    account_id:Mapped[str]=mapped_column(String(100),primary_key=True)
+    lease_until:Mapped[str]=mapped_column(String(40),default='')
+    lease_token:Mapped[str]=mapped_column(String(36),default='')
+    status:Mapped[str]=mapped_column(String(20),default='idle')
+    attempts:Mapped[int]=mapped_column(Integer,default=0)
+    next_attempt_at:Mapped[str]=mapped_column(String(40),default='')
+    last_error:Mapped[str]=mapped_column(String(40),default='')

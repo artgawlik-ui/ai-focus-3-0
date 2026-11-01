@@ -19,21 +19,33 @@ from backend.meta_models import MetaOAuthState,MetaConversation,MetaMessage,Meta
 router=APIRouter(prefix='/api/meta',tags=['Instagram development'])
 SCOPES={'instagram_basic','instagram_manage_messages'}
 GRAPH='https://graph.facebook.com/v26.0'
-TARGET_USERNAME='artur_uluru_hair'
+from backend.meta_flags import legacy_enabled,feature
+from backend.meta_models import MetaWebhookInbox,MetaRefreshState
 uid=lambda:str(uuid.uuid4())
 # Official exchange/refresh endpoints require secret-bearing query parameters.
 # Never allow httpx INFO logging of those URLs.
-logging.getLogger('httpx').setLevel(logging.WARNING)
+from backend.meta_logging import install as install_provider_log_guard
+install_provider_log_guard()
 
-def enabled():return os.getenv('META_ENABLED','false').lower()=='true'
-def require_config():
-    if not enabled():raise HTTPException(404,'Integracja Meta wyłączona')
+def enabled():return legacy_enabled()
+def require_config(module='crm_history'):
+    if not feature(module):raise HTTPException(404,'Moduł Meta wyłączony')
     if os.getenv('META_MODE')!='development':raise HTTPException(409,'Dozwolony wyłącznie tryb deweloperski')
-    missing=[k for k in ('META_APP_ID','META_APP_SECRET','META_CONFIG_ID','META_VERIFY_TOKEN','META_ENCRYPTION_KEY','META_TEST_ACCOUNT_ID','META_REDIRECT_URI') if not os.getenv(k)]
-    if missing:raise HTTPException(503,'Brak bezpiecznej konfiguracji integracji')
-    try:Fernet(os.environ['META_ENCRYPTION_KEY'].encode())
-    except Exception:raise HTTPException(503,'Nieprawidłowy klucz szyfrowania integracji')
-    if not os.environ['META_REDIRECT_URI'].startswith('https://'):raise HTTPException(503,'OAuth wymaga HTTPS')
+    required={
+        'oauth':('META_APP_ID','META_APP_SECRET','META_CONFIG_ID','META_ENCRYPTION_KEY','META_TEST_ACCOUNT_ID','META_REDIRECT_URI'),
+        'webhook_verify':('META_VERIFY_TOKEN',),
+        'ingest':('META_APP_SECRET','META_ENCRYPTION_KEY','META_TEST_ACCOUNT_ID'),
+        'crm_history':('META_ENCRYPTION_KEY',),
+        'diagnostics':('META_ENCRYPTION_KEY','META_TEST_ACCOUNT_ID'),
+    }[module]
+    # Legacy-only installations keep the original all-config guard unchanged.
+    if os.getenv('META_'+module.upper()+'_ENABLED') is None:
+        required=('META_APP_ID','META_APP_SECRET','META_CONFIG_ID','META_VERIFY_TOKEN','META_ENCRYPTION_KEY','META_TEST_ACCOUNT_ID','META_REDIRECT_URI')
+    if any(not os.getenv(k) for k in required):raise HTTPException(503,'Brak bezpiecznej konfiguracji integracji')
+    if 'META_ENCRYPTION_KEY' in required:
+        try:Fernet(os.environ['META_ENCRYPTION_KEY'].encode())
+        except Exception:raise HTTPException(503,'Nieprawidłowy klucz szyfrowania integracji')
+    if 'META_REDIRECT_URI' in required and not os.environ['META_REDIRECT_URI'].startswith('https://'):raise HTTPException(503,'OAuth wymaga HTTPS')
 
 def seal(kind,value):return Fernet(os.environ['META_ENCRYPTION_KEY'].encode()).encrypt(json.dumps({'kind':kind,'value':value}).encode()).decode()
 def unseal(kind,value):
@@ -50,10 +62,12 @@ def credentials(db):
 
 def graph_headers(token):return {'Authorization':'Bearer '+token}
 class InvalidMetaGrant(ValueError):pass
+class ConfirmedRevoked(InvalidMetaGrant):pass
 
 def validate_token(client,token):
     r=client.get(GRAPH+'/debug_token',params={'input_token':token},headers=graph_headers(os.environ['META_APP_ID']+'|'+os.environ['META_APP_SECRET']));r.raise_for_status();data=r.json()['data']
-    if not data.get('is_valid') or str(data.get('app_id'))!=os.environ['META_APP_ID'] or not SCOPES<=set(data.get('scopes',[])) or set(data.get('scopes',[]))-SCOPES-{'public_profile'}:raise InvalidMetaGrant('Invalid grant')
+    if data.get('is_valid') is False:raise ConfirmedRevoked('Grant invalidated')
+    if data.get('is_valid') is not True or str(data.get('app_id'))!=os.environ['META_APP_ID'] or not SCOPES<=set(data.get('scopes',[])) or set(data.get('scopes',[]))-SCOPES-{'public_profile'}:raise InvalidMetaGrant('Invalid grant')
     if data.get('type') not in ('SYSTEM_USER','BUSINESS_INTEGRATION_SYSTEM_USER'):raise InvalidMetaGrant('Unified Login requires system-user configuration')
     expiry=min((int(data[k]) for k in ('expires_at','data_access_expires_at') if data.get(k)),default=0)
     data['expires_at']=expiry
@@ -83,14 +97,18 @@ def public_message(m):
 @router.get('/status')
 def status(user=Depends(current),db=Depends(database)):
     data={'enabled':enabled(),'connected':False,'mode':'development_only','oauth_path':'unified_login','graph_version':'v26.0','outbound':False,'account_verified':False,'required_scopes':sorted(SCOPES),'credential_storage':'encrypted_postgresql; encryption key in environment','target_account_status':'not_authorized','delivery_status_supported':False,'can_approve':user.role=='manager' and user.email.casefold()==os.getenv('BOOTSTRAP_EMAIL','').casefold()}
-    if not enabled():return data
-    require_config();token=credentials(db)
+    data['modules']={name:feature(name) for name in ('oauth','webhook_verify','ingest','crm_history','diagnostics')}
+    if not feature('diagnostics'):return data
+    if not data['can_approve']:return data
+    require_config('diagnostics');token=credentials(db)
     data.update(connected=bool(token),account_verified=bool(token),expires_at=token.expires_at if token else None,reauthorization_required=not bool(token))
+    check=db.get(MetaRefreshState,os.environ['META_TEST_ACCOUNT_ID'])
+    data['credential_check']={'status':check.status,'attempts':check.attempts,'retry_at':check.next_attempt_at or None,'error_category':check.last_error or None} if check else {'status':'not_checked'}
     return data
 
 @router.post('/oauth/start')
 def oauth_start(request:Request,response:Response,user=Depends(manager),db=Depends(database)):
-    require_config();owner(user)
+    require_config('oauth');owner(user)
     if db.scalar(select(func.count()).select_from(MetaOAuthState).where(MetaOAuthState.user_id==user.id,MetaOAuthState.expires_at>now(),MetaOAuthState.consumed==0))>=3:raise HTTPException(429,'Zbyt wiele rozpoczętych autoryzacji')
     state=secrets.token_urlsafe(32);nonce=secrets.token_urlsafe(32)
     db.execute(delete(MetaOAuthState).where(MetaOAuthState.expires_at<now()))
@@ -100,12 +118,13 @@ def oauth_start(request:Request,response:Response,user=Depends(manager),db=Depen
 
 @router.get('/oauth/callback')
 def oauth_callback(request:Request,response:Response,state:str='',code:str='',error:str='',error_reason:str='',db=Depends(database)):
-    require_config()
+    require_config('oauth')
     row=db.get(MetaOAuthState,digest(state));nonce=request.cookies.get('focus_meta_oauth','')
     if not row or row.consumed or row.expires_at<now() or not hmac.compare_digest(row.nonce_hash,digest(nonce)):raise HTTPException(403,'Nieprawidłowa lub wygasła autoryzacja')
     session=db.get(LoginSession,row.session_hash);user=db.get(User,row.user_id)
     if not session or session.user_id!=row.user_id or session.expires<now() or not user or not user.active:raise HTTPException(403,'Sesja autoryzacji wygasła')
     owner(user)
+    if not hmac.compare_digest(row.session_hash,digest(request.cookies.get('focus_session',''))):raise HTTPException(403,'Sesja autoryzacji niezgodna')
     code=code.removesuffix('#_')
     try:
         changed=db.execute(update(MetaOAuthState).where(MetaOAuthState.state_hash==row.state_hash,MetaOAuthState.consumed==0).values(consumed=1,code_hash=digest(code) if code and not error and not error_reason else None));db.commit()
@@ -114,7 +133,6 @@ def oauth_callback(request:Request,response:Response,state:str='',code:str='',er
     if changed.rowcount!=1:raise HTTPException(403,'Autoryzacja wykorzystana')
     response.delete_cookie('focus_meta_oauth',path='/api/meta/oauth/callback',secure=True,httponly=True,samesite='lax')
     if error or error_reason or not code:return {'connected':False,'reason':'authorization_cancelled'}
-    code=code.removesuffix('#_')
     try:
         with httpx.Client(timeout=20,follow_redirects=False) as client:
             r=client.get(GRAPH+'/oauth/access_token',params={'client_id':os.environ['META_APP_ID'],'client_secret':os.environ['META_APP_SECRET'],'redirect_uri':os.environ['META_REDIRECT_URI'],'code':code});r.raise_for_status();token=r.json()['access_token']
@@ -122,7 +140,6 @@ def oauth_callback(request:Request,response:Response,state:str='',code:str='',er
             r=client.get(GRAPH+'/me',params={'fields':'client_business_id'},headers=graph_headers(token));r.raise_for_status();business=r.json()
             r=client.get(GRAPH+'/me/assigned_instagram_accounts',params={'fields':'id,username'},headers=graph_headers(token));r.raise_for_status()
             account=next(a for a in r.json()['data'] if str(a['id'])==os.environ['META_TEST_ACCOUNT_ID'])
-            if account['username'].casefold()==TARGET_USERNAME:raise ValueError('Only distinct test accounts are allowed')
         account_id=str(account['id']);stored=db.get(MetaCredential,account_id)
         if not stored:stored=MetaCredential(account_id=account_id);db.add(stored)
         stored.business_id=str(business['client_business_id']);stored.subject_id=str(debug.get('user_id') or business['id']);stored.username=account['username'];stored.config_id=os.environ['META_CONFIG_ID'];stored.token_ciphertext=seal('token',token);stored.revoked=0;stored.checked_at=now()
@@ -134,15 +151,13 @@ def oauth_callback(request:Request,response:Response,state:str='',code:str='',er
 
 @router.post('/refresh')
 def refresh(user=Depends(manager),db=Depends(database)):
-    require_config();owner(user);row=credentials(db)
-    if not row:raise HTTPException(409,'Wymagana ponowna autoryzacja')
-    try:
-        with httpx.Client(timeout=20,follow_redirects=False) as client:debug=validate_token(client,unseal('token',row.token_ciphertext))
-        expiry=int(debug.get('expires_at',0));row.expires_at=datetime.fromtimestamp(expiry,timezone.utc).isoformat() if expiry else '';row.checked_at=now();db.commit()
-        return {'validated':True,'rotated':False,'reauthorize_before_expiry':bool(expiry),'note':'SUAT nie używa ig_refresh_token; bez business_management stosujemy ponowny OAuth przed wygaśnięciem.'}
-    except Exception:
-        row.revoked=1;row.token_ciphertext='';db.commit()
-        raise HTTPException(502,'Token nieaktywny; połączenie lokalnie wyłączone, wymagana autoryzacja')
+    require_config('oauth');owner(user)
+    # Release the authentication dependency's transaction before provider I/O.
+    db.commit()
+    from backend.meta_refresh import check
+    result=check(os.environ['META_TEST_ACCOUNT_ID'])
+    db.expire_all()
+    return result
 
 @router.post('/disconnect')
 def disconnect(user=Depends(manager),db=Depends(database)):
@@ -153,69 +168,41 @@ def disconnect(user=Depends(manager),db=Depends(database)):
 
 @router.get('/webhook')
 def verify_webhook(request:Request):
-    require_config();q=request.query_params
+    require_config('webhook_verify');q=request.query_params
     if q.get('hub.mode')!='subscribe' or not hmac.compare_digest(q.get('hub.verify_token',''),os.environ['META_VERIFY_TOKEN']):raise HTTPException(403,'Nieprawidłowa weryfikacja webhooka')
     challenge=q.get('hub.challenge','')
     if not challenge or len(challenge)>200:raise HTTPException(400,'Nieprawidłowe wyzwanie')
     return Response(challenge,media_type='text/plain')
 
 @router.post('/webhook')
-async def webhook(request:Request,db=Depends(database)):
-    require_config();raw=await request.body()
+async def webhook(request:Request):
+    require_config('ingest')
+    from backend.meta_inbox import MAX_BODY,MAX_EVENTS,persist
+    raw=bytearray()
+    async for chunk in request.stream():
+        if len(raw)+len(chunk)>MAX_BODY:raise HTTPException(413,'Webhook przekracza limit')
+        raw.extend(chunk)
     expected='sha256='+hmac.new(os.environ['META_APP_SECRET'].encode(),raw,hashlib.sha256).hexdigest()
     if not hmac.compare_digest(request.headers.get('X-Hub-Signature-256',''),expected):raise HTTPException(403,'Nieprawidłowy podpis webhooka')
     try:payload=json.loads(raw)
     except (ValueError,UnicodeDecodeError):raise HTTPException(400,'Nieprawidłowy JSON')
     if not isinstance(payload,dict) or payload.get('object')!='instagram' or not isinstance(payload.get('entry'),list):raise HTTPException(400,'Nieprawidłowy webhook')
-    # All processing is one transaction; a retried batch cannot duplicate CRM activities.
+    count=sum(len(e.get('messaging',[])) for e in payload['entry'] if isinstance(e,dict) and isinstance(e.get('messaging'),list))
+    if count>MAX_EVENTS:raise HTTPException(413,'Zbyt wiele zdarzeń')
     try:
-        for entry in payload['entry']:
-            if not isinstance(entry,dict) or str(entry.get('id',''))!=os.environ['META_TEST_ACCOUNT_ID']:continue
-            grant=db.scalar(select(MetaCredential).where(MetaCredential.account_id==os.environ['META_TEST_ACCOUNT_ID']).with_for_update())
-            if grant and grant.revoked:continue
-            events=entry.get('messaging',[])
-            if not isinstance(events,list):continue
-            for event in events:
-                if not isinstance(event,dict):continue
-                message=event.get('message',{})
-                if not isinstance(message,dict):continue
-                mid=message.get('mid')
-                if not isinstance(mid,str) or not 0<len(mid)<=250:continue
-                sender=str(event.get('sender',{}).get('id',''));recipient=str(event.get('recipient',{}).get('id',''))
-                account=os.environ['META_TEST_ACCOUNT_ID'];echo=sender==account and message.get('is_echo') is True
-                if not echo and recipient!=account:continue
-                peer=recipient if echo else sender
-                if not peer or peer==account or len(peer)>100:continue
-                try:at=datetime.fromtimestamp(int(event['timestamp'])/1000,timezone.utc)
-                except (KeyError,ValueError,TypeError,OverflowError,OSError):continue
-                if at>datetime.now(timezone.utc)+timedelta(minutes=5) or at<datetime.now(timezone.utc)-timedelta(days=90):continue
-                c=db.scalar(select(MetaConversation).where(MetaConversation.account_id==account,MetaConversation.peer_id==peer).with_for_update())
-                if not c:
-                    try:
-                        with db.begin_nested():
-                            c=MetaConversation(id=uid(),account_id=account,peer_id=peer);db.add(c);db.flush()
-                    except IntegrityError:c=db.scalar(select(MetaConversation).where(MetaConversation.account_id==account,MetaConversation.peer_id==peer).with_for_update())
-                existing=db.scalar(select(MetaMessage).where(MetaMessage.conversation_id==c.id,MetaMessage.external_id==mid))
-                if existing:
-                    if message.get('is_deleted') and existing.status!='deleted':existing.body_ciphertext='';existing.status='deleted'
-                    continue
-                deleted=bool(message.get('is_deleted'));text=message.get('text','')
-                if not isinstance(text,str):text=''
-                text=text[:10000]
-                item=MetaMessage(id=uid(),conversation_id=c.id,external_id=mid,status='deleted' if deleted else 'api_confirmed_sent' if echo else 'received',direction='outbound' if echo else 'inbound',body_ciphertext=seal('message',text) if text and not deleted and at>datetime.now(timezone.utc)-timedelta(days=30) else '',occurred_at=at.isoformat())
-                try:
-                    with db.begin_nested():db.add(item);db.flush()
-                except IntegrityError:continue
-                if not echo and not deleted:
-                    c.last_inbound_at=max(c.last_inbound_at or '',at.isoformat())
-                    if opt_out(text):c.opted_out=1
-                if c.salon_id:
-                    salon=db.get(Salon,c.salon_id)
-                    audit(db,c,salon.owner_id,'instagram_deleted' if deleted else 'instagram_received' if not echo else 'instagram_sent','Webhook Meta potwierdził zdarzenie; źródło meta_message:'+item.id)
-        db.commit()
-    except Exception:
-        db.rollback();raise HTTPException(503,'Zapis zdarzeń chwilowo niedostępny; ponów webhook')
+        # Standard server thread pool only for bounded SQL, never a new worker.
+        import anyio
+        if not hasattr(request.app.state,'meta_inbox_limiter'):
+            request.app.state.meta_inbox_limiter=anyio.CapacityLimiter(4)
+        await anyio.to_thread.run_sync(persist,payload,limiter=request.app.state.meta_inbox_limiter)
+    except Exception:raise HTTPException(503,'Trwały zapis chwilowo niedostępny; ponów webhook')
     return {'accepted':True}
+
+@router.get('/inbox/diagnostics')
+def inbox_diagnostics(user=Depends(manager),db=Depends(database)):
+    owner(user);require_config('diagnostics')
+    from backend.meta_inbox import diagnostics
+    return diagnostics(db)
 
 @router.get('/conversations')
 def conversations(user=Depends(current),db=Depends(database)):
@@ -279,13 +266,13 @@ def expire_content(db,at=None):
     db.execute(delete(MetaOAuthState).where(MetaOAuthState.expires_at<at.isoformat()));db.commit()
 
 def agent_replies(db,salon_id):
-    if not enabled():return []
+    if not feature('crm_history'):return []
     items=db.scalars(select(MetaMessage).join(MetaConversation).where(MetaConversation.salon_id==salon_id,MetaMessage.status=='received',MetaMessage.body_ciphertext!='').order_by(MetaMessage.occurred_at.desc()).limit(15))
     return [SimpleNamespace(id='meta_message:'+m.id,kind='instagram_received',created_at=m.occurred_at,body=unseal('message',m.body_ciphertext)) for m in items if m.occurred_at>(datetime.now(timezone.utc)-timedelta(days=30)).isoformat()]
 
 @router.post('/subscribe')
 def subscribe(user=Depends(manager),db=Depends(database)):
-    require_config();owner(user);token=credentials(db)
+    require_config('ingest');owner(user);token=credentials(db)
     if not token:raise HTTPException(409,'Wymagane autoryzowane konto testowe')
     try:
         with httpx.Client(timeout=20,follow_redirects=False) as client:
@@ -321,6 +308,7 @@ async def privacy_callback(kind,request,db):
     for row in rows:
         row.token_ciphertext='';row.revoked=1
         if kind=='deletion':
+            db.execute(update(MetaWebhookInbox).where(MetaWebhookInbox.account_id==row.account_id).values(payload_ciphertext='',status='done',processed_at=now(),lease_token='',lease_until=''))
             conversation_ids=select(MetaConversation.id).where(MetaConversation.account_id==row.account_id)
             db.execute(update(MetaMessage).where(MetaMessage.conversation_id.in_(conversation_ids)).values(body_ciphertext=''))
             row.username='';row.business_id='';row.subject_id='erased:'+digest(row.subject_id)
@@ -351,21 +339,10 @@ def deletion_status(id:str,db=Depends(database)):
 def privacy_policy():
     controller=os.getenv('PRIVACY_CONTROLLER_NAME','Nazwa administratora wymaga uzupełnienia przez właściciela przed App Review')
     contact=os.getenv('PRIVACY_CONTACT_EMAIL','Kontakt z administratorem: przez właściciela konta Ai Focus')
-    return Response('Ai Focus 3.0 — polityka integracji testowej Meta\nAdministrator: '+controller+'\nKontakt: '+contact+'\nCel: obsługa autoryzowanego konta testowego i zapis zdarzeń Instagram w CRM. Bez automatycznej wysyłki.\nZakres: identyfikatory kont i wiadomości, treść rozmów, uprawnienia i zaszyfrowany token. Dane nie są sprzedawane ani używane do treningu modeli.\nPrzetwarzanie wymaga ustalenia podstawy prawnej przez administratora; publiczny profil nie stanowi zgody marketingowej.\nTreści rozmów: maksymalnie 30 dni; minimalne identyfikatory zdarzeń: 90 dni. Kopie i odrębne rekordy CRM podlegają polityce administratora.\nProcesor hostingu: Render, region Frankfurt; dostawca platformy: Meta. Przed uruchomieniem kont rzeczywistych administrator weryfikuje DPA i transfery danych.\nPrawa: dostęp, sprostowanie, usunięcie, ograniczenie, sprzeciw i skarga do UODO — kontakt powyżej.\nOdłączenie w ustawieniach CRM usuwa lokalny token. Uprawnienia można odwołać również w ustawieniach integracji biznesowych Meta.\nŻądania usunięcia Meta są weryfikowane podpisem; niejednoznaczną tożsamość administrator weryfikuje ręcznie.\nTo dokument wdrożenia testowego, wymagający zatwierdzenia i uzupełnienia tożsamości administratora przed App Review.\n',media_type='text/plain')
+    return Response('Ai Focus 3.0 — polityka integracji testowej Meta\nAdministrator: '+controller+'\nKontakt: '+contact+'\nCel: obsługa autoryzowanego konta testowego i zapis zdarzeń Instagram w CRM. Bez automatycznej wysyłki.\nZakres: identyfikatory kont i wiadomości, treść rozmów, uprawnienia i zaszyfrowany token. Dane nie są sprzedawane ani używane do treningu modeli.\nPrzetwarzanie wymaga ustalenia podstawy prawnej przez administratora; publiczny profil nie stanowi zgody marketingowej.\nTreści rozmów: maksymalnie 30 dni; minimalne identyfikatory zdarzeń: 90 dni. Zakończony inbox: zaszyfrowany payload 7 dni, metadane 90 dni. Zdarzenia błędne wymagają przeglądu administratora i osobnej decyzji o usunięciu. Kopie i odrębne rekordy CRM podlegają polityce administratora.\nProcesor hostingu: Render, region Frankfurt; dostawca platformy: Meta. Przed uruchomieniem kont rzeczywistych administrator weryfikuje DPA i transfery danych.\nPrawa: dostęp, sprostowanie, usunięcie, ograniczenie, sprzeciw i skarga do UODO — kontakt powyżej.\nOdłączenie w ustawieniach CRM usuwa lokalny token. Uprawnienia można odwołać również w ustawieniach integracji biznesowych Meta.\nŻądania usunięcia Meta są weryfikowane podpisem; niejednoznaczną tożsamość administrator weryfikuje ręcznie.\nTo dokument wdrożenia testowego, wymagający zatwierdzenia i uzupełnienia tożsamości administratora przed App Review.\n',media_type='text/plain')
 
 def maintain_credentials(db):
-    """Daily validity check; no broad business_management permission or send API."""
-    if not enabled():return
-    require_config()
-    for row in db.scalars(select(MetaCredential).where(MetaCredential.revoked==0).with_for_update(skip_locked=True)):
-        if row.expires_at and row.expires_at<=now():row.revoked=1;row.token_ciphertext='';continue
-        if row.checked_at>(datetime.now(timezone.utc)-timedelta(hours=24)).isoformat():continue
-        try:
-            with httpx.Client(timeout=20,follow_redirects=False) as client:validate_token(client,unseal('token',row.token_ciphertext))
-            row.checked_at=now()
-        except InvalidMetaGrant:
-            row.revoked=1;row.token_ciphertext=''
-        except httpx.HTTPStatusError as error:
-            if error.response.status_code in (400,401,403):row.revoked=1;row.token_ciphertext=''
-        except Exception:logging.getLogger('meta').warning('Meta credential check deferred; no customer action performed')
-    db.commit()
+    if not feature('oauth'):return
+    require_config('oauth');db.commit()
+    from backend.meta_refresh import maintain
+    maintain();db.expire_all()

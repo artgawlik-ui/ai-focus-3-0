@@ -1,0 +1,29 @@
+[
+  {
+    "url": "https://developers.facebook.com/documentation/instagram-platform/instagram-api-with-unified-login/get-started",
+    "retrieved_at": "2026-11-01T07:48:00.331445+00:00",
+    "http_status": 200,
+    "sha256": "3118d8a862844181773c198a8c9aa36407d24ff59fc4e9d1ea918362894b31f1",
+    "contains_v26": true,
+    "contains_debug_token": false,
+    "contains_access_token_endpoint": true
+  },
+  {
+    "url": "https://developers.facebook.com/documentation/instagram-platform/instagram-api-with-unified-login/authentication",
+    "retrieved_at": "2026-11-01T07:48:01.166542+00:00",
+    "http_status": 200,
+    "sha256": "5b92655b8f4cd40151abbfa309f933e3af5cc89c32e249555b2a6fc39b493b4a",
+    "contains_v26": true,
+    "contains_debug_token": false,
+    "contains_access_token_endpoint": true
+  },
+  {
+    "url": "https://developers.facebook.com/docs/graph-api/reference/debug_token/",
+    "retrieved_at": "2026-11-01T07:48:02.631668+00:00",
+    "http_status": 200,
+    "sha256": "dce5afa46f7e1f53045f803645d7c708f21cb7ba13da0dd3aa2542abc2669ad0",
+    "contains_v26": true,
+    "contains_debug_token": true,
+    "contains_access_token_endpoint": false
+  }
+]
