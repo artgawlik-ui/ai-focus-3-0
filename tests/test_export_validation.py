@@ -75,3 +75,13 @@ def test_import_cannot_trigger_restore(monkeypatch):
     monkeypatch.setattr(subprocess,'run',forbidden)
     module=importlib.import_module('scripts.isolated_export_restore')
     assert callable(module.main)
+
+
+def test_synthetic_restore_override_is_strict_and_sanitized(tmp_path):
+    import subprocess,sys,os,json
+    output=tmp_path/'result.json'
+    result=subprocess.run([sys.executable,'-m','scripts.isolated_export_restore','--archive',str(tmp_path/'absent'),'--sha256','0'*64,'--output',str(output),'--synthetic-source-name','unapproved-fixture'],env={**os.environ,'APP_ENV':'test'},capture_output=True,text=True)
+    data=json.loads(output.read_text())
+    assert result.returncode==1 and data['error_category']=='invalid_synthetic_source_name'
+    assert 'unapproved-fixture' not in result.stdout+result.stderr+output.read_text()
+    assert data['temporary_plaintext_removed'] and 'isolation' not in data

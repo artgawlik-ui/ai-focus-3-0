@@ -8,6 +8,7 @@ def main():
     import argparse,tempfile
     parser=argparse.ArgumentParser(description='Lokalny, bezsieciowy test eksportu Focus 3; bez operacji produkcyjnych')
     parser.add_argument('--archive',required=True);parser.add_argument('--sha256',required=True);parser.add_argument('--output',required=True)
+    parser.add_argument('--synthetic-source-name', default=None, help='Wyłącznie lokalnie wygenerowana baza focus3_synthetic_<hex>')
     args=parser.parse_args()
     archive_path=Path(args.archive)
     work=tempfile.TemporaryDirectory(prefix='focus3-export-check-')
@@ -36,6 +37,7 @@ def main():
 
     try:
      if os.getenv('APP_ENV')=='production':raise ExportError('production_runtime_forbidden')
+     if args.synthetic_source_name is not None and not re.fullmatch(r'focus3_synthetic_[a-f0-9]{12}', args.synthetic_source_name):raise ExportError('invalid_synthetic_source_name')
      info=inspect_archive(archive_path)
      if info['archive_sha256']!=args.sha256:raise ExportError('archive_sha256_mismatch')
      toc,info=extract_checked(archive_path,root/'validated');dump=toc.parent
@@ -44,7 +46,8 @@ def main():
      report['toc']={}
      for key,pattern in {'database_version':r'Dumped from database version: ([^\n]+)','pg_dump_version':r'Dumped by pg_dump version: ([^\n]+)','archive_created_at':r'Archive created at ([^\n]+)','format':r'Format: ([^\n]+)'}.items():
       m=re.search(pattern,toc_list);report['toc'][key]=m[1].strip() if m else None
-     report['toc']['database_name_matches_expected']=bool(re.search(r'dbname: ai_focus_3_0_db(?:\n|$)',toc_list))
+     report['synthetic_source']=args.synthetic_source_name is not None
+     report['toc']['database_name_matches_expected']=bool(re.search(r'dbname: '+re.escape(args.synthetic_source_name or 'ai_focus_3_0_db')+r'(?:\n|$)',toc_list))
      if not report['toc']['database_name_matches_expected']:raise ExportError('unexpected_database')
      report['toc']['header_entries']=int(re.search(r'TOC Entries: ([0-9]+)',toc_list)[1])
      report['toc']['entries']=len([l for l in toc_list.splitlines() if l and not l.startswith(';')])

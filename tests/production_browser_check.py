@@ -2,9 +2,10 @@
 import json, os
 from pathlib import Path
 from playwright.sync_api import sync_playwright
-origin=os.getenv('FOCUS_TEST_ORIGIN','https://ai-focus-3-0.onrender.com')
+from scripts.local_test_policy import local_origin
+origin=local_origin()
 isolated=origin.startswith('http://127.0.0.1:')
-credentials=json.loads(Path(os.getenv('FOCUS_TEST_CREDENTIAL_FILE','.render-auth/verification.json')).read_text())
+credentials=json.loads(Path(os.environ['FOCUS_TEST_CREDENTIAL_FILE']).read_text())
 results=[]
 with sync_playwright() as p:
     cases=[('chromium-desktop',p.chromium,{'viewport':{'width':1440,'height':1050}},os.getenv('FOCUS_TEST_CHROMIUM_EXECUTABLE','/usr/bin/chromium')),('webkit-iphone',p.webkit,p.devices['iPhone 13'],os.getenv('FOCUS_TEST_WEBKIT_EXECUTABLE','/workspace/ai-focus-3-0/.tools/run-webkit.sh'))]

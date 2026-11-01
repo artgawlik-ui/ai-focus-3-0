@@ -2,9 +2,10 @@
 import argparse,json,time
 from pathlib import Path
 import httpx
+from scripts.local_test_policy import local_origin
 
 def check(expected_version):
-    origin='https://ai-focus-3-0.onrender.com'
+    origin=local_origin()
     result={'origin':origin,'expected_version':expected_version,'requests':{},'mutations':0}
     with httpx.Client(base_url=origin,follow_redirects=False,timeout=20) as client:
         for path,expected in (('/api/health',200),('/api/auth/me',401),('/api/salons',401),('/api/meta/status',401),('/api/meta/webhook',404),('/api/meta/oauth/callback',404),('/manifest.webmanifest',200),('/sw.js',200)):
