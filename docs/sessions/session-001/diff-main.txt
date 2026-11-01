@@ -1,4 +1,4 @@
- .github/workflows/tests.yml                        |   5 +
+ .github/workflows/tests.yml                        |  11 +
  backend/db.py                                      |   5 +-
  backend/main.py                                    |  16 +-
  backend/meta.py                                    | 173 ++++-----
@@ -68,7 +68,13 @@
  .../evidence/restore-and-dry-run.json              | 418 +++++++++++++++++++++
  docs/meta/3.0.4/salon-cleanup/scope-manifest.json  |  57 +++
  docs/sessions/session-001/ACCEPTANCE.md            |  46 +++
+ docs/sessions/session-001/CHANGES.md               |  29 ++
+ docs/sessions/session-001/OPERATIONS.md            |  68 ++++
+ docs/sessions/session-001/REPORT.md                |  95 +++++
  docs/sessions/session-001/START.md                 |  19 +
+ docs/sessions/session-001/diff-main.txt            |  99 +++++
+ docs/sessions/session-001/evidence.json            |  41 ++
+ docs/sessions/session-001/synthetic-restore.json   | 403 ++++++++++++++++++++
  frontend/src/MetaPanel.tsx                         |   6 +-
  migrations/versions/004_meta_durable_inbox.py      |  37 ++
  scripts/cleanup_backup.py                          |  15 +
@@ -96,4 +102,4 @@
  tests/test_meta_migration.py                       |  42 +++
  tests/test_salon_cleanup.py                        | 116 ++++++
  tests/test_synthetic_recovery.py                   |  36 ++
- 98 files changed, 4621 insertions(+), 118 deletions(-)
+ 104 files changed, 5362 insertions(+), 118 deletions(-)

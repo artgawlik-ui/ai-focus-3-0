@@ -77,6 +77,9 @@ Rollback i propozycje operacji zastrzeżonych: OPERATIONS.md; wymagają osobnej 
 ## Zmiany i commity
 
 Lista plików sesji oraz commity implementacyjne: CHANGES.md i git log.
+CI poprawki 5854732: https://github.com/artgawlik-ui/ai-focus-3-0/actions/runs/41319894994
+W chwili zapisu raportu CI w toku; nie jest przedstawione jako zakończony wynik.
+Stan finalnego HEAD należy sprawdzić w Checks PR #3; wyniki lokalne są odrębnymi dowodami.
 Raport nie zawiera danych klientów, identyfikatorów produkcyjnych, haseł ani tokenów.
 
 ## Szacunek i wznowienie
