@@ -1,0 +1,50 @@
+{
+  "tested_code_commit": "d002989",
+  "base_sha": "d15265b26524d594bdbcb4bc6b63fcbc398a1424",
+  "backend": {
+    "tests": "140",
+    "failures": "0",
+    "errors": "0",
+    "skipped": "0",
+    "time": "47.377"
+  },
+  "operator_cleanup_tests_not_collected": 11,
+  "operator_collection_only_count": 11,
+  "new_agent_flag_tests": 2,
+  "new_application_backup_integrity_tests": 4,
+  "percentage_coverage_measured": false,
+  "commands": {
+    "backend": "DATABASE_URL=<local focus3_test> python -m pytest -q --ignore=tests/test_salon_cleanup.py --tb=no --show-capture=no",
+    "operators_collection_only": "python -m pytest --collect-only -q tests/test_salon_cleanup.py",
+    "frontend": "npm run build --prefix frontend",
+    "e2e": "DATABASE_URL=<local focus3_test> python -m tests.ci_e2e",
+    "pip_audit": "pip-audit -r requirements.txt --cache-dir /tmp/focus3-pip-audit --format=json",
+    "npm_audit": "npm audit --prefix frontend --json",
+    "schema_diff": "git diff origin/main -- backend/db.py backend/meta_models.py migrations",
+    "alembic": "python -m alembic heads"
+  },
+  "frontend": "PASS",
+  "browsers": [
+    "chromium-desktop: PASS",
+    "webkit-iphone: PASS"
+  ],
+  "pip_audit": {
+    "dependencies": 32,
+    "vulnerabilities": 0
+  },
+  "npm_audit": {
+    "info": 0,
+    "low": 0,
+    "moderate": 0,
+    "high": 0,
+    "critical": 0,
+    "total": 0
+  },
+  "alembic_head": "004",
+  "schema_diff_vs_production_commit": "empty",
+  "production_mutations": 0,
+  "production_sql": "BLOCKED_BY_ALLOWLIST",
+  "decision": "BLOCKED",
+  "remaining_basic_sessions": 5,
+  "remaining_dm_min": 1
+}

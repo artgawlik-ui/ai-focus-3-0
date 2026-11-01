@@ -1,0 +1,33 @@
+{
+  "/api/health": {
+    "status": 200,
+    "cache_control": "no-store",
+    "hsts": true,
+    "version": "3.0.3"
+  },
+  "/api/auth/me": {
+    "status": 401,
+    "cache_control": "no-store",
+    "hsts": true
+  },
+  "/api/salons": {
+    "status": 401,
+    "cache_control": "no-store",
+    "hsts": true
+  },
+  "/api/meta/status": {
+    "status": 401,
+    "cache_control": "no-store",
+    "hsts": true
+  },
+  "/api/meta/oauth/callback": {
+    "status": 404,
+    "cache_control": "no-store",
+    "hsts": true
+  },
+  "/api/meta/webhook": {
+    "status": 404,
+    "cache_control": "no-store",
+    "hsts": true
+  }
+}
