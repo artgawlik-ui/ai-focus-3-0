@@ -13,7 +13,10 @@ if url.startswith('postgres://'):
     url = url.replace('postgres://', 'postgresql+psycopg://', 1)
 elif url.startswith('postgresql://'):
     url = url.replace('postgresql://', 'postgresql+psycopg://', 1)
-engine = create_engine(url, pool_pre_ping=True, hide_parameters=True, connect_args={'check_same_thread': False} if url.startswith('sqlite') else {})
+# Two connections per existing process; bounded waits, no overflow on Starter.
+engine = create_engine(url, pool_pre_ping=True, hide_parameters=True,
+    **({'connect_args':{'check_same_thread':False}} if url.startswith('sqlite') else
+       {'pool_size':2,'max_overflow':0,'pool_timeout':5}))
 if url.startswith('sqlite'):
     from sqlalchemy import event
     @event.listens_for(engine, 'connect')

@@ -15,7 +15,7 @@ from backend.schemas import *
 
 logging.basicConfig(level=logging.INFO)
 log = logging.getLogger('focus')
-app = FastAPI(title='Ai Focus 3.0', version='3.0.2')
+app = FastAPI(title='Ai Focus 3.0', version='3.0.3')
 from backend.limits import BodyLimitMiddleware
 app.add_middleware(BodyLimitMiddleware)
 uid = lambda: str(uuid.uuid4())
@@ -62,7 +62,7 @@ async def headers(request: Request, call_next):
 @app.get('/api/health')
 def health(db=Depends(database)):
     db.execute(select(func.count()).select_from(User))
-    return {'status':'ok','version':'3.0.2'}
+    return {'status':'ok','version':'3.0.3'}
 
 @app.post('/api/auth/login')
 def login(payload:LoginIn, request:Request, response:Response, db=Depends(database)):
@@ -242,11 +242,13 @@ def dashboard(days:int=Query(30,ge=1,le=366),user=Depends(current),db=Depends(da
     return {'total':len(salons),'active':sum(s.status=='active' for s in salons),'potential':sum(s.potential for s in salons),'weighted_forecast':round(sum(s.potential*weights[s.stage] for s in salons)),'forecast_note':'Model orientacyjny: stałe wagi etapów, bez danych zamówień. Potencjał miesięczny w PLN.','pipeline':pipeline,'activities':len(activities),'days':days,'conversion':round(100*pipeline['won']/max(1,pipeline['won']+pipeline['lost']),1),'follow_ups':due,'team':[{'name':u.name,'salons':sum(s.owner_id==u.id for s in salons),'activities':sum(a.user_id==u.id for a in activities)} for u in db.scalars(select(User).where(User.active==1))] if user.role=='manager' else []}
 @app.get('/api/integrations')
 def integrations(user=Depends(current),db=Depends(database)):
-    from backend.meta import enabled,credentials,require_config
-    meta={'connected':False,'outbound':False,'mode':'disabled'}
-    if enabled():
+    from backend.meta import credentials,require_config
+    from backend.meta_flags import feature,MODULES
+    modules={name:feature(name) for name in MODULES}
+    meta={'connected':False,'outbound':False,'mode':'development' if any(modules.values()) else 'disabled','modules':modules}
+    if feature('diagnostics') and user.role=='manager' and user.email.casefold()==os.getenv('BOOTSTRAP_EMAIL','').casefold():
         try:
-            require_config();meta.update(connected=bool(credentials(db)),mode='development')
+            require_config('diagnostics');meta.update(connected=bool(credentials(db)),mode='development')
         except HTTPException:meta['mode']='needs_configuration'
     return {'instagram':meta,'google_calendar':{'connected':False,'mode':'manual_link'},'livespace':{'connected':False,'mode':'adapter_schema_ready'},'agent':{'mode':'openai' if os.getenv('AI_PAID_PROCESSING_APPROVED','false').lower()=='true' and os.getenv('OPENAI_API_KEY') else 'rules','qualification_enabled':os.getenv('AGENT_V2_ENABLED','false').lower()=='true','outbound':False},'discovery':{'provider':'OpenStreetMap','connected':True,'note':'Publiczne wpisy wymagają weryfikacji; nie stanowią zgody na kontakt.'}}
 @app.post('/api/agent/jobs',status_code=202)
@@ -324,7 +326,7 @@ def deactivate_user(id:str,user=Depends(manager),db=Depends(database)):
 @app.get('/api/admin/integrity')
 def database_integrity(user=Depends(manager)):
     from scripts.backup import fingerprint
-    return {'tables':fingerprint(os.environ['DATABASE_URL'],include_metadata=True),'version':'3.0.2'}
+    return {'tables':fingerprint(os.environ['DATABASE_URL'],include_metadata=True),'version':'3.0.3'}
 
 @app.post('/api/admin/backup')
 def download_backup(payload:BackupIn,user=Depends(manager)):

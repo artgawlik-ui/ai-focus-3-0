@@ -6,6 +6,7 @@ from sqlalchemy import select, update
 from backend.db import Session, Job, Salon, Activity, User, now
 from backend.main import uid
 log=logging.getLogger('worker')
+_last_meta_monitor=0.0
 
 def run_once():
     with Session() as db:
@@ -52,15 +53,38 @@ def run_once():
 
 def maintain_meta_once():
     # A missing/invalid optional integration must never starve the CRM queue.
-    from backend.meta import enabled,expire_content,maintain_credentials
+    from backend.meta import expire_content,maintain_credentials
+    from backend.meta_flags import feature
+    from backend.meta_inbox import maintenance
     try:
         with Session() as db:
             # Retention continues even while ingest/OAuth are disabled.
             expire_content(db)
-            if enabled():maintain_credentials(db)
+            maintenance(db)
+            if feature('oauth'):maintain_credentials(db)
         return True
     except Exception:
         log.warning('Meta maintenance deferred; CRM queue continues; no customer action performed')
+        return False
+
+def process_meta_once():
+    global _last_meta_monitor
+    # Existing process/cycle only. Optional integration cannot starve CRM jobs.
+    try:
+        from backend.meta_inbox import drain_once,maintenance
+        from backend.meta_refresh import maintain
+        from backend.meta import require_config
+        from backend.meta_flags import feature
+        if feature('crm_history'):
+            require_config('crm_history');drain_once()
+        if time.monotonic()-_last_meta_monitor>=60:
+            with Session() as db:maintenance(db)
+            _last_meta_monitor=time.monotonic()
+        if feature('oauth'):
+            require_config('oauth');maintain()
+        return True
+    except Exception:
+        log.warning('Meta cycle deferred; CRM queue continues')
         return False
 
 if __name__=='__main__':
@@ -76,7 +100,9 @@ if __name__=='__main__':
             if time.monotonic()-last_cleanup>3600:
                 maintain_meta_once()
                 last_cleanup=time.monotonic()
-            if not run_once(): time.sleep(2)
+            process_meta_once()
+            run_once()
+            time.sleep(2)
         except Exception:
             log.warning('Queue unavailable; retrying after database readiness check')
             time.sleep(5)
