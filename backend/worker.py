@@ -23,7 +23,10 @@ def run_once():
             salon=db.get(Salon,job.salon_id)
             requester=db.get(User,job.user_id)
             if not requester or not requester.active or (requester.role!='manager' and salon.owner_id!=requester.id):raise ValueError('Access revoked')
-            if salon.status=='do_not_contact': raise ValueError('Kontakt zablokowany')
+            from backend.meta_models import MetaConversation
+            # Rezygnacja jest trwałą preferencją, również po retencji/odłączeniu Meta.
+            opted_out=db.scalar(select(MetaConversation.id).where(MetaConversation.salon_id==salon.id,MetaConversation.opted_out==1).limit(1))
+            if salon.status=='do_not_contact' or opted_out: raise ValueError('Kontakt zablokowany')
             history=list(db.scalars(select(Activity).where(Activity.salon_id==salon.id).order_by(Activity.created_at.desc()).limit(15)))
             from backend.meta import agent_replies
             history.extend(agent_replies(db,salon.id))

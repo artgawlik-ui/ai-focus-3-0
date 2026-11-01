@@ -60,6 +60,10 @@ def credentials(db):
     if not isinstance(unseal('token',row.token_ciphertext),str):raise HTTPException(503,'Nieprawidłowy magazyn tokenów')
     return row
 
+def secure_text_equal(left,right):
+    # Porównanie bajtów odrzuca nie-ASCII bez wyjątku ujawniającego błąd 500.
+    return hmac.compare_digest(left.encode('utf-8'),right.encode('utf-8'))
+
 def graph_headers(token):return {'Authorization':'Bearer '+token}
 class InvalidMetaGrant(ValueError):pass
 class ConfirmedRevoked(InvalidMetaGrant):pass
@@ -169,7 +173,7 @@ def disconnect(user=Depends(manager),db=Depends(database)):
 @router.get('/webhook')
 def verify_webhook(request:Request):
     require_config('webhook_verify');q=request.query_params
-    if q.get('hub.mode')!='subscribe' or not hmac.compare_digest(q.get('hub.verify_token',''),os.environ['META_VERIFY_TOKEN']):raise HTTPException(403,'Nieprawidłowa weryfikacja webhooka')
+    if q.get('hub.mode')!='subscribe' or not secure_text_equal(q.get('hub.verify_token',''),os.environ['META_VERIFY_TOKEN']):raise HTTPException(403,'Nieprawidłowa weryfikacja webhooka')
     challenge=q.get('hub.challenge','')
     if not challenge or len(challenge)>200:raise HTTPException(400,'Nieprawidłowe wyzwanie')
     return Response(challenge,media_type='text/plain')
@@ -183,7 +187,7 @@ async def webhook(request:Request):
         if len(raw)+len(chunk)>MAX_BODY:raise HTTPException(413,'Webhook przekracza limit')
         raw.extend(chunk)
     expected='sha256='+hmac.new(os.environ['META_APP_SECRET'].encode(),raw,hashlib.sha256).hexdigest()
-    if not hmac.compare_digest(request.headers.get('X-Hub-Signature-256',''),expected):raise HTTPException(403,'Nieprawidłowy podpis webhooka')
+    if not secure_text_equal(request.headers.get('X-Hub-Signature-256',''),expected):raise HTTPException(403,'Nieprawidłowy podpis webhooka')
     try:payload=json.loads(raw)
     except (ValueError,UnicodeDecodeError):raise HTTPException(400,'Nieprawidłowy JSON')
     if not isinstance(payload,dict) or payload.get('object')!='instagram' or not isinstance(payload.get('entry'),list):raise HTTPException(400,'Nieprawidłowy webhook')

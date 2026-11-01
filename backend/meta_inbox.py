@@ -39,7 +39,11 @@ def persist(payload):
             kind='deleted' if message.get('is_deleted') else 'echo' if message.get('is_echo') else 'message'
             identity=[entry['id'],kind,mid] if isinstance(mid,str) and mid else event
             key=hashlib.sha256(json.dumps(identity,sort_keys=True,separators=(',',':')).encode()).hexdigest()
-            wrapped={'object':'instagram','entry':[{'id':entry['id'],'messaging':[event]}]}
+            stored_event=event
+            if message.get('is_deleted'):
+                # Nie przechowujemy ewentualnego tekstu/załączników w tombstone.
+                stored_event={'sender':{'id':peer_id(event,'sender')},'recipient':{'id':peer_id(event,'recipient')},'timestamp':event.get('timestamp'),'message':{'mid':mid,'is_deleted':True,'is_echo':message.get('is_echo') is True}}
+            wrapped={'object':'instagram','entry':[{'id':entry['id'],'messaging':[stored_event]}]}
             rows.append(dict(id=str(uuid.uuid4()),dedup_key=key,account_id=str(entry['id']),payload_ciphertext=seal('inbox',wrapped),status='pending',attempts=0,next_attempt_at='',lease_until='',lease_token='',created_at=now(),updated_at=now(),processed_at='',last_error='',dead_letter=0))
     with Session() as db:
         if db.bind.dialect.name=='postgresql':
@@ -49,6 +53,20 @@ def persist(payload):
             db.execute(insert_for(db,MetaWebhookInbox).values(rows).on_conflict_do_nothing(index_elements=['dedup_key']))
         db.commit()
     return len(rows)
+
+def scrub_message_payloads(db,account,mid):
+    """Usunięcie wiadomości obejmuje również trwałe kopie jej tekstu w inboxie."""
+    accounts=[str(account)]
+    # Zgodność z 3.0.3, która zachowywała typ liczbowego entry.id w kluczu.
+    if str(account).isdecimal():accounts.append(int(account))
+    keys=[hashlib.sha256(json.dumps([a,kind,mid],sort_keys=True,separators=(',',':')).encode()).hexdigest() for a in accounts for kind in ('message','echo','deleted')]
+    db.execute(update(MetaWebhookInbox).where(MetaWebhookInbox.account_id==str(account),MetaWebhookInbox.dedup_key.in_(keys)).values(payload_ciphertext='',status='done',processed_at=now(),updated_at=now(),lease_token='',lease_until='',last_error='',dead_letter=0))
+
+def peer_id(event,key):
+    identity=event.get(key)
+    if not isinstance(identity,dict):return ''
+    value=identity.get('id','')
+    return str(value) if isinstance(value,(str,int)) and not isinstance(value,bool) else ''
 
 def apply_payload(db,payload):
     from backend.meta import seal,opt_out,audit,uid
@@ -64,7 +82,7 @@ def apply_payload(db,payload):
             if not isinstance(message,dict):continue
             mid=message.get('mid')
             if not isinstance(mid,str) or not 0<len(mid)<=250:continue
-            sender=str(event.get('sender',{}).get('id',''));recipient=str(event.get('recipient',{}).get('id',''))
+            sender=peer_id(event,'sender');recipient=peer_id(event,'recipient')
             account=os.environ['META_TEST_ACCOUNT_ID'];echo=sender==account and message.get('is_echo') is True
             if not echo and recipient!=account:continue
             peer=recipient if echo else sender
@@ -80,9 +98,15 @@ def apply_payload(db,payload):
                 except IntegrityError:c=db.scalar(select(MetaConversation).where(MetaConversation.account_id==account,MetaConversation.peer_id==peer).with_for_update())
             existing=db.scalar(select(MetaMessage).where(MetaMessage.conversation_id==c.id,MetaMessage.external_id==mid))
             if existing:
-                if message.get('is_deleted') and existing.status!='deleted':existing.body_ciphertext='';existing.status='deleted'
+                if message.get('is_deleted') or existing.status=='deleted':
+                    newly_deleted=existing.status!='deleted'
+                    existing.body_ciphertext='';existing.status='deleted';scrub_message_payloads(db,account,mid)
+                    if newly_deleted and c.salon_id:
+                        salon=db.get(Salon,c.salon_id)
+                        audit(db,c,salon.owner_id,'instagram_deleted','Webhook Meta potwierdził usunięcie; źródło meta_message:'+existing.id)
                 continue
             deleted=bool(message.get('is_deleted'));text=message.get('text','')
+            if deleted:scrub_message_payloads(db,account,mid)
             if not isinstance(text,str):text=''
             text=text[:10000]
             item=MetaMessage(id=uid(),conversation_id=c.id,external_id=mid,status='deleted' if deleted else 'api_confirmed_sent' if echo else 'received',direction='outbound' if echo else 'inbound',body_ciphertext=seal('message',text) if text and not deleted and at>datetime.now(timezone.utc)-timedelta(days=30) else '',occurred_at=at.isoformat())
@@ -119,6 +143,11 @@ def process_claim(id,lease,at=None):
             if db.bind.dialect.name=='postgresql':
                 db.execute(text("SET LOCAL lock_timeout='500ms'"))
                 db.execute(text("SET LOCAL statement_timeout='2000ms'"))
+            # Wspólna kolejność blokad z callbackiem prywatności: credential -> inbox.
+            # Podgląd nie blokuje wiersza; po blokadzie ponownie sprawdzamy dzierżawę.
+            account=db.scalar(select(MetaWebhookInbox.account_id).where(MetaWebhookInbox.id==id))
+            if account:
+                db.scalar(select(MetaCredential).where(MetaCredential.account_id==account).with_for_update())
             row=db.scalar(select(MetaWebhookInbox).where(MetaWebhookInbox.id==id,MetaWebhookInbox.status=='processing',MetaWebhookInbox.lease_token==lease,MetaWebhookInbox.lease_until>=at.isoformat()).with_for_update())
             if not row:return False
             apply_payload(db,unseal('inbox',row.payload_ciphertext))
@@ -129,6 +158,9 @@ def process_claim(id,lease,at=None):
     except Exception:
         # Never record exception strings, payloads, identifiers or provider URLs.
         with Session() as db:
+            if db.bind.dialect.name=='postgresql':
+                db.execute(text("SET LOCAL lock_timeout='500ms'"))
+                db.execute(text("SET LOCAL statement_timeout='2000ms'"))
             row=db.scalar(select(MetaWebhookInbox).where(MetaWebhookInbox.id==id,MetaWebhookInbox.status=='processing',MetaWebhookInbox.lease_token==lease).with_for_update())
             if row:
                 row.status='failed';row.dead_letter=int(row.attempts>=MAX_ATTEMPTS);row.last_error='processing_failed'

@@ -15,7 +15,7 @@ from backend.schemas import *
 
 logging.basicConfig(level=logging.INFO)
 log = logging.getLogger('focus')
-app = FastAPI(title='Ai Focus 3.0', version='3.0.3')
+app = FastAPI(title='Ai Focus 3.0', version='3.0.4')
 from backend.limits import BodyLimitMiddleware
 app.add_middleware(BodyLimitMiddleware)
 uid = lambda: str(uuid.uuid4())
@@ -62,7 +62,7 @@ async def headers(request: Request, call_next):
 @app.get('/api/health')
 def health(db=Depends(database)):
     db.execute(select(func.count()).select_from(User))
-    return {'status':'ok','version':'3.0.3'}
+    return {'status':'ok','version':'3.0.4'}
 
 @app.post('/api/auth/login')
 def login(payload:LoginIn, request:Request, response:Response, db=Depends(database)):
@@ -326,7 +326,7 @@ def deactivate_user(id:str,user=Depends(manager),db=Depends(database)):
 @app.get('/api/admin/integrity')
 def database_integrity(user=Depends(manager)):
     from scripts.backup import fingerprint
-    return {'tables':fingerprint(os.environ['DATABASE_URL'],include_metadata=True),'version':'3.0.3'}
+    return {'tables':fingerprint(os.environ['DATABASE_URL'],include_metadata=True),'version':'3.0.4'}
 
 @app.post('/api/admin/backup')
 def download_backup(payload:BackupIn,user=Depends(manager)):
