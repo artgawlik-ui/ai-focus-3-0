@@ -1,0 +1,20 @@
+{
+  "retrieved_at": "2026-11-01T13:42:45.135589+00:00",
+  "original_export_still_present": true,
+  "artifacts": {
+    "original-reference": {
+      "export_id": "dpg-dbh1b0gm7kps73f0p2m0-a/2026-11-01T12:41Z",
+      "created_at": "2026-11-01T12:41:00Z",
+      "bytes": 8993,
+      "sha256": "093ab561995be1f5af8383610b7b725113950a592a466ed14b5a348ad4a4f42d",
+      "signed_url_saved": false
+    },
+    "fresh-backup": {
+      "export_id": "dpg-dbh1b0gm7kps73f0p2m0-a/2026-11-01T13:36Z",
+      "created_at": "2026-11-01T13:36:00Z",
+      "bytes": 8994,
+      "sha256": "fc99b4568c04c13fae9724ffadd85cc50c153d6709ce98e99f979e87cb816be2",
+      "signed_url_saved": false
+    }
+  }
+}

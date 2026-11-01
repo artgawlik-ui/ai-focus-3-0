@@ -1,0 +1,57 @@
+{
+  "tables": {
+    "jobs": {
+      "ids": [
+        "99ce1425-bbd7-4ded-b8b4-563e860c9807",
+        "a385d814-d359-4fdf-b688-e3d135e9bc8e",
+        "acfe9b5f-f199-411c-b707-377f08a1dc5c"
+      ],
+      "sha256": "020c5a299e0ea8de593e1d5f82a5da0e6f601dc8d970b1c95f944965b019b96e"
+    },
+    "salons": {
+      "ids": [
+        "d68c81ad-6e39-44df-aa95-f45f922189c4"
+      ],
+      "sha256": "18c890529d48b9ec2408930b4bba565d77ebd042a1413f54c7236f8223a7591e"
+    },
+    "activities": {
+      "ids": [
+        "015c8aaa-5b6d-45e4-844f-bf94a6591d39",
+        "07ec99ce-bee1-4247-bb75-8101bf6bdc18",
+        "110fc64d-053f-429a-b91c-85c00deca38a",
+        "2cc07cf9-6c8f-47d1-ad25-f7cbba4c7d1e",
+        "2d2a91df-8101-469a-b110-01207084f429",
+        "7d82bf43-2058-424c-b486-648b3ea6a2de",
+        "b72a12f8-dfef-4c92-9100-e5fa46d54a15",
+        "ec73e3f9-bfca-4c7a-8e79-3b8c54c8898b"
+      ],
+      "sha256": "636b3acd099797f917ca1d5b5b43e41e66a88fa4ae57aa81fe43fdf186122231"
+    },
+    "appointments": {
+      "ids": [
+        "df214926-a3b6-4515-ac84-4e7f184c4c7d"
+      ],
+      "sha256": "5e0177ef6506407ede0a2817cfbd61e9aa6c90db2901caa028103d15ffdd703c"
+    },
+    "integration_links": {
+      "ids": [],
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    }
+  },
+  "revision": "004",
+  "target_id": "d68c81ad-6e39-44df-aa95-f45f922189c4",
+  "meta_links": 0,
+  "active_jobs": 0,
+  "salon_count": 1,
+  "schema_sha256": "17baae61039d40c637b14dd9312f3c099e8c87b43bc3229ad3e4abd8b402d6f1",
+  "original_target_id": "d68c81ad-6e39-44df-aa95-f45f922189c4",
+  "owner_confirmed_original_test": true,
+  "fresh_backup_verified": true,
+  "backup_sha256": "fc99b4568c04c13fae9724ffadd85cc50c153d6709ce98e99f979e87cb816be2",
+  "production_delete_authorized": false,
+  "production_current_sql_verified": false,
+  "original_export_id": "dpg-dbh1b0gm7kps73f0p2m0-a/2026-11-01T12:41Z",
+  "fresh_export_id": "dpg-dbh1b0gm7kps73f0p2m0-a/2026-11-01T13:36Z",
+  "fresh_export_created_at": "2026-11-01T13:36:00Z",
+  "fresh_dump_created_at": "2026-11-01 13:37:51 UTC"
+}
