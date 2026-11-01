@@ -67,3 +67,11 @@ def test_cli_guards_never_spawn_restore_or_expose_input(tmp_path,mode):
     assert data['error_category']=={'production':'production_runtime_forbidden','wrong_hash':'archive_sha256_mismatch','url':'archive_size'}[mode]
     assert data['temporary_plaintext_removed'] and 'isolation' not in data
     assert 'fixture-sensitive' not in result.stdout+result.stderr+output.read_text()
+
+
+def test_import_cannot_trigger_restore(monkeypatch):
+    import subprocess,importlib
+    def forbidden(*args,**kwargs):raise AssertionError('Import nie może uruchamiać procesów')
+    monkeypatch.setattr(subprocess,'run',forbidden)
+    module=importlib.import_module('scripts.isolated_export_restore')
+    assert callable(module.main)
