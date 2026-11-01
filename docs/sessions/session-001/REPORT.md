@@ -29,7 +29,7 @@ Kryteria zapisano w ACCEPTANCE.md, commit 9893b32.
   dokumentacja opisuje przyszłą kontrolę po redeployu i wyłączenie konta technicznego.
 - Nowy preflight Meta działa wyłącznie na przekazanym słowniku konfiguracji testowej;
   zwraca ustawione/puste/zły format, nie wartości, nie czyta produkcji, nie wywołuje API.
-- CI otrzymało instalację klienta PostgreSQL 17 do nowego rzeczywistego testu restore.
+- CI używa klientów PostgreSQL 17 z już istniejącego kontenera usługi testowej; bez nowej usługi. Pierwsza próba instalacji pakietu hosta w CI nie powiodła się (pakiet niedostępny); zastąpiono ją ponownym użyciem klientów kontenera.
 
 ## Testy i dowody
 

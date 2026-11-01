@@ -20,11 +20,17 @@ jobs:
       - uses: actions/setup-node@v4
         with: {node-version: '22', cache: npm, cache-dependency-path: frontend/package-lock.json}
       - run: pip install -r requirements.txt pytest pip-audit playwright
-      - name: PostgreSQL 17 client for synthetic encrypted restore
+      - name: Reuse PostgreSQL 17 service clients for synthetic restore
+        env:
+          FOCUS_CI_POSTGRES_CONTAINER: ${{ job.services.postgres.id }}
         run: |
-          sudo apt-get update -qq
-          sudo apt-get install -y postgresql-client-17
-          echo /usr/lib/postgresql/17/bin >> "$GITHUB_PATH"
+          mkdir -p "$RUNNER_TEMP/focus3-pg-bin"
+          for tool in pg_dump pg_restore; do
+            printf '#!/usr/bin/env bash\nset -euo pipefail\nexec docker exec -i --env PGHOST --env PGPORT --env PGDATABASE --env PGUSER --env PGPASSWORD --env PGSSLMODE "$FOCUS_CI_POSTGRES_CONTAINER" %s "$@"\n' "$tool" > "$RUNNER_TEMP/focus3-pg-bin/$tool"
+            chmod 700 "$RUNNER_TEMP/focus3-pg-bin/$tool"
+          done
+          echo "$RUNNER_TEMP/focus3-pg-bin" >> "$GITHUB_PATH"
+          echo "FOCUS_CI_POSTGRES_CONTAINER=$FOCUS_CI_POSTGRES_CONTAINER" >> "$GITHUB_ENV"
       - run: alembic upgrade head
       - run: pytest -q
       - run: npm ci --prefix frontend
