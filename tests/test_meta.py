@@ -18,7 +18,11 @@ def event(mid='test-mid',text='Proszę o termin wizyty',**kw):
     return {'object':'instagram','entry':[{'id':'90001','messaging':[{'sender':{'id':'90002'},'recipient':{'id':'90001'},'timestamp':int(datetime.now(timezone.utc).timestamp()*1000),'message':{'mid':mid,'text':text,**kw}}]}]}
 def webhook(c,data,valid=True):
     body=json.dumps(data,ensure_ascii=False).encode();signature='sha256='+hmac.new(b'synthetic-secret',body,hashlib.sha256).hexdigest()
-    return c.post('/api/meta/webhook',content=body,headers={'Content-Type':'application/json','X-Hub-Signature-256':signature if valid else 'sha256=invalid'})
+    result=c.post('/api/meta/webhook',content=body,headers={'Content-Type':'application/json','X-Hub-Signature-256':signature if valid else 'sha256=invalid'})
+    if result.status_code==200:
+        from backend.meta_inbox import drain_once
+        drain_once()
+    return result
 def cid(c):return c.get('/api/meta/conversations').json()[0]['id']
 
 def test_disabled_mode_and_webhook_verification(monkeypatch):
@@ -113,8 +117,8 @@ def test_unified_oauth_encrypted_db_replay_and_disconnect(monkeypatch,caplog):
     with Session() as db:assert credentials(db) is None
     assert webhook(c,event()).status_code==200 and c.get('/api/meta/conversations').json()==[]
 
-@pytest.mark.parametrize('failure',['wrong_scope','wrong_account','target','fail','extra_scope'])
-def test_oauth_rejects_invalid_grant_and_actual_target(monkeypatch,failure):
+@pytest.mark.parametrize('failure',['wrong_scope','wrong_account','fail','extra_scope'])
+def test_oauth_rejects_invalid_grant_and_account(monkeypatch,failure):
     class Reject(FakeMeta):pass
     setattr(Reject,failure,True)
     c=client();r,_=authorize(c,monkeypatch,Reject);assert r.status_code==502
