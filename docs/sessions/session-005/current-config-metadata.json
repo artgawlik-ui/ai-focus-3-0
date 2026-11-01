@@ -1,0 +1,30 @@
+{
+  "mutations": 0,
+  "postgres": {
+    "id": "dpg-dbh1b0gm7kps73f0p2m0-a",
+    "status": "available",
+    "version": "17",
+    "region": "frankfurt",
+    "public_allowlist_empty": true
+  },
+  "recovery_keys": [
+    "recoveryStatus",
+    "startsAt"
+  ],
+  "recovery": {
+    "recoveryStatus": "AVAILABLE",
+    "startsAt": "2026-10-29T06:32:47Z"
+  },
+  "effective_flags": {
+    "META_ENABLED": "OFF",
+    "META_OAUTH_ENABLED": "OFF",
+    "META_WEBHOOK_VERIFY_ENABLED": "OFF",
+    "META_INGEST_ENABLED": "OFF",
+    "META_CRM_HISTORY_ENABLED": "OFF",
+    "META_DIAGNOSTICS_ENABLED": "OFF",
+    "META_DM_TRANSPORT_ENABLED": "OFF",
+    "AGENT_V2_ENABLED": "ON",
+    "AI_PAID_PROCESSING_APPROVED": "OFF",
+    "OFFSITE_BACKUP_ENABLED": "OFF"
+  }
+}

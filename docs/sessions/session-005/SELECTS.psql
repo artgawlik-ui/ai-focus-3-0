@@ -1,0 +1,46 @@
+\set ON_ERROR_STOP on
+\set ECHO none
+\prompt 'Approved owner ID: ' owner_user_id
+\prompt 'Approved technical ID: ' technical_user_id
+-- Nie wykonano na produkcji. Parametry kont przekazuje prywatnie zatwierdzony operator.
+BEGIN TRANSACTION ISOLATION LEVEL REPEATABLE READ READ ONLY;
+SET LOCAL TIME ZONE 'UTC';
+SET LOCAL search_path=pg_catalog,public;
+SET LOCAL statement_timeout='5s';
+SET LOCAL lock_timeout='1s';
+SET LOCAL idle_in_transaction_session_timeout='10s';
+
+-- baseline
+SELECT current_setting('transaction_read_only')='on' AS read_only,
+ current_setting('transaction_isolation')='repeatable read' AS repeatable_read,
+ current_setting('server_version_num')::integer/10000 AS postgres_major,
+ (SELECT array_agg(version_num ORDER BY version_num) FROM public.alembic_version) AS revisions,
+ (SELECT count(*) FROM pg_tables WHERE schemaname='public') AS public_table_count,
+ NOT EXISTS(SELECT 1 FROM pg_tables WHERE schemaname='public' AND tablename NOT IN ('activities','alembic_version','appointments','integration_links','jobs','login_attempts','meta_conversations','meta_credentials','meta_messages','meta_oauth_states','meta_privacy_requests','meta_refresh_states','meta_webhook_inbox','salons','sessions','trainings','users')) AS no_unknown_tables,
+ NOT EXISTS(SELECT 1 FROM pg_constraint c JOIN pg_namespace n ON n.oid=c.connamespace WHERE n.nspname='public' AND NOT c.convalidated) AS constraints_validated;
+
+-- accounts
+SELECT
+ :'owner_user_id'::text IS NOT NULL AND :'technical_user_id'::text IS NOT NULL AND :'owner_user_id'::text<>:'technical_user_id'::text AS distinct_approved_accounts,
+ EXISTS(SELECT 1 FROM public.users WHERE id=:'owner_user_id'::text AND active=1 AND role='manager') AS owner_active_manager,
+ EXISTS(SELECT 1 FROM public.users WHERE id=:'technical_user_id'::text AND active=0) AS technical_disabled,
+ (SELECT count(*) FROM public.sessions WHERE user_id=:'technical_user_id'::text) AS technical_sessions_total,
+ (SELECT count(*) FROM public.sessions WHERE user_id=:'technical_user_id'::text AND expires::timestamptz>CURRENT_TIMESTAMP) AS technical_sessions_valid;
+
+-- fingerprints
+SELECT * FROM (SELECT 'activities' AS table_name,count(*) AS row_count,encode(sha256(convert_to(coalesce(string_agg(to_jsonb(t)::text,E'\n' ORDER BY to_jsonb(t)::text COLLATE "C"),''),'UTF8')),'hex') AS sha256 FROM public."activities" t UNION ALL SELECT 'alembic_version' AS table_name,count(*) AS row_count,encode(sha256(convert_to(coalesce(string_agg(to_jsonb(t)::text,E'\n' ORDER BY to_jsonb(t)::text COLLATE "C"),''),'UTF8')),'hex') AS sha256 FROM public."alembic_version" t UNION ALL SELECT 'appointments' AS table_name,count(*) AS row_count,encode(sha256(convert_to(coalesce(string_agg(to_jsonb(t)::text,E'\n' ORDER BY to_jsonb(t)::text COLLATE "C"),''),'UTF8')),'hex') AS sha256 FROM public."appointments" t UNION ALL SELECT 'integration_links' AS table_name,count(*) AS row_count,encode(sha256(convert_to(coalesce(string_agg(to_jsonb(t)::text,E'\n' ORDER BY to_jsonb(t)::text COLLATE "C"),''),'UTF8')),'hex') AS sha256 FROM public."integration_links" t UNION ALL SELECT 'jobs' AS table_name,count(*) AS row_count,encode(sha256(convert_to(coalesce(string_agg(to_jsonb(t)::text,E'\n' ORDER BY to_jsonb(t)::text COLLATE "C"),''),'UTF8')),'hex') AS sha256 FROM public."jobs" t UNION ALL SELECT 'login_attempts' AS table_name,count(*) AS row_count,encode(sha256(convert_to(coalesce(string_agg(to_jsonb(t)::text,E'\n' ORDER BY to_jsonb(t)::text COLLATE "C"),''),'UTF8')),'hex') AS sha256 FROM public."login_attempts" t UNION ALL SELECT 'meta_conversations' AS table_name,count(*) AS row_count,encode(sha256(convert_to(coalesce(string_agg(to_jsonb(t)::text,E'\n' ORDER BY to_jsonb(t)::text COLLATE "C"),''),'UTF8')),'hex') AS sha256 FROM public."meta_conversations" t UNION ALL SELECT 'meta_credentials' AS table_name,count(*) AS row_count,encode(sha256(convert_to(coalesce(string_agg(to_jsonb(t)::text,E'\n' ORDER BY to_jsonb(t)::text COLLATE "C"),''),'UTF8')),'hex') AS sha256 FROM public."meta_credentials" t UNION ALL SELECT 'meta_messages' AS table_name,count(*) AS row_count,encode(sha256(convert_to(coalesce(string_agg(to_jsonb(t)::text,E'\n' ORDER BY to_jsonb(t)::text COLLATE "C"),''),'UTF8')),'hex') AS sha256 FROM public."meta_messages" t UNION ALL SELECT 'meta_oauth_states' AS table_name,count(*) AS row_count,encode(sha256(convert_to(coalesce(string_agg(to_jsonb(t)::text,E'\n' ORDER BY to_jsonb(t)::text COLLATE "C"),''),'UTF8')),'hex') AS sha256 FROM public."meta_oauth_states" t UNION ALL SELECT 'meta_privacy_requests' AS table_name,count(*) AS row_count,encode(sha256(convert_to(coalesce(string_agg(to_jsonb(t)::text,E'\n' ORDER BY to_jsonb(t)::text COLLATE "C"),''),'UTF8')),'hex') AS sha256 FROM public."meta_privacy_requests" t UNION ALL SELECT 'meta_refresh_states' AS table_name,count(*) AS row_count,encode(sha256(convert_to(coalesce(string_agg(to_jsonb(t)::text,E'\n' ORDER BY to_jsonb(t)::text COLLATE "C"),''),'UTF8')),'hex') AS sha256 FROM public."meta_refresh_states" t UNION ALL SELECT 'meta_webhook_inbox' AS table_name,count(*) AS row_count,encode(sha256(convert_to(coalesce(string_agg(to_jsonb(t)::text,E'\n' ORDER BY to_jsonb(t)::text COLLATE "C"),''),'UTF8')),'hex') AS sha256 FROM public."meta_webhook_inbox" t UNION ALL SELECT 'salons' AS table_name,count(*) AS row_count,encode(sha256(convert_to(coalesce(string_agg(to_jsonb(t)::text,E'\n' ORDER BY to_jsonb(t)::text COLLATE "C"),''),'UTF8')),'hex') AS sha256 FROM public."salons" t UNION ALL SELECT 'sessions' AS table_name,count(*) AS row_count,encode(sha256(convert_to(coalesce(string_agg(to_jsonb(t)::text,E'\n' ORDER BY to_jsonb(t)::text COLLATE "C"),''),'UTF8')),'hex') AS sha256 FROM public."sessions" t UNION ALL SELECT 'trainings' AS table_name,count(*) AS row_count,encode(sha256(convert_to(coalesce(string_agg(to_jsonb(t)::text,E'\n' ORDER BY to_jsonb(t)::text COLLATE "C"),''),'UTF8')),'hex') AS sha256 FROM public."trainings" t UNION ALL SELECT 'users' AS table_name,count(*) AS row_count,encode(sha256(convert_to(coalesce(string_agg(to_jsonb(t)::text,E'\n' ORDER BY to_jsonb(t)::text COLLATE "C"),''),'UTF8')),'hex') AS sha256 FROM public."users" t) fingerprints ORDER BY table_name;
+
+-- worker
+SELECT
+ (SELECT count(*) FROM public.jobs WHERE status='queued') AS queued_jobs,
+ (SELECT count(*) FROM public.jobs WHERE status='running') AS running_jobs,
+ (SELECT count(*) FROM public.meta_webhook_inbox WHERE status IN ('pending','processing')) AS inbox_open,
+ (SELECT count(*) FROM public.meta_webhook_inbox WHERE status='failed' OR dead_letter=1) AS inbox_failed,
+ (SELECT count(*) FROM public.meta_webhook_inbox WHERE status='done' AND payload_ciphertext<>'' AND NULLIF(processed_at,'')::timestamptz<CURRENT_TIMESTAMP-interval '7 days') AS inbox_payloads_retention_due,
+ (SELECT count(*) FROM public.meta_webhook_inbox WHERE status='done' AND NULLIF(processed_at,'')::timestamptz<CURRENT_TIMESTAMP-interval '90 days') AS inbox_rows_retention_due,
+ (SELECT count(*) FROM public.meta_messages WHERE body_ciphertext<>'' AND NULLIF(occurred_at,'')::timestamptz<CURRENT_TIMESTAMP-interval '30 days') AS message_content_retention_due,
+ (SELECT count(*) FROM public.meta_messages WHERE NULLIF(occurred_at,'')::timestamptz<CURRENT_TIMESTAMP-interval '90 days') AS message_rows_retention_due,
+ (SELECT count(*) FROM public.meta_oauth_states WHERE NULLIF(expires_at,'')::timestamptz<CURRENT_TIMESTAMP) AS oauth_states_retention_due,
+ (SELECT count(*) FROM public.meta_webhook_inbox WHERE status='done' AND processed_at='') + (SELECT count(*) FROM public.meta_messages WHERE occurred_at='') + (SELECT count(*) FROM public.meta_oauth_states WHERE expires_at='') AS missing_retention_timestamps;
+
+ROLLBACK;
