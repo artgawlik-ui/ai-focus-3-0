@@ -18,7 +18,7 @@ SELECT indexname,indexdef FROM pg_indexes
 SELECT count(*) AS active_technical_accounts FROM users
   WHERE email='verification@focus.invalid' AND active=1; -- oczekiwane 0
 SELECT count(*) AS active_technical_sessions FROM sessions s JOIN users u ON u.id=s.user_id
-  WHERE u.email='verification@focus.invalid' AND s.expires > CURRENT_TIMESTAMP::text;
+  WHERE u.email='verification@focus.invalid' AND s.expires::timestamptz > CURRENT_TIMESTAMP;
 ROLLBACK;
 -- Dokładne liczby + SHA-256 wszystkich tabel: scripts.backup.fingerprint(...,
 -- include_metadata=True), wyłącznie przez zatwierdzony kanał odczytu, bez wypisywania URL.
