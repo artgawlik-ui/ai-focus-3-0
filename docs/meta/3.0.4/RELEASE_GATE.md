@@ -1,5 +1,12 @@
 # Issue #4 — decyzja release gate
 
+> Aktualizacja 2026-11-02 (sesja 006): właściciel zatwierdził **RPO = 60 minut**.
+> Bieżący gate wydania: **BLOCKED**. PITR AVAILABLE nie dowodzi latest recoverable point
+> ≤60 min; ostatni eksport jest starszy niż limit. Historyczne READY poniżej dotyczyło
+> wąskiego kandydata kodu, nie zamkniętego recovery. Obowiązuje [raport sesji 006](../../sessions/session-006/REPORT.md)
+> i [procedura RPO/kluczy/restore](../../sessions/session-006/RECOVERY_PROCEDURE.md).
+
+
 Ten dokument aktualizuje stan raportu issue #2, nie usuwa jego historycznych dowodów.
 
 | Zakres | Decyzja |

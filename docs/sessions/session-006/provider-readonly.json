@@ -1,0 +1,72 @@
+{
+  "observed_at_utc": "2026-11-01T23:12:55.175503+00:00",
+  "rpo_seconds": 3600,
+  "production_mutations": 0,
+  "postgres": {
+    "id": "dpg-dbh1b0gm7kps73f0p2m0-a",
+    "name": "ai-focus-3-0-db",
+    "status": "available",
+    "version": "17",
+    "plan": "0.1c-256mb",
+    "region": "frankfurt",
+    "diskSizeGB": 1,
+    "highAvailabilityEnabled": false,
+    "public_allowlist_empty": true
+  },
+  "postgres_field_names": [
+    "connectionPool",
+    "createdAt",
+    "dashboardUrl",
+    "databaseName",
+    "databaseUser",
+    "diskAutoscalingEnabled",
+    "diskSizeGB",
+    "highAvailabilityEnabled",
+    "id",
+    "ipAllowList",
+    "name",
+    "owner",
+    "plan",
+    "readReplicas",
+    "region",
+    "role",
+    "status",
+    "suspended",
+    "suspenders",
+    "updatedAt",
+    "version"
+  ],
+  "recovery_http_status": 200,
+  "recovery": {
+    "recoveryStatus": "AVAILABLE",
+    "startsAt": "2026-10-29T06:32:47Z"
+  },
+  "recovery_field_names": [
+    "recoveryStatus",
+    "startsAt"
+  ],
+  "exports": [
+    {
+      "id": "dpg-dbh1b0gm7kps73f0p2m0-a/2026-11-01T18:25Z",
+      "createdAt": "2026-11-01T18:25:00Z"
+    },
+    {
+      "id": "dpg-dbh1b0gm7kps73f0p2m0-a/2026-11-01T13:36Z",
+      "createdAt": "2026-11-01T13:36:00Z"
+    },
+    {
+      "id": "dpg-dbh1b0gm7kps73f0p2m0-a/2026-11-01T12:41Z",
+      "createdAt": "2026-11-01T12:41:00Z"
+    }
+  ],
+  "latest_export_age_seconds": 17278,
+  "latest_export_within_rpo": false,
+  "workspace_metadata_http_status": 200,
+  "workspace_field_names": [
+    "email",
+    "id",
+    "name",
+    "type"
+  ],
+  "workspace_plan": {}
+}
