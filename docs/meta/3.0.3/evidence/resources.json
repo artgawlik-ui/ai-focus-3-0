@@ -1,0 +1,11 @@
+{
+  "rss_kib": 368080,
+  "threads": 19,
+  "rss_mib": 359.45,
+  "wall_seconds": 12.8,
+  "process_cpu_seconds": 2,
+  "webhooks": 20,
+  "processed": 20,
+  "max_ack_ms": 39.44,
+  "scope": "local supervisor + API + existing agent; not Render quota, no backup process, no real Meta API"
+}
