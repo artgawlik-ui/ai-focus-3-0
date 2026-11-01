@@ -4,6 +4,8 @@
 - ce1b480: guardy lokalne, testy odzyskiwania, preflight Meta, bramka integralności, CI.
 - 45b436c: raport i agregaty dowodów.
 - 5854732: klient pg_dump/pg_restore z istniejącego serwisu CI zamiast niedostępnego pakietu hosta.
+- ccafa0c: uzupełnienie stanu wznowienia i zakresu zmian.
+- Poprawka uruchamiania testu przeglądarkowego jako modułu: commit zawierający ten wpis (git log).
 - Commit raportowy: odczytaj git log dla tego katalogu (plik nie zawiera własnego przyszłego SHA).
 
 Pliki commitów przygotowania i implementacji względem zastanego 6eaed76:

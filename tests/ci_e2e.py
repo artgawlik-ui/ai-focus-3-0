@@ -46,7 +46,7 @@ try:
     Path('/tmp/focus3-test-network-down').unlink(missing_ok=True)
     proxy=subprocess.Popen([sys.executable,'-m','tests.offline_proxy'],stdout=subprocess.DEVNULL,stderr=subprocess.DEVNULL)
     time.sleep(.5)
-    subprocess.run([sys.executable,'tests/production_browser_check.py'],env=env,check=True)
+    subprocess.run([sys.executable,'-m','tests.production_browser_check'],env=env,check=True)
 finally:
     Path('/tmp/focus3-test-network-down').unlink(missing_ok=True);credential_path.unlink(missing_ok=True)
     if proxy:proxy.terminate();proxy.wait(timeout=10)

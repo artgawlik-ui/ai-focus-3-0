@@ -48,6 +48,7 @@ powtórka sekwencyjna: 129/129, następna 130/130; końcowy wynik w evidence.jso
 Nie było dostępu do produkcji ani ryzyka jej danych. Poprzednie 116 testów z CI jest
 historycznym punktem odniesienia; nie przedstawiamy nieudanego pomiaru jako zielonej bazy.
 Pierwszy pip-audit nie wystartował z powodu read-only ~/.cache; ponowiono z cache w /tmp.
+CI wykryło także brak importu scripts przy bezpośrednim uruchomieniu pliku testu przeglądarkowego. Lokalny PYTHONPATH maskował problem; ci_e2e zmieniono na uruchamianie modułu, po czym ponowiono test bez PYTHONPATH.
 Dwa ostrzeżenia: przestarzały interfejs pytest zależności i migracja httpx w Starlette;
 nie są podatnościami potwierdzonymi audytem, wymagają przyszłej kontroli kompatybilności.
 

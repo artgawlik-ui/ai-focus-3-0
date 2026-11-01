@@ -15,7 +15,7 @@
     "encrypted_restore": "pytest tests/test_synthetic_recovery.py",
     "export_restore": "python -m scripts.synthetic_export_probe --output docs/sessions/session-001/synthetic-restore.json",
     "frontend": "npm run build --prefix frontend",
-    "e2e": "DATABASE_URL=<local synthetic focus3_test> python -m tests.ci_e2e",
+    "e2e": "env -u PYTHONPATH DATABASE_URL=<local synthetic focus3_test> python -m tests.ci_e2e",
     "pip_audit": "pip-audit -r requirements.txt --cache-dir /tmp/focus3-pip-audit --format=json",
     "npm_audit": "npm audit --prefix frontend --json"
   },
@@ -37,5 +37,6 @@
     "total": 0
   },
   "physical_iphone_test_this_session": false,
-  "baseline": "INVALID: overlapping synthetic database sessions; see REPORT.md"
+  "baseline": "INVALID: overlapping synthetic database sessions; see REPORT.md",
+  "e2e_import_environment": "No inherited PYTHONPATH; child invoked as module"
 }
