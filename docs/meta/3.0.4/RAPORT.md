@@ -1,4 +1,6 @@
-# Ai Focus 3.0.4 — issue #2: BLOCKED
+# Ai Focus 3.0.4 — historyczny raport issue #2: BLOCKED
+
+Aktualizacja issue #4: [BACKUP_VERIFICATION.md](BACKUP_VERIFICATION.md) i [RELEASE_GATE.md](RELEASE_GATE.md) zawierają późniejsze dowody odtworzenia świeżego eksportu i osobne decyzje dla kodu oraz Meta. Poniższy raport zachowuje stan z issue #2.
 
 **Status dotyczy kontrolowanego uruchomienia Meta: BLOCKED.** Poprawki są przygotowane do przeglądu, ale nie wdrożono ich, nie wykonano merge i nie aktywowano żadnej integracji. Działająca produkcja pozostaje **3.0.3** na https://ai-focus-3-0.onrender.com.
 
