@@ -1,3 +1,20 @@
+# Wznowienie po sesji 010
+
+[Raport 010](docs/sessions/session-010/REPORT.md). Wydanie nadal BLOCKED.
+Sesja 009 zapisana i wysłana: 9858db3177dd003e9463d55ec72eb8fd406287bb.
+Sesja 010 dodaje wspólną transakcyjną blokadę kontaktu salonu (PostgreSQL advisory)
+w workerze, zapisie opt-out i wiązaniu rozmowy. Bez migracji i zmian flag.
+Lokalny PG17: 36 testów PASS, w tym 3 nowe testy integracji/współbieżności.
+Wynik CI końcowego SHA sprawdzić w Checks PR #3; nie deklarować PASS przed success.
+Przy rolling deploy stare procesy nie przestrzegają nowej blokady: wymagane zakończenie
+starych workerów przed aktywacją odbioru Meta. Transport DM pozostaje wyłączony.
+Brak grantu SSH/aktualnego SQL, dowodu RPO60 i weryfikacji artefaktu rollbacku nadal blokuje wydanie.
+Zgoda A aktualna. Następny krok: grant TCP Codex do ssh.frankfurt.render.com:22,
+potem weryfikacja hosta/kanału i dokładnie 4 SELECT-y. Bez otwierania allowlisty.
+Szacunek nadal 5 sesji podstawowych + ≥1 DM; operacyjne bramki niezamknięte.
+
+---
+
 # Aktualizacja po sesji 009
 
 Raport: [sesja 009](docs/sessions/session-009/REPORT.md). Wydanie nadal **BLOCKED**.

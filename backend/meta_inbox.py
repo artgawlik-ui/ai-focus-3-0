@@ -115,7 +115,10 @@ def apply_payload(db,payload):
             except IntegrityError:continue
             if not echo and not deleted:
                 c.last_inbound_at=max(c.last_inbound_at or '',at.isoformat())
-                if opt_out(text):c.opted_out=1
+                if opt_out(text):
+                    from backend.contact_guard import lock_contact
+                    lock_contact(db,c.salon_id)
+                    c.opted_out=1
             if c.salon_id:
                 salon=db.get(Salon,c.salon_id)
                 audit(db,c,salon.owner_id,'instagram_deleted' if deleted else 'instagram_received' if not echo else 'instagram_sent','Webhook Meta potwierdził zdarzenie; źródło meta_message:'+item.id)

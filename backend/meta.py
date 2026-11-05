@@ -221,6 +221,8 @@ def bind(id:str,payload:BindIn,user=Depends(manager),db=Depends(database)):
     if not salon:raise HTTPException(404,'Salon niedostępny')
     if c.salon_id and c.salon_id!=salon.id:raise HTTPException(409,'Konwersacja już powiązana; wymagana osobna procedura korekty')
     if not c.salon_id:
+        from backend.contact_guard import lock_contact
+        lock_contact(db,salon.id)
         c.salon_id=salon.id;audit(db,c,user.id,'instagram_link','Ręcznie potwierdzono powiązanie konwersacji Instagram z salonem')
         for m in db.scalars(select(MetaMessage).where(MetaMessage.conversation_id==c.id,MetaMessage.status=='received')):
             db.add(Activity(id=uid(),salon_id=salon.id,user_id=user.id,kind='instagram_received',body='Powiązano odpowiedź Meta; źródło meta_message:'+m.id,created_at=m.occurred_at))

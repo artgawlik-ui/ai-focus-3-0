@@ -9,6 +9,9 @@ _last_meta_monitor=0.0
 
 def authorized_salon(db, job, final=False):
     # Refresh identity-map entries after a slow provider call; lock through final commit.
+    if final:
+        from backend.contact_guard import lock_contact
+        lock_contact(db, job.salon_id)
     options = {'populate_existing': True, 'with_for_update': True} if final else {}
     requester = db.get(User, job.user_id, **options)
     salon = db.get(Salon, job.salon_id, **options)
