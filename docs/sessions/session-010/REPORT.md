@@ -5,7 +5,8 @@
 - Zweryfikowano lokalny commit 009: 9858db3177dd003e9463d55ec72eb8fd406287bb;
   początkowo GitHub był na 05a9e6b. Wykonano zwykły push, bez force/merge/deploy.
 - PR #3 odczytany Draft. CI 009: 42081039659; backend/build success, ostatni odczyt
-  E2E in progress. Końcowy wynik wymaga sprawdzenia; nie oznaczamy całej sesji PASS.
+  E2E in progress w pierwszym odczycie; późniejszy odczyt potwierdził **success** całego CI 009.
+  https://github.com/artgawlik-ui/ai-focus-3-0/actions/runs/42081039659
 - Zinwentaryzowano zapis blokady: CRM status do_not_contact aktualizuje wiersz Salon;
   MetaConversation.opted_out zapisuje apply_payload; nowa relacja salon_id powstaje w bind.
   Worker sprawdza status i wszystkie powiązane rezygnacje. Zmiana CRM blokuje ten sam
@@ -60,3 +61,14 @@ backend/meta_inbox.py, tests/test_contact_concurrency.py, RESUME.md i dokumenty 
 SHA raportu: `git log -1 --format=%H -- docs/sessions/session-010/REPORT.md`.
 **Status wydania BLOCKED. Pozostaje szacunkowo 5 sesji podstawowych + ≥1 DM**,
 bez gwarantowanego terminu i bez obniżenia za same poprawki przy otwartych bramkach.
+
+## Dodatkowe potwierdzenia przed zamknięciem
+
+- Regresja syntetycznego PG17:
+  `pytest -q tests/test_meta.py tests/test_meta_303.py tests/test_meta_304.py tests/test_contact_concurrency.py tests/test_agent_resilience.py tests/test_supervise.py`
+  **85 passed, 0 failed, 0 skipped, 27.37 s**. To osobne uruchomienie; liczby 36 i 85
+  częściowo obejmują te same testy, nie sumować jako unikalnych.
+- Poprawka sesji 010 wysłana: def70f3ff3dc70564ae5aa9f8ae42c68fbc798e5.
+- REST PATCH opisu PR #3 zakończony sukcesem; odpowiedź draft=true i HEAD=def70f3.
+- Końcowy commit dokumentacji również wymaga zielonego CI; wynik dokładnego SHA
+  podany w raporcie rozmowy. Zakończony sukcesem CI 009 nie zastępuje tego warunku.

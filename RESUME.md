@@ -4,7 +4,10 @@
 Sesja 009 zapisana i wysłana: 9858db3177dd003e9463d55ec72eb8fd406287bb.
 Sesja 010 dodaje wspólną transakcyjną blokadę kontaktu salonu (PostgreSQL advisory)
 w workerze, zapisie opt-out i wiązaniu rozmowy. Bez migracji i zmian flag.
-Lokalny PG17: 36 testów PASS, w tym 3 nowe testy integracji/współbieżności.
+Lokalny PG17: 36 testów PASS, w tym 3 nowe testy integracji/współbieżności;
+rozszerzona regresja Meta/inbox/worker/supervisor: 85/85 PASS (zbiory nakładają się).
+CI 009 zakończone success: https://github.com/artgawlik-ui/ai-focus-3-0/actions/runs/42081039659.
+Kod 010 wysłany jako def70f3; opis PR przez REST zaktualizowany, Draft potwierdzony.
 Wynik CI końcowego SHA sprawdzić w Checks PR #3; nie deklarować PASS przed success.
 Przy rolling deploy stare procesy nie przestrzegają nowej blokady: wymagane zakończenie
 starych workerów przed aktywacją odbioru Meta. Transport DM pozostaje wyłączony.
