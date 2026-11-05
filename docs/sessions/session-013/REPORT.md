@@ -105,7 +105,11 @@ swojego syntetycznego serwera. Izolowane sitecustomize ładuje tests/e2e_discove
 który zastępuje Nominatim/Overpass w httpx i blokuje wszystkie pozostałe zewnętrzne HTTP
 (również Meta/model). Przeglądarka korzysta z rzeczywistego endpointu/geometrii/CRM.
 Transport odmawia instalacji poza APP_ENV=test i lokalną bazą focus3_ci_*; nie ma importu
-w kodzie aplikacji. Prywatny katalog fixture usuwany po E2E. Dodatkowe 3 testy guardów
-transportu: **3 passed**, bez bazy i prawdziwej sieci. Łącznie **22 nowe przypadki pytest**
-(19 funkcji +3 fixture), plus scenariusz UI w dwóch przeglądarkach.
+w kodzie aplikacji. Prywatny katalog fixture usuwany po E2E. Dodatkowe 4 testy guardów
+transportu: **4 passed**, bez bazy i prawdziwej sieci. Łącznie **23 nowe przypadki pytest**
+(19 funkcji +4 fixture), plus scenariusz UI w dwóch przeglądarkach.
 Nowy końcowy commit/CI należy sprawdzić osobno; nie deklarować PASS na podstawie cb64017.
+
+Bootstrap fixture kończy proces kodem 78 przy błędzie instalacji, ponieważ Python
+domyślnie ignoruje wyjątki sitecustomize. Osobny test subprocess potwierdza brak startu
+aplikacji poza dozwolonym środowiskiem, zamiast powrotu do rzeczywistego transportu.

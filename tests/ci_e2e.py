@@ -11,7 +11,7 @@ url=source.set(database=name).render_as_string(hide_password=False)
 with psycopg.connect(admin,autocommit=True) as db:db.execute('CREATE DATABASE '+name)
 child=None;proxy=None
 fixture_dir=tempfile.TemporaryDirectory(prefix='focus3-e2e-http-')
-Path(fixture_dir.name,'sitecustomize.py').write_text('from tests.e2e_discovery_transport import install; install()\n')
+Path(fixture_dir.name,'sitecustomize.py').write_text('import os\ntry:\n from tests.e2e_discovery_transport import install\n install()\nexcept BaseException:\n os._exit(78)\n')
 credential_fd,credential_name=tempfile.mkstemp(prefix='focus3-ci-',suffix='.json')
 os.close(credential_fd)
 credential_path=Path(credential_name)

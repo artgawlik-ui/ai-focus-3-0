@@ -18,3 +18,17 @@ def test_synthetic_transport_rejects_wrong_environment(monkeypatch,mode,database
     monkeypatch.setenv('APP_ENV',mode)
     monkeypatch.setenv('DATABASE_URL','postgresql://postgres@127.0.0.1/'+database)
     with pytest.raises(RuntimeError):install()
+
+
+def test_failed_fixture_bootstrap_exits_before_application(tmp_path):
+    import os,subprocess,sys
+    from pathlib import Path
+    # Python normally ignores sitecustomize errors: this bootstrap must fail closed.
+    source=(Path(__file__).parent/'ci_e2e.py').read_text()
+    import ast
+    tree=ast.parse(source)
+    assignment=next(n for n in ast.walk(tree) if isinstance(n,ast.Call) and isinstance(n.func,ast.Attribute) and n.func.attr=='write_text' and n.args and isinstance(n.args[0],ast.Constant) and 'os._exit(78)' in str(n.args[0].value))
+    (tmp_path/'sitecustomize.py').write_text(assignment.args[0].value)
+    env={'PATH':os.environ.get('PATH',''),'APP_ENV':'production','DATABASE_URL':'postgresql://postgres@127.0.0.1/focus3_ci_synthetic','PYTHONPATH':str(tmp_path)+os.pathsep+str(Path(__file__).resolve().parents[1])}
+    result=subprocess.run([sys.executable,'-c','raise SystemExit(0)'],env=env,capture_output=True,timeout=10)
+    assert result.returncode==78
