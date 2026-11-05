@@ -116,3 +116,16 @@ operacyjnie ograniczony grant TCP Codex ssh.frankfurt.render.com:22, potem zaufa
 kanał READ ONLY/prywatne ID i cztery SELECT-y. Bez zmiany allowlisty PostgreSQL.
 Nie prosić ponownie o A. Wymagana osobna zgoda na produkcyjny schemat/deploy/aktywację.
 **Szacunek nadal5 sesji podstawowych +≥1DM**; nowy adapter nie zamknął wymagań recovery.
+
+## Potwierdzone pełne CI implementacji
+
+Commit `778477c78690f59b61ece1d83f3e6cbbdf2e20a5`, workflow PR
+https://github.com/artgawlik-ui/ai-focus-3-0/actions/runs/42132281549,
+job127611594248: **completed/success**. Log: `259 passed, 2 warnings in 84.68s`,
+`chromium-desktop: PASS`, `webkit-iphone: PASS`, `found 0 vulnerabilities`,
+`No known vulnerabilities found`. Build i wszystkie kroki workflow success.
+225 wejściowych +34 nowe =259, bez osłabienia dotychczasowych testów.
+11 operatorskich cleanup nadal poza zakresem CI; nie są testami aplikacji Google.
+Kod/testy **PASS na mockach**; live OAuth/Google i produkcyjne wydanie **BLOCKED**.
+Ten dopisek i RESUME to dokumentacja dowodu, bez dalszych zmian kodu.
+Końcowy SHA dokumentacji również wymaga zielonego CI (Checks PR #3).

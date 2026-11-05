@@ -11,8 +11,9 @@ Nie zmieniać produkcyjnych flag. Standardowy Alembic pozostaje 004/17 tabel;
 opcjonalne google-alembic.ini ->005/21. Rollback 005->004 tylko marker, zachowuje dane.
 Po 005 schema flag musi zostać true do zatwierdzonego downgrade; standardowy profil nie zna005.
 Lokalnie 68/68 testów regresji PASS, build/compile/sh/diff PASS. Nowych przypadków 34
-(32 Google, 1 lifecycle, 1 fixture). Pełny CI końcowego SHA sprawdzić w PR, wyników
-wejściowych nie przypisywać nowemu commitowi. SHA raportu: git log -1 --format=%H --
+(32 Google, 1 lifecycle, 1 fixture). Implementacja778477c: CI42132281549 SUCCESS,
+259 passed, Chromium/WebKit PASS, pip/npm0 podatności. Końcowy CI commita dopisku
+dokumentacyjnego sprawdzić w PR; nie przypisywać mu automatycznie wyniku implementacji. SHA raportu: git log -1 --format=%H --
 docs/sessions/session-015/REPORT.md. Jeśli CI niegreen, najpierw napraw konkretny błąd.
 Brak nowego kanału/settera TCP, revision5; bez kolejnych prób SSH i bez produkcyjnego SQL.
 Zgoda A aktualna tylko 4 SELECT-y 004/17; przyszłe005 wymaga nowego zatwierdzonego manifestu.
