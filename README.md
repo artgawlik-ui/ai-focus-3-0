@@ -81,3 +81,15 @@ tylko HTTPS bez sekretów w URL i bez przekierowań. Zmiana produkcyjna wymaga z
 Źródła są niekompletne, wyniki ograniczone do 100; brak wyniku nie oznacza braku salonów.
 Publiczny serwis nie ma gwarancji dostępności. Polityka sprawdzona 5 listopada 2026:
 https://operations.osmfoundation.org/policies/nominatim/ (HTTP 200). Brak nowych płatnych usług.
+
+## Plan wizyt (kandydat sesji 014)
+
+`VISIT_PLANNER_ENABLED=false` domyślnie. Po zatwierdzonej aktywacji: dzień/tydzień
+Europe/Warsaw, filtr handlowca dla managera, propozycja domyślnie 20 min w formularzu,
+zmiana terminu/notatek/statusu i odwołanie. CRM jest źródłem prawdy. Nowy workflow
+pozwala handlowcowi proponować, a potwierdzenie wymaga managera i jawnej deklaracji,
+że klient uzgodnił termin. Brak automatycznych wydarzeń, wiadomości i potwierdzeń.
+`calendar-preview` to wyłącznie payload przyszłego adaptera, nie OAuth ani synchronizacja.
+Nawigacja i lokalizacja Google wymagają ręcznej weryfikacji aktualnego adresu w profilu;
+zmiana profilu unieważnia weryfikację. Zabezpieczenie tras działa również przy fladze OFF.
+Projekt integracji: [GOOGLE_CALENDAR_PLAN.md](docs/integrations/GOOGLE_CALENDAR_PLAN.md).

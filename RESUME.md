@@ -1,3 +1,26 @@
+# Wznowienie po sesji 014
+
+[Raport 014](docs/sessions/session-014/REPORT.md). Punkt wejściowy 9138215/CI 42094884611
+success potwierdzone, PR #3 Draft. Wydanie nadal BLOCKED.
+Nowe: istniejące appointments rozszerzone o 1/7 dni i handlowca, edycję daty/minut/notatek,
+revision przeciw nadpisaniu, odwołanie, audyt. UI domyślnie propozycja 20 min;
+w nowym workflow manager potwierdza po jawnym uzgodnieniu klienta.
+VISIT_PLANNER_ENABLED=false domyślnie. Brak zmiany schematu (004), kosztów i produkcji.
+Adres do nawigacji musi być ręcznie potwierdzony dla aktualnego profilu; zmiana profilu
+unieważnia weryfikację. Ten guard działa również przy panelu OFF. Trasy nie mieszają handlowców.
+Google Calendar nadal ręczny link + preview bez zewnętrznych zapisów, OAuth/sync niezaimplementowane.
+Projekt: docs/integrations/GOOGLE_CALENDAR_PLAN.md; prawdziwe konto wymaga przyszłej autoryzacji.
+16 nowych testów; lokalnie 34/34 regresji oraz końcowy plik 16/16 (zbiory nakładają się),
+build/compile/check PASS. Nowy flow mobilny w istniejącym E2E — końcowy CI dokładnego HEAD
+sprawdzić w PR, nie przepisywać wyniku wejściowego. Uchwyty przerwanych procesów nie były dowodem.
+Brak nowego kanału/grantu/settera, środowisko revision 5. Nie ponawiano TCP/SSH; 0 produkcyjnych SQL.
+A aktualna. Nadal SQL/integralność/RPO60/magazyn-klucz/artefakt-env/handoff otwarte.
+Najbliższy krok operacyjny: grant TCP Codex ssh.frankfurt.render.com:22, bez zmiany allowlisty;
+potem host key/kanał/prywatne ID i 4 SELECT-y. Nie wdrażać ani aktywować integracji bez zgody.
+Szacunek nadal 5 sesji podstawowych + ≥1 DM. Kod i dane Focus 1.0/2.0 niezmienione.
+
+---
+
 # Wznowienie po sesji 013
 
 [Raport 013](docs/sessions/session-013/REPORT.md), [macierz dowodów](docs/sessions/session-013/EVIDENCE_GATE.md).
