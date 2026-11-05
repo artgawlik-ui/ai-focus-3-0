@@ -1,6 +1,7 @@
 """Real HTTPS browser checks in Chromium desktop and WebKit with iPhone emulation."""
 import json, os
 from pathlib import Path
+from urllib.parse import urlsplit,parse_qs,urlencode
 from playwright.sync_api import sync_playwright
 from scripts.local_test_policy import local_origin
 origin=local_origin()
@@ -120,6 +121,43 @@ with sync_playwright() as p:
             page.get_by_role('button',name='Zapisz szkic · bez wysyłki').click()
             page.get_by_role('button',name='Zatwierdź szkic · bez wysyłki').first.click()
             page.get_by_text('Zatwierdzona · niewysłana',exact=False).first.wait_for()
+            assert page.evaluate('document.documentElement.scrollWidth<=innerWidth')
+        if isolated:
+            section=page.get_by_label('Google Calendar integracja',exact=True)
+            section.get_by_role('button',name='Przygotuj połączenie Google',exact=True).click()
+            link=section.get_by_role('link',name='Otwórz autoryzację Google',exact=True)
+            link.wait_for();params=parse_qs(urlsplit(link.get_attribute('href')).query)
+            assert params['code_challenge_method']==['S256']
+            # Local callback only. Provider exchange is a strict synthetic transport fixture.
+            page.request.get(origin+'/api/google-calendar/oauth/callback?'+urlencode({'state':params['state'][0],'code':'synthetic-'+label}))
+            section.get_by_role('button',name='Odśwież status Google',exact=True).click()
+            section.get_by_role('button',name='Zatwierdź konto handlowca',exact=True).click()
+            section.get_by_role('button',name='Utwórz dedykowany kalendarz',exact=True).click()
+            token=page.request.get(origin+'/api/auth/me').json()['csrf']
+            visit=next(v for v in page.request.get(origin+'/api/appointments').json() if v['salon_name']=='[TEST] Salon promień '+label)
+            assert page.request.patch(origin+'/api/appointments/'+visit['id'],data={'status':'confirmed','confirmation_recorded':True},headers={'X-CSRF-Token':token}).status==200
+            section.get_by_role('button',name='Odśwież status Google',exact=True).click()
+            section.get_by_label('Wizyta do synchronizacji',exact=True).select_option(visit['id'])
+            section.get_by_role('button',name='Odśwież podgląd wizyty',exact=True).click()
+            section.get_by_label('Zatwierdzam wysłanie tej wersji wizyty do Google',exact=True).check()
+            previous=[j['id'] for j in page.request.get(origin+'/api/google-calendar/requests').json()]
+            section.get_by_role('button',name='Zleć zatwierdzoną synchronizację',exact=True).click()
+            page.wait_for_function('''async data=>{const rows=await(await fetch('/api/google-calendar/requests')).json();return rows.some(j=>j.appointment_id===data.visit&&!data.previous.includes(j.id)&&j.status==='synced')}''',arg={'visit':visit['id'],'previous':previous},timeout=25000)
+            section.get_by_role('button',name='Odśwież status Google',exact=True).click()
+            history=section.locator('article').filter(has=page.get_by_text('[TEST] Salon promień '+label,exact=True)).first
+            history.get_by_text('Stan potwierdzony przez API',exact=False).wait_for(timeout=25000)
+            assert page.request.patch(origin+'/api/appointments/'+visit['id'],data={'status':'cancelled'},headers={'X-CSRF-Token':token}).status==200
+            section.get_by_role('button',name='Odśwież status Google',exact=True).click()
+            section.get_by_label('Wizyta do synchronizacji',exact=True).select_option(visit['id'])
+            section.get_by_role('button',name='Odśwież podgląd wizyty',exact=True).click()
+            section.get_by_label('Zatwierdzam wysłanie tej wersji wizyty do Google',exact=True).check()
+            previous=[j['id'] for j in page.request.get(origin+'/api/google-calendar/requests').json()]
+            section.get_by_role('button',name='Zleć zatwierdzoną synchronizację',exact=True).click()
+            page.wait_for_function('''async data=>{const rows=await(await fetch('/api/google-calendar/requests')).json();return rows.some(j=>j.appointment_id===data.visit&&!data.previous.includes(j.id)&&j.status==='synced')}''',arg={'visit':visit['id'],'previous':previous},timeout=25000)
+            section.get_by_role('button',name='Odśwież status Google',exact=True).click()
+            history.get_by_text('Stan potwierdzony przez API',exact=False).wait_for(timeout=25000)
+            section.get_by_role('button',name='Odłącz Google od aplikacji',exact=True).click()
+            section.get_by_text('Brak połączonego konta.',exact=False).wait_for()
             assert page.evaluate('document.documentElement.scrollWidth<=innerWidth')
         if label=='webkit-iphone':page.get_by_label('Otwórz menu').click()
         page.get_by_label('Wyloguj',exact=True).click()

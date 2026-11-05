@@ -105,6 +105,16 @@ def process_meta_once():
         log.warning('Meta cycle deferred; CRM queue continues')
         return False
 
+def process_google_once():
+    from backend.google_transport import writable
+    if not writable():return False
+    try:
+        from backend.google_calendar import process_once
+        return process_once()
+    except Exception:
+        log.warning('Google Calendar cycle deferred; no success assumed')
+        return False
+
 def main():
     import signal
     import threading
@@ -126,6 +136,8 @@ def main():
                     last_cleanup=time.monotonic()
                 if stop_event.is_set() or paused():continue
                 process_meta_once()
+                if stop_event.is_set() or paused():continue
+                process_google_once()
                 if stop_event.is_set() or paused():continue
                 run_once()
                 publish('idle')

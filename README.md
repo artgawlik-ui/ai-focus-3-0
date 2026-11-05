@@ -56,7 +56,7 @@ Blueprint generuje hasło początkowego konta w bezpiecznym środowisku Render. 
 
 ## Granice integracji
 
-- Google Calendar: działa ręczne otwieranie formularza, brak OAuth i synchronizacji dwukierunkowej.
+- Google Calendar: zachowany ręczny formularz. Opcjonalny adapter OAuth i zatwierdzana synchronizacja z sesji 015 są przetestowane na mockach, domyślnie OFF; brak potwierdzenia działania na żywo i synchronizacji dwukierunkowej.
 - Instagram: adapter Unified Login i podpisane webhooki wdrożone za wyłącznikiem; rzeczywista autoryzacja konta testowego czeka na właściciela. Brak transportu wysyłki.
 - Livespace: przygotowana tabela mapowania zewnętrznych ID/kursora z unikalnością; brak aktywnej synchronizacji i adaptera sieciowego. Wymaga uzgodnienia źródła prawdy i API.
 - OpenAI: adapter przygotowany, domyślnie nieaktywny, brak testu realnego modelu bez autoryzowanego sekretu i zgody kosztowej.
@@ -93,3 +93,11 @@ pozwala handlowcowi proponować, a potwierdzenie wymaga managera i jawnej deklar
 Nawigacja i lokalizacja Google wymagają ręcznej weryfikacji aktualnego adresu w profilu;
 zmiana profilu unieważnia weryfikację. Zabezpieczenie tras działa również przy fladze OFF.
 Projekt integracji: [GOOGLE_CALENDAR_PLAN.md](docs/integrations/GOOGLE_CALENDAR_PLAN.md).
+
+## Opcjonalny Google Calendar (sesja 015)
+
+OAuth per użytkownik, dedykowany kalendarz, zatwierdzane zlecenia synchronizacji i panel
+statusu są przygotowane za trzema domyślnie wyłączonymi flagami. Osobny profil Alembic
+005 nie zmienia standardowego schematu 004. Nie uruchamiaj profilu na produkcji bez
+zgody i zamknięcia bramek recovery. Konfiguracja, wymagania Google, ograniczenia testów
+i plan wycofania: [GOOGLE_CALENDAR_PLAN](docs/integrations/GOOGLE_CALENDAR_PLAN.md).

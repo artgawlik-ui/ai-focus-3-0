@@ -424,6 +424,8 @@ def download_backup(payload:BackupIn,user=Depends(manager)):
 
 from backend.meta import router as meta_router
 app.include_router(meta_router)
+from backend.google_calendar import router as google_router
+app.include_router(google_router)
 
 DIST=Path(__file__).resolve().parent.parent/'frontend'/'dist'
 if DIST.exists():

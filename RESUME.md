@@ -1,3 +1,31 @@
+# Wznowienie po sesji 015
+
+[Raport 015](docs/sessions/session-015/REPORT.md),
+[Google Calendar](docs/integrations/GOOGLE_CALENDAR_PLAN.md).
+Punkt wejściowy 516cd335, CI success/225 potwierdzone przy rozpoczęciu; PR #3 Draft.
+Zaimplementowany OAuth sesja/state/PKCE, oddzielny grant użytkownika, Fernet, dedykowany
+kalendarz i jawnie zatwierdzana synchronizacja wersji wizyty (kolejka, ETag, retry, cancel).
+Panel mobilny + mock transport Google w E2E Chromium/WebKit. Brak realnego Google OAuth/API.
+GOOGLE_SCHEMA_ENABLED / GOOGLE_CALENDAR_ENABLED / GOOGLE_CALENDAR_WRITE_ENABLED domyślnie false.
+Nie zmieniać produkcyjnych flag. Standardowy Alembic pozostaje 004/17 tabel;
+opcjonalne google-alembic.ini ->005/21. Rollback 005->004 tylko marker, zachowuje dane.
+Po 005 schema flag musi zostać true do zatwierdzonego downgrade; standardowy profil nie zna005.
+Lokalnie 68/68 testów regresji PASS, build/compile/sh/diff PASS. Nowych przypadków 34
+(32 Google, 1 lifecycle, 1 fixture). Pełny CI końcowego SHA sprawdzić w PR, wyników
+wejściowych nie przypisywać nowemu commitowi. SHA raportu: git log -1 --format=%H --
+docs/sessions/session-015/REPORT.md. Jeśli CI niegreen, najpierw napraw konkretny błąd.
+Brak nowego kanału/settera TCP, revision5; bez kolejnych prób SSH i bez produkcyjnego SQL.
+Zgoda A aktualna tylko 4 SELECT-y 004/17; przyszłe005 wymaga nowego zatwierdzonego manifestu.
+Wydanie BLOCKED: aktualna integralność/konta SQL, RPO60, magazyn/klucz, rollback artefakt/env,
+produkcyjny handoff; Google dodatkowo klient Web/test OAuth S256 i zgody na aktywację.
+Nie wykonać merge/deploy/migracji/eksportu/restore/PITR/Meta/DM bez osobnej zgody.
+Szacunek nadal 5 sesji podstawowych + co najmniej 1 DM. Focus1/2 nietknięte.
+Następny bezpieczny krok: zweryfikować pełny CI i przygotować test rejestracji Web OAuth
+na zatwierdzonym koncie testowym; operacyjnie potrzebny ograniczony grant TCP Codex
+ssh.frankfurt.render.com:22, bez zmiany allowlisty PostgreSQL.
+
+---
+
 # Wznowienie po sesji 014
 
 [Raport 014](docs/sessions/session-014/REPORT.md). Punkt wejściowy 9138215/CI 42094884611

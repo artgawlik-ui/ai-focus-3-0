@@ -32,3 +32,19 @@ def test_failed_fixture_bootstrap_exits_before_application(tmp_path):
     env={'PATH':os.environ.get('PATH',''),'APP_ENV':'production','DATABASE_URL':'postgresql://postgres@127.0.0.1/focus3_ci_synthetic','PYTHONPATH':str(tmp_path)+os.pathsep+str(Path(__file__).resolve().parents[1])}
     result=subprocess.run([sys.executable,'-c','raise SystemExit(0)'],env=env,capture_output=True,timeout=10)
     assert result.returncode==78
+
+
+def test_google_fixture_is_local_and_etag_protected(monkeypatch,tmp_path):
+    monkeypatch.setenv('APP_ENV','test');monkeypatch.setenv('DATABASE_URL','postgresql://postgres@127.0.0.1/focus3_ci_synthetic')
+    monkeypatch.setenv('FOCUS_TEST_GOOGLE_STORE',str(tmp_path/'google.json'))
+    monkeypatch.setattr(httpx.HTTPTransport,'handle_request',httpx.HTTPTransport.handle_request)
+    monkeypatch.setattr(httpx.AsyncHTTPTransport,'handle_async_request',httpx.AsyncHTTPTransport.handle_async_request)
+    install()
+    root='https://www.googleapis.com/calendar/v3'
+    calendar=httpx.post(root+'/calendars',json={'summary':'Syntetyczny kalendarz'}).json()['id']
+    path=root+'/calendars/'+calendar+'/events'
+    first=httpx.post(path,params={'sendUpdates':'none'},json={'id':'fixture-event','status':'confirmed'})
+    assert first.status_code==200
+    assert httpx.post(path,params={'sendUpdates':'none'},json={'id':'fixture-event'}).status_code==409
+    assert httpx.patch(path+'/fixture-event',params={'sendUpdates':'none'},headers={'If-Match':'wrong'},json={'status':'cancelled'}).status_code==412
+    assert httpx.patch(path+'/fixture-event',params={'sendUpdates':'none'},headers={'If-Match':first.json()['etag']},json={'status':'cancelled'}).json()['status']=='cancelled'
