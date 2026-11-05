@@ -10,11 +10,14 @@ admin=source.set(database='postgres').render_as_string(hide_password=False)
 url=source.set(database=name).render_as_string(hide_password=False)
 with psycopg.connect(admin,autocommit=True) as db:db.execute('CREATE DATABASE '+name)
 child=None;proxy=None
+fixture_dir=tempfile.TemporaryDirectory(prefix='focus3-e2e-http-')
+Path(fixture_dir.name,'sitecustomize.py').write_text('from tests.e2e_discovery_transport import install; install()\n')
 credential_fd,credential_name=tempfile.mkstemp(prefix='focus3-ci-',suffix='.json')
 os.close(credential_fd)
 credential_path=Path(credential_name)
 try:
     env={**os.environ,'AGENT_V2_ENABLED':'true','AI_PAID_PROCESSING_APPROVED':'false','DATABASE_URL':url,'APP_ENV':'test','PORT':'8005','APP_ORIGIN':'http://127.0.0.1:8006','FOCUS_TEST_ORIGIN':'http://127.0.0.1:8006','FOCUS_TEST_OFFLINE_FLAG':'/tmp/focus3-test-network-down','FOCUS_TEST_CREDENTIAL_FILE':str(credential_path)}
+    env.update({'DISCOVERY_RADIUS_ENABLED':'true','PYTHONPATH':fixture_dir.name+os.pathsep+str(Path(__file__).resolve().parents[1])})
     from cryptography.fernet import Fernet
     env.update({'META_ENABLED':'true','META_MODE':'development','META_APP_ID':'123456','META_CONFIG_ID':'ci-synthetic','META_APP_SECRET':uuid.uuid4().hex,'META_VERIFY_TOKEN':uuid.uuid4().hex,'META_ENCRYPTION_KEY':Fernet.generate_key().decode(),'META_TEST_ACCOUNT_ID':'90001','META_REDIRECT_URI':'https://test.invalid/api/meta/oauth/callback','BOOTSTRAP_EMAIL':'verification@focus.invalid'})
     os.environ.update({k:env[k] for k in ['DATABASE_URL','APP_ENV']+list(k for k in env if k.startswith('META_'))})
@@ -56,3 +59,4 @@ finally:
         engine.dispose()
     except ImportError:pass
     with psycopg.connect(admin,autocommit=True) as db:db.execute('DROP DATABASE '+name)
+    fixture_dir.cleanup()

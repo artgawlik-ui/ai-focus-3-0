@@ -7,7 +7,10 @@ formularz weryfikacji przed zapisem. DISCOVERY_RADIUS_ENABLED=false domyślnie;
 GEOCODING_SEARCH_URL konfigurowalny HTTPS. Stare city-only zachowane.
 Bez nowych migracji/zależności/produkcji. Geokoder ma publiczny cache/rate limit także
 między procesami PG. Nie wysyła CRM; nie ma autocomplete ani realnych testów dostawcy.
-19 nowych testów, lokalna regresja 56/56, build PASS. Nowy UI w Chromium/WebKit na fixture
+22 nowe testy (19 funkcji +3 bezpieczeństwa fixture), lokalna regresja 56/56 +3/3, build PASS.
+Pierwszy CI cb64017: backend 205 PASS, Chromium PASS, WebKit nie otrzymał testowej flagi.
+Korekta E2E: flaga w izolowanym serwerze, transport HTTP dostawcy fixture ze ścisłym guardem;
+przeglądarki używają rzeczywistego API. Koniecznie sprawdzić CI poprawionego HEAD. Nowy UI w Chromium/WebKit na fixture
 w istniejącym CI; końcowy wynik exact HEAD w Checks PR #3, nie przepisywać starszego PASS.
 README poprawione: start.sh już startuje worker; status produkcji jest datowany.
 TCP sprawdzone raz, puste. Brak narzędzia ustawienia reguły; 0 SSH/SELECT, A aktualna.

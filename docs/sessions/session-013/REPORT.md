@@ -62,8 +62,8 @@ centra, nie klientów. Publiczne usługi mogą odmówić dostępu; brak gwarancj
 - `npm run build --prefix frontend`: PASS (tsc i Vite). `git diff --check`: PASS.
 - Dodano scenariusz UI w istniejącym E2E dla Chromium i WebKit/iPhone: wybór miasta,
   centrum/promienia, wynik i odległość, formularz przeglądu, zapis syntetycznego salonu,
-  brak poziomego przewijania. Endpointy discovery są w przeglądarce zastąpione fixtures;
-  API/provider są testowane oddzielnie. Nie jest to dowód działania prawdziwego Nominatim
+  brak poziomego przewijania. Flaga promienia jest ON wyłącznie w izolowanym serwerze E2E;
+  transport dostawców HTTP zastępują fixtures, przeglądarka używa rzeczywistego API. Nie jest to dowód działania prawdziwego Nominatim
   lub Overpass ani fizycznego iPhone'a. Końcowy wynik dopiero w CI dokładnego SHA.
 - Brak realnych zapytań do usług wyszukiwania i brak komunikacji z klientami. Jedyny
   zewnętrzny HTTP nowej funkcji podczas sesji to odczyt oficjalnej polityki.
@@ -94,3 +94,18 @@ Bez merge/deploy/zmian produkcji, eksportów/restore/PITR, klientów, sekretów 
 Meta/Render/sieci. Brak realnych DM i nowych kosztów. Focus 1.0/2.0 niezmienione.
 Szacunek nadal **5 sesji podstawowych + ≥1 DM**, bez redukcji za nową funkcję przy
 otwartych wymaganiach recovery/dostępu. Nie działa w tle po sesji.
+
+## Korekta po CI i dowody końcowego podejścia
+
+CI cb64017 (42093723048): backend/build PASS (205 testów), Chromium nowy przepływ PASS,
+WebKit nie znalazł przycisku geokodowania — testowa flaga nadpisywana przez browser route
+nie dotarła do widoku kontrolowanego przez service workera. Nie zmieniono produkcyjnej flagi.
+Usunięto zależność od interception przeglądarki: tests/ci_e2e.py włącza flagę tylko dla
+swojego syntetycznego serwera. Izolowane sitecustomize ładuje tests/e2e_discovery_transport.py,
+który zastępuje Nominatim/Overpass w httpx i blokuje wszystkie pozostałe zewnętrzne HTTP
+(również Meta/model). Przeglądarka korzysta z rzeczywistego endpointu/geometrii/CRM.
+Transport odmawia instalacji poza APP_ENV=test i lokalną bazą focus3_ci_*; nie ma importu
+w kodzie aplikacji. Prywatny katalog fixture usuwany po E2E. Dodatkowe 3 testy guardów
+transportu: **3 passed**, bez bazy i prawdziwej sieci. Łącznie **22 nowe przypadki pytest**
+(19 funkcji +3 fixture), plus scenariusz UI w dwóch przeglądarkach.
+Nowy końcowy commit/CI należy sprawdzić osobno; nie deklarować PASS na podstawie cb64017.
