@@ -31,7 +31,8 @@ def run_once():
         db.commit()
         job=db.scalar(select(Job).where(Job.status=='queued').order_by(Job.created_at).with_for_update(skip_locked=True).limit(1))
         if not job: return False
-        result=db.execute(update(Job).where(Job.id==job.id,Job.status=='queued').values(status='running',updated_at=now()))
+        claim_stamp=now()
+        result=db.execute(update(Job).where(Job.id==job.id,Job.status=='queued').values(status='running',updated_at=claim_stamp))
         if result.rowcount!=1: db.rollback(); return False
         db.commit()
         try:
@@ -49,13 +50,23 @@ def run_once():
                 analysis.pop('score',None); analysis.pop('criteria',None)
             from backend.agent_provider import add_optional_questions
             add_optional_questions(analysis,minimal_model_context(analysis))
+            # Fence a previous executor after recovery/reclaim. Lock and result commit are atomic.
+            owned=db.scalar(select(Job).where(Job.id==job.id,Job.status=='running',Job.updated_at==claim_stamp).with_for_update().execution_options(populate_existing=True))
+            if not owned:
+                db.rollback()
+                return True
             salon=authorized_salon(db,job,final=True)
             job.status='completed'; job.result=json.dumps(analysis,ensure_ascii=False); job.updated_at=now()
             db.add(Activity(id=uid(),salon_id=salon.id,user_id=job.user_id,kind='agent_draft',body='Przygotowano analizę i szkic. Nie wysłano wiadomości.'))
             db.commit()
             log.info('agent completed job_id=%s user_id=%s rules=%s sent=false',job.id,job.user_id,analysis.get('rules_version','legacy'))
         except Exception:
-            db.rollback(); job=db.get(Job,job.id); job.status='failed'; job.result=json.dumps({'error':'Analiza nie powiodła się. Sprawdź konfigurację dostawcy i ponów zadanie.'}); job.updated_at=now(); db.commit(); log.warning('Job failed id=%s',job.id)
+            job_id=job.id
+            db.rollback()
+            owned=db.scalar(select(Job).where(Job.id==job_id,Job.status=='running',Job.updated_at==claim_stamp).with_for_update().execution_options(populate_existing=True))
+            if owned:
+                owned.status='failed'; owned.result=json.dumps({'error':'Analiza nie powiodła się. Sprawdź konfigurację dostawcy i ponów zadanie.'}); owned.updated_at=now(); db.commit()
+                log.warning('Job failed; details suppressed')
         return True
 
 def maintain_meta_once():
@@ -94,22 +105,37 @@ def process_meta_once():
         log.warning('Meta cycle deferred; CRM queue continues')
         return False
 
-if __name__=='__main__':
+def main():
     import signal
-    running=True
-    def stop(*_):
-        global running
-        running=False
-    signal.signal(signal.SIGTERM,stop); signal.signal(signal.SIGINT,stop)
+    import threading
+    from backend.worker_control import paused, publish
+    stop_event=threading.Event()
+    def stop(*_):stop_event.set()
+    previous={sig:signal.signal(sig,stop) for sig in (signal.SIGTERM,signal.SIGINT)}
     last_cleanup=-3600
-    while running:
-        try:
-            if time.monotonic()-last_cleanup>3600:
-                maintain_meta_once()
-                last_cleanup=time.monotonic()
-            process_meta_once()
-            run_once()
-            time.sleep(2)
-        except Exception:
-            log.warning('Queue unavailable; retrying after database readiness check')
-            time.sleep(5)
+    try:
+        while not stop_event.is_set():
+            if paused():
+                publish('paused')
+                stop_event.wait(2)
+                continue
+            try:
+                publish('running')
+                if time.monotonic()-last_cleanup>3600:
+                    maintain_meta_once()
+                    last_cleanup=time.monotonic()
+                if stop_event.is_set() or paused():continue
+                process_meta_once()
+                if stop_event.is_set() or paused():continue
+                run_once()
+                publish('idle')
+                stop_event.wait(2)
+            except Exception:
+                publish('degraded')
+                log.warning('Queue unavailable; retrying after database readiness check')
+                stop_event.wait(5)
+    finally:
+        publish('stopped')
+        for sig,handler in previous.items():signal.signal(sig,handler)
+
+if __name__=='__main__':main()

@@ -96,3 +96,16 @@ def test_signal_during_start_still_reaps_just_created_child(harness):
     spawn.assert_called_once()
     api.terminate.assert_called_once()
     api.wait.assert_called_once()
+
+
+def test_supervisor_can_restart_after_child_failure(harness):
+    handlers,spawn=harness
+    api1,worker1,api2,worker2=child(),child(),child(),child()
+    worker1.poll.return_value=7;worker1.returncode=7
+    worker2.poll.return_value=3;worker2.returncode=3
+    spawn.side_effect=[api1,worker1,api2,worker2]
+    assert supervise.main()==7
+    assert supervise.main()==3
+    api1.wait.assert_called_once();api2.wait.assert_called_once()
+    assert spawn.call_count==4
+    assert all(h==signal.SIG_DFL for h in handlers.values())

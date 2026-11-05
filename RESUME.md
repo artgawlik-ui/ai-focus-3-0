@@ -1,3 +1,26 @@
+# Wznowienie po sesji 011
+
+[Raport 011](docs/sessions/session-011/REPORT.md), [plan rollout/drain](docs/sessions/session-011/ROLLOUT.md).
+Status wydania **BLOCKED**. Punkt wejściowy 64b1719 i CI 42081843358 success potwierdzone.
+Nowy kod: fencing przejęcia Job przed zapisem wyniku/błędu; pauza całego workera
+WORKER_PAUSED (domyślnie false, błędna/pusta wartość pauzuje) lub lokalny pause file;
+SIGTERM nie zaczyna kolejnego etapu, plik statusu operacyjnego bez PII.
+Brak zmiany schematu/flag Meta/płatnego AI; nie uruchomiono pauzy ani rollout na produkcji.
+Nowe testy 011: 14; lokalny PG17 regresja 94/94, ponowny worker lifecycle 13/13,
+supervisor 6/6. Zbiory częściowo nakładają się; końcowy CI sprawdzić dla HEAD PR #3.
+Pierwszy deploy musi startować z nowym workerem w pauzie, Meta OFF; dopiero po
+potwierdzeniu zakończenia starych procesów osobna zgoda na wznowienie. Stary kod
+nie przestrzega nowych zabezpieczeń; rollback je usuwa i wymaga drain przed cofnięciem.
+API health sprawdza bazę, nie worker. Status ulotny nie jest zewnętrznym monitoringiem.
+TCP grant nadal pusty, zero SSH/SQL. Zgoda A aktualna, prywatne ID niepotwierdzone.
+Render GET: PG17 available, 0.1c-256mb, 1GB; brak latest point w dostępnych metadata.
+RPO60, aktualna integralność/konta, magazyn/klucz i artefakt/env rollbacku nadal otwarte.
+Najbliższy krok właściciela: grant TCP Codex do ssh.frankfurt.render.com:22;
+nie otwierać allowlisty. Brak zgody na merge/deploy/eksport/PITR/konfigurację/Meta/DM.
+Pozostaje szacunkowo 5 sesji podstawowych + ≥1 DM; termin zależy od dowodów recovery/dostępu.
+
+---
+
 # Wznowienie po sesji 010
 
 [Raport 010](docs/sessions/session-010/REPORT.md). Wydanie nadal BLOCKED.
