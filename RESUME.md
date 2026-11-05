@@ -1,7 +1,15 @@
-# AI FOCUS 3.0.4 — punkt wznowienia po sesji 006
+# AI FOCUS 3.0.4 — punkt wznowienia, aktualizacja po sesji 007
 
-Zapis: 2 listopada 2026, Europe/Warsaw. **Status wydania: BLOCKED.**
-Następny etap: **sesja 007 — dowód RPO 60 i odblokowanie odczytów**, nie deploy.
+Pierwotny checkpoint: 2 listopada; aktualizacja sesji 007: 5 listopada 2026, Europe/Warsaw. **Status wydania: BLOCKED.**
+Następny krok: **zgoda A i wewnętrzny dostęp SQL**, następnie kontynuacja sesji 007, nie deploy.
+
+> Wykonano odczyty wznowienia 5 listopada: [raport sesji 007](docs/sessions/session-007/REPORT.md).
+> Checkpoint 60644d8 i jego checks potwierdzone. Render nadal live d15265b; recovery
+> AVAILABLE ze startsAt 2026-11-01T06:32:50Z, bez latest point. Eksport z 1 listopada
+> miał przy odczycie 337161 s (93h39m21s); nie spełnia RPO 60. Meta/DM OFF w zapisanej
+> konfiguracji. Nie powtarzano restore ani lokalnej regresji. **A nadal nieudzielona**,
+> granty TCP puste. [Minimalny zakres A](docs/sessions/session-007/AUTHORIZATION_REQUEST.md).
+> Bez nowej zgody/kanału lub zmiany faktów nie powtarzać zakończonych testów i tych samych planów.
 
 ## Źródło prawdy i zapisany commit
 
@@ -11,7 +19,8 @@ Następny etap: **sesja 007 — dowód RPO 60 i odblokowanie odczytów**, nie de
 - Ostatni zweryfikowany commit kodu/dokumentacji przed tym punktem wznowienia:
   **19cf9db71474df0588f74cdaa91839c752ee8602**.
 - Lokalny HEAD, zdalna gałąź i PR HEAD były zgodne z tym SHA przed zapisem RESUME.md.
-- Commit dodający RESUME.md jest osobnym checkpointem dokumentacyjnym. Jego SHA:
+- Pierwotny commit dodający RESUME.md: 60644d8bc208f356060b7629273c1412786d14a2.
+  Ostatnia aktualizacja tego pliku (może być późniejsza) ma SHA:
   `git log -1 --format=%H -- RESUME.md`; nie wpisujemy rekurencyjnie własnego przyszłego SHA.
   Końcowy SHA checkpointu podano również w raporcie rozmowy i opisie PR.
 - Main/baza PR i ostatnia potwierdzona produkcja: d15265b26524d594bdbcb4bc6b63fcbc398a1424,
@@ -85,7 +94,7 @@ niezmienionych pełnych testów/restore bez nowej przyczyny, regresji lub zmiany
 ### A. RPO 60 — niepotwierdzone operacyjnie
 
 Płatny compute PostgreSQL 0.1c-256mb, 1 GB, PG17, Frankfurt; obsługuje PITR.
-API zwraca AVAILABLE i startsAt=2026-10-29T06:32:47Z, bez endsAt/najnowszego punktu/lag WAL.
+W sesji 006 API zwracało AVAILABLE i startsAt=2026-10-29T06:32:47Z, bez endsAt/najnowszego punktu/lag WAL. Nowszy odczyt sesji 007 znajduje się na początku tego pliku.
 Dokumentacja zabrania punktu z ostatnich 10 min; to nie SLA maksymalnego lag 10 min.
 Hobby ma okno 3 dni, Pro+ 7 dni; rzeczywisty workspace billing tier nie jest potwierdzony.
 Większa retencja/compute sama nie dowodzi RPO. Nie kupować upgrade jako domyślnego rozwiązania.
