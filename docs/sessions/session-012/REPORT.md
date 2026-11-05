@@ -109,3 +109,17 @@ Zmiany: backend/main.py, tests/test_release_rehearsal.py, .github/workflows/test
 RESUME.md i dokumenty 012. SHA raportu: `git log -1 --format=%H -- docs/sessions/session-012/REPORT.md`.
 Bez merge/deploy/restore/nowych eksportów/produkcji/konfiguracji/płatnych zasobów/Meta/DM.
 Focus 1.0/2.0 niezmienione. Prywatne archiwa nieopublikowane. PR pozostaje Draft.
+
+## Korekta po pełnym CI
+
+Pierwszy CI kandydata 9c15a57: workflow 42087673652, **185 passed / 1 failed**.
+Błąd dotyczył istniejącego testu opt-out po unsend: zakładał przyjęcie nowego Job mimo
+rezygnacji, co zmieniła nowa kontrola API. Nie wyłączono ani nie osłabiono testu.
+Job jest teraz utworzony przed rezygnacją; po unsend i Meta OFF test sprawdza 409 dla
+nowego Job oraz failed/brak draft dla wcześniejszego zadania uruchomionego przez worker.
+
+Powtórzono regresję z tests/test_meta_304.py oraz wszystkimi plikami wcześniejszego
+zestawu: **69 passed, 0 failed/skipped, 33.63 s** na syntetycznym PG17. Zbiór
+obejmuje wcześniejsze 59 przypadków — liczb nie sumować. 4 nowe testy i 1 wzmocniony.
+Końcowy commit zawiera ten test i aktualizację raportu; pełne CI nowego SHA nadal
+musi zakończyć się success. Wynik końcowy w PR/raporcie rozmowy.

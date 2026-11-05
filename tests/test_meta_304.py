@@ -129,10 +129,12 @@ def test_opt_out_still_blocks_agent_after_unsend_and_meta_disable(monkeypatch):
     c=client();seed_token();salon=add(c)
     webhook(c,event());conversation=cid(c)
     c.post('/api/meta/conversations/'+conversation+'/bind',json={'salon_id':salon['id']})
+    assert c.post('/api/agent/jobs',json={'salon_id':salon['id']}).status_code==202
     webhook(c,event('stop-mid','Nie kontaktuj się ponownie'))
     webhook(c,event('stop-mid','Nie kontaktuj się ponownie',is_deleted=True))
     monkeypatch.setenv('META_ENABLED','false')
-    c.post('/api/agent/jobs',json={'salon_id':salon['id']});assert run_once()
+    assert c.post('/api/agent/jobs',json={'salon_id':salon['id']}).status_code==409
+    assert run_once()
     job=c.get('/api/agent/jobs').json()[0]
     assert job['status']=='failed'
     assert not json.loads(job['result']).get('draft')

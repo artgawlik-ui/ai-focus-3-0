@@ -5,7 +5,10 @@ Punkt wejściowy c538b9a / CI 42085434097 success potwierdzone; PR #3 Draft.
 Nowe: próba rzeczywistych procesów starego d15265b i nowego workera na syntetycznym PG17,
 pause/SIGTERM/kill/resume, pojedynczy szkic, stare API health/401 i 17 hashów bez zmian.
 API teraz odrzuca Job dla trwałego Meta opt-out, pod wspólną blokadą kontaktu.
-4 nowe testy; lokalna regresja 59/59 PASS. CI potrzebuje historii Git do starego kodu:
+4 nowe testy; lokalna regresja 59/59 PASS, rozszerzona po CI: 69/69 PASS.
+CI 9c15a57 wykazało 185 PASS/1 FAIL (nieaktualne założenie testu opt-out).
+Test wzmocniono: 409 dla nowego Job oraz odrzucenie starego zadania po rezygnacji.
+Nie pomijać końcowego CI nowego HEAD; wynik w Checks PR #3. CI potrzebuje historii Git do starego kodu:
 checkout fetch-depth=0; nie włącza to merge/deploy ani operacji Render.
 Testy rollbacku nie uruchamiają starego workera po cofnięciu: nie jest to pełny rollback
 Render. Stary worker nie zna pauzy/fencing/Meta opt-out — przed takim cofnięciem STOP
