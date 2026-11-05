@@ -1,3 +1,26 @@
+# Wznowienie po sesji 012
+
+[Raport 012](docs/sessions/session-012/REPORT.md). Wydanie nadal BLOCKED.
+Punkt wejściowy c538b9a / CI 42085434097 success potwierdzone; PR #3 Draft.
+Nowe: próba rzeczywistych procesów starego d15265b i nowego workera na syntetycznym PG17,
+pause/SIGTERM/kill/resume, pojedynczy szkic, stare API health/401 i 17 hashów bez zmian.
+API teraz odrzuca Job dla trwałego Meta opt-out, pod wspólną blokadą kontaktu.
+4 nowe testy; lokalna regresja 59/59 PASS. CI potrzebuje historii Git do starego kodu:
+checkout fetch-depth=0; nie włącza to merge/deploy ani operacji Render.
+Testy rollbacku nie uruchamiają starego workera po cofnięciu: nie jest to pełny rollback
+Render. Stary worker nie zna pauzy/fencing/Meta opt-out — przed takim cofnięciem STOP
+przy niepotwierdzonej kontroli kolejki/retencji i procesów. Nie omijać tego WORKER_PAUSED.
+Render GET: d15265b nadal live; brak eligibility artefaktu i env snapshot w get_deploy.
+Brak nowego dowodu latest recovery point, RPO60 nadal niepotwierdzone; nie tworzono kopii.
+TCP nadal puste; 0 SSH/SELECT. A aktualna, grant i prywatne ID niepotwierdzone.
+Najbliższa czynność: grant TCP Codex do ssh.frankfurt.render.com:22, bez zmiany allowlisty.
+Nadal wymagane aktualne SQL/konta/hash, recovery/RPO/klucz/magazyn, artefakt/env i handoff.
+Szacunek 5 sesji podstawowych + ≥1 DM nie maleje bez zamknięcia tych wymagań.
+Końcowe CI HEAD sprawdzić w Checks PR #3; wyniku wejściowego nie przepisywać na nowy SHA.
+Brak deploy/merge/produkcyjnych zmian/Meta/realnych DM. Dalszy punkt: REPORT.md 012.
+
+---
+
 # Wznowienie po sesji 011
 
 [Raport 011](docs/sessions/session-011/REPORT.md), [plan rollout/drain](docs/sessions/session-011/ROLLOUT.md).

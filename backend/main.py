@@ -253,9 +253,14 @@ def integrations(user=Depends(current),db=Depends(database)):
     return {'instagram':meta,'google_calendar':{'connected':False,'mode':'manual_link'},'livespace':{'connected':False,'mode':'adapter_schema_ready'},'agent':{'mode':'openai' if os.getenv('AI_PAID_PROCESSING_APPROVED','false').lower()=='true' and os.getenv('OPENAI_API_KEY') else 'rules','qualification_enabled':os.getenv('AGENT_V2_ENABLED','false').lower()=='true','outbound':False},'discovery':{'provider':'OpenStreetMap','connected':True,'note':'Publiczne wpisy wymagają weryfikacji; nie stanowią zgody na kontakt.'}}
 @app.post('/api/agent/jobs',status_code=202)
 def queue_job(payload:JobIn,user=Depends(current),db=Depends(database)):
+    from backend.contact_guard import lock_contact
+    from backend.meta_models import MetaConversation
     salon=salon_access(db,payload.salon_id,user)
-    if salon.status=='do_not_contact': raise HTTPException(409,'Salon ma zablokowany kontakt')
-    db.scalar(select(Salon).where(Salon.id==salon.id).with_for_update())
+    lock_contact(db,salon.id)
+    db.scalar(select(Salon).where(Salon.id==salon.id).with_for_update().execution_options(populate_existing=True))
+    salon=salon_access(db,payload.salon_id,user)
+    opted_out=db.scalar(select(MetaConversation.id).where(MetaConversation.salon_id==salon.id,MetaConversation.opted_out==1).limit(1))
+    if salon.status=='do_not_contact' or opted_out: raise HTTPException(409,'Salon ma zablokowany kontakt')
     pending=db.scalar(select(Job).where(Job.salon_id==salon.id,Job.status.in_(['queued','running'])))
     if pending: raise HTTPException(409,'Analiza salonu już oczekuje')
     job=Job(id=uid(),salon_id=salon.id,user_id=user.id,evidence=payload.evidence); db.add(job); db.commit(); return serial(job)

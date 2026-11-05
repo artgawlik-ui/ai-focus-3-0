@@ -15,6 +15,7 @@ jobs:
       DATABASE_URL: postgresql://postgres:ci-only-password@localhost:5432/focus3_test
     steps:
       - uses: actions/checkout@v4
+        with: {fetch-depth: 0} # Historical code rollback rehearsal needs d15265b.
       - uses: actions/setup-python@v5
         with: {python-version: '3.12'}
       - uses: actions/setup-node@v4
