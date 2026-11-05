@@ -1,12 +1,24 @@
 """Separate durable DB queue consumer. Never sends messages or changes a salon priority."""
 import json, logging, os, time
 from datetime import datetime, timedelta, timezone
-import httpx
 from sqlalchemy import select, update
 from backend.db import Session, Job, Salon, Activity, User, now
 from backend.main import uid
 log=logging.getLogger('worker')
 _last_meta_monitor=0.0
+
+def authorized_salon(db, job, final=False):
+    # Refresh identity-map entries after a slow provider call; lock through final commit.
+    options = {'populate_existing': True, 'with_for_update': True} if final else {}
+    requester = db.get(User, job.user_id, **options)
+    salon = db.get(Salon, job.salon_id, **options)
+    if not requester or not requester.active or not salon or (requester.role != 'manager' and salon.owner_id != requester.id):
+        raise ValueError('Access revoked')
+    from backend.meta_models import MetaConversation
+    opted_out = db.scalar(select(MetaConversation.id).where(MetaConversation.salon_id == salon.id, MetaConversation.opted_out == 1).limit(1))
+    if salon.status == 'do_not_contact' or opted_out:
+        raise ValueError('Kontakt zablokowany')
+    return salon
 
 def run_once():
     with Session() as db:
@@ -20,13 +32,7 @@ def run_once():
         if result.rowcount!=1: db.rollback(); return False
         db.commit()
         try:
-            salon=db.get(Salon,job.salon_id)
-            requester=db.get(User,job.user_id)
-            if not requester or not requester.active or (requester.role!='manager' and salon.owner_id!=requester.id):raise ValueError('Access revoked')
-            from backend.meta_models import MetaConversation
-            # Rezygnacja jest trwałą preferencją, również po retencji/odłączeniu Meta.
-            opted_out=db.scalar(select(MetaConversation.id).where(MetaConversation.salon_id==salon.id,MetaConversation.opted_out==1).limit(1))
-            if salon.status=='do_not_contact' or opted_out: raise ValueError('Kontakt zablokowany')
+            salon=authorized_salon(db,job)
             history=list(db.scalars(select(Activity).where(Activity.salon_id==salon.id).order_by(Activity.created_at.desc()).limit(15)))
             from backend.meta import agent_replies
             history.extend(agent_replies(db,salon.id))
@@ -38,14 +44,9 @@ def run_once():
                 analysis['priority_suggestion']=salon.priority
                 analysis['warning']='Tryb podstawowy; punktacja rozszerzona wyłączona. '+analysis['warning']
                 analysis.pop('score',None); analysis.pop('criteria',None)
-            # A configured key alone never activates paid processing.
-            if os.getenv('AI_PAID_PROCESSING_APPROVED','false').lower()=='true' and os.getenv('OPENAI_API_KEY'):
-                response=httpx.post('https://api.openai.com/v1/chat/completions',headers={'Authorization':'Bearer '+os.environ['OPENAI_API_KEY']},json={'model':os.getenv('OPENAI_MODEL','gpt-4.1-mini'),'store':False,'max_completion_tokens':300,'messages':[{'role':'system','content':'Zwróć wyłącznie neutralne pytania po polsku. Nie twórz faktów, decyzji ani wiadomości do wysłania.'},{'role':'user','content':json.dumps(minimal_model_context(analysis),ensure_ascii=False)}]},timeout=60)
-                response.raise_for_status()
-                questions=response.json()['choices'][0]['message']['content']
-                if not isinstance(questions,str) or len(questions)>5000:raise ValueError('Invalid provider result')
-                analysis['model_questions_unverified']=questions
-                analysis['engine']='rules+openai_questions'
+            from backend.agent_provider import add_optional_questions
+            add_optional_questions(analysis,minimal_model_context(analysis))
+            salon=authorized_salon(db,job,final=True)
             job.status='completed'; job.result=json.dumps(analysis,ensure_ascii=False); job.updated_at=now()
             db.add(Activity(id=uid(),salon_id=salon.id,user_id=job.user_id,kind='agent_draft',body='Przygotowano analizę i szkic. Nie wysłano wiadomości.'))
             db.commit()

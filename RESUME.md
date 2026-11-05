@@ -1,3 +1,18 @@
+# Aktualizacja po sesji 009
+
+Raport: [sesja 009](docs/sessions/session-009/REPORT.md). Wydanie nadal **BLOCKED**.
+Nowe poprawki workera: awaria opcjonalnego AI zachowuje analizę regułową;
+ponowna kontrola dostępu i blokady kontaktu przed zapisem szkicu, odświeżenie ORM
+oraz blokady użytkownika/salonu do końca transakcji. Bez zmiany flag i schematu.
+Lokalnie 29 testów PASS (17 nowych). CI dokładnego HEAD sprawdzić w PR #3.
+Punkt wejściowy: 05a9e6be77b6993d942a9b4cc76398527b403298.
+Przy wznowieniu jego CI nadal trwało; backend/build miały success, E2E/audyty oczekiwały.
+Nie powtarzać testów bez przyczyny. Zgoda A pozostaje aktualna, TCP nadal puste.
+RPO 60 niepotwierdzone. Bez produkcyjnego SQL, deployu, merge i aktywacji Meta.
+Szacunek nadal 5 sesji podstawowych + ≥1 DM, zależny od zamknięcia bramek.
+
+---
+
 # AI FOCUS 3.0.4 — punkt wznowienia po sesji 008
 
 **Status wydania: BLOCKED.** Raport: [sesja 008](docs/sessions/session-008/REPORT.md).
