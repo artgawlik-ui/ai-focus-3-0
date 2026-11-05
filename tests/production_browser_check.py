@@ -93,7 +93,7 @@ with sync_playwright() as p:
             dialog=page.get_by_role('dialog')
             dialog.get_by_label('Termin (strefa urządzenia)',exact=True).fill('2027-03-29T'+hour+':30')
             dialog.get_by_label('Czas trwania (minuty)',exact=True).fill('15')
-            dialog.get_by_label('Status',exact=True).select_option('confirmed')
+            dialog.get_by_label('Status wizyty',exact=True).select_option('confirmed')
             dialog.get_by_label('Klient uzgodnił termin',exact=False).check()
             dialog.get_by_role('button',name='Zapisz wizytę',exact=True).click()
             card.get_by_text('Potwierdzona',exact=True).wait_for()

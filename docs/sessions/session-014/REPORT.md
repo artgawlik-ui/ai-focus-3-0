@@ -108,3 +108,11 @@ PR pozostaje Draft, bez merge/deploy/produkcyjnych migracji/restore/PITR/eksport
 zmian sekretów/sieci/Render/Meta i realnych DM. Nowe koszty: 0. Focus 1.0/2.0 nietknięte.
 **Wydanie operacyjne BLOCKED. Szacunek nadal 5 sesji podstawowych + ≥1 DM**;
 nowa funkcja nie zamyka wymagań produkcyjnego recovery/dostępu, brak podstaw do redukcji.
+
+## Korekta po pierwszym CI
+
+CI 2b8e16e (42123531272): backend/build PASS, E2E zatrzymało się na dokładnym
+selektorze label=Status w formularzu zmiany. Wcześniejsze kroki propozycji/historii
+i potwierdzenia adresu/nawigacji wykonane. Dodano jednoznaczne aria-label=Status wizyty
+oraz jawne etykiety ARIA filtrów planu. Test nadal wykonuje potwierdzenie/anulowanie;
+nie usunięto kroku ani nie zwiększano timeoutu. Końcowe CI nowego SHA wymagane osobno.

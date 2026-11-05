@@ -13,6 +13,8 @@ Projekt: docs/integrations/GOOGLE_CALENDAR_PLAN.md; prawdziwe konto wymaga przys
 16 nowych testów; lokalnie 34/34 regresji oraz końcowy plik 16/16 (zbiory nakładają się),
 build/compile/check PASS. Nowy flow mobilny w istniejącym E2E — końcowy CI dokładnego HEAD
 sprawdzić w PR, nie przepisywać wyniku wejściowego. Uchwyty przerwanych procesów nie były dowodem.
+Pierwszy CI 2b8e16e: backend/build PASS, E2E wymagało jednoznacznej etykiety statusu.
+Dodano ARIA Status wizyty i filtrów; konieczne końcowe CI poprawionego SHA.
 Brak nowego kanału/grantu/settera, środowisko revision 5. Nie ponawiano TCP/SSH; 0 produkcyjnych SQL.
 A aktualna. Nadal SQL/integralność/RPO60/magazyn-klucz/artefakt-env/handoff otwarte.
 Najbliższy krok operacyjny: grant TCP Codex ssh.frankfurt.render.com:22, bez zmiany allowlisty;
