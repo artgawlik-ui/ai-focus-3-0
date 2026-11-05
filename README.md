@@ -1,6 +1,6 @@
 # Ai Focus 3.0
 
-Aktualny raport integracji Meta: [docs/meta/REPORT.md](docs/meta/REPORT.md). CRM działa przez HTTPS na wydaniu cd22a44 (3.0.2); integracje zewnętrzne i automatyczne kopie offsite wymagają dalszych prac.
+Aktualny punkt wznowienia i ograniczenia wydania: [RESUME.md](RESUME.md). Ostatni odczyt produkcji w sesji 012 potwierdził d15265b (3.0.3); kandydat 3.0.4 pozostaje w Draft PR #3, bez deployu. Raport Meta: [docs/meta/REPORT.md](docs/meta/REPORT.md).
 
 Osobny CRM sprzedaży NAK Hair / muk Haircare. React 19 + TypeScript, FastAPI, SQLAlchemy, PostgreSQL 17, Alembic. Polskie UI, responsywna PWA, indywidualne konta menedżera i handlowców. Bez automatycznej wysyłki wiadomości.
 
@@ -31,8 +31,7 @@ alembic upgrade head
 # Ustaw BOOTSTRAP_EMAIL i BOOTSTRAP_PASSWORD przez bezpieczne zmienne środowiska.
 python -m scripts.bootstrap
 sh scripts/start.sh
-# W osobnym procesie, z tym samym DATABASE_URL:
-python -m backend.worker
+# start.sh uruchamia supervisor, API i worker; nie uruchamiaj drugiego workera.
 ```
 
 Nie uruchamiaj seedera na produkcji. `scripts/seed_test.py` wymaga `APP_ENV=test` i pustej bazy. Testy API odmawiają pracy na bazie innej niż jawnie wskazana baza testowa.
@@ -66,3 +65,19 @@ Blueprint generuje hasło początkowego konta w bezpiecznym środowisku Render. 
 - Konta: tworzenie i zmiana własnego hasła, bez samoobsługowego resetu e-mail/MFA i bez panelu dezaktywacji.
 
 Szczegóły testów i blokad: [docs/STATUS.md](docs/STATUS.md). Odtwarzanie: [docs/RECOVERY.md](docs/RECOVERY.md).
+
+## Wyszukiwanie miejscowości i promienia (kandydat 013)
+
+`DISCOVERY_RADIUS_ENABLED=false` domyślnie zachowuje dotychczasowe wyszukiwanie miasta.
+Po osobnej aktywacji dostępne są wybór centrum miejscowości w Polsce i promień 1–50 km,
+odległości w linii prostej, źródła OSM i czas odczytu. Dodanie do CRM wymaga formularza
+weryfikacji; brakujące dane pozostają puste. Geokodowanie wysyła tylko wpisaną miejscowość,
+nie dane CRM. Nominatim jest wywoływany przyciskiem (bez autocomplete), z User-Agent,
+cache do 128 miejscowości/24 h i limitem 1 żądania/s współdzielonym przez PostgreSQL.
+Krótka transakcja geokodowania zajmuje połączenie do 10 s; kolejne równoległe żądania
+są odrzucane 429 zamiast kolejkowane. Nie włączać na innym backendzie bazy bez analizy limitu.
+`GEOCODING_SEARCH_URL` pozwala operatorowi zmienić kompatybilną usługę bez aktualizacji kodu;
+tylko HTTPS bez sekretów w URL i bez przekierowań. Zmiana produkcyjna wymaga zgody.
+Źródła są niekompletne, wyniki ograniczone do 100; brak wyniku nie oznacza braku salonów.
+Publiczny serwis nie ma gwarancji dostępności. Polityka sprawdzona 5 listopada 2026:
+https://operations.osmfoundation.org/policies/nominatim/ (HTTP 200). Brak nowych płatnych usług.

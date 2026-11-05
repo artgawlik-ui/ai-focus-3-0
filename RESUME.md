@@ -1,3 +1,24 @@
+# Wznowienie po sesji 013
+
+[Raport 013](docs/sessions/session-013/REPORT.md), [macierz dowodów](docs/sessions/session-013/EVIDENCE_GATE.md).
+Punkt wejściowy a276463 / CI 42090550994 success, PR #3 Draft. Wydanie BLOCKED.
+Nowa funkcja: miejscowość + jawne centrum + promień 1–50 km, dystans/źródło/data OSM,
+formularz weryfikacji przed zapisem. DISCOVERY_RADIUS_ENABLED=false domyślnie;
+GEOCODING_SEARCH_URL konfigurowalny HTTPS. Stare city-only zachowane.
+Bez nowych migracji/zależności/produkcji. Geokoder ma publiczny cache/rate limit także
+między procesami PG. Nie wysyła CRM; nie ma autocomplete ani realnych testów dostawcy.
+19 nowych testów, lokalna regresja 56/56, build PASS. Nowy UI w Chromium/WebKit na fixture
+w istniejącym CI; końcowy wynik exact HEAD w Checks PR #3, nie przepisywać starszego PASS.
+README poprawione: start.sh już startuje worker; status produkcji jest datowany.
+TCP sprawdzone raz, puste. Brak narzędzia ustawienia reguły; 0 SSH/SELECT, A aktualna.
+Nadal SQL/integralność/RPO60/magazyn i klucz/artefakt-env/handoff są otwarte.
+Najbliższy krok: aktywacja jednego grantu TCP Codex ssh.frankfurt.render.com:22,
+potem zaufany host/kanał/prywatne ID i tylko 4 SELECT-y. Bez zmian allowlisty.
+Nie aktywować Meta lub wyszukiwania promienia na produkcji bez zgody. Bez merge/deploy.
+Szacunek 5 sesji podstawowych + ≥1 DM nie maleje bez zamknięcia rzeczywistych wymagań.
+
+---
+
 # Wznowienie po sesji 012
 
 [Raport 012](docs/sessions/session-012/REPORT.md). Wydanie nadal BLOCKED.

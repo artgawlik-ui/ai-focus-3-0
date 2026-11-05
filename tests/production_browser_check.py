@@ -12,6 +12,13 @@ with sync_playwright() as p:
     for label,engine,options,executable in cases:
         browser=engine.launch(executable_path=executable if Path(executable).exists() else None,headless=True,args=['--no-sandbox'] if label.startswith('chromium') else [])
         context=browser.new_context(**options)
+        if isolated:
+            def integration_view(route):
+                response=route.fetch();data=response.json();data['discovery']['radius_enabled']=True
+                route.fulfill(response=response,json=data)
+            context.route('**/api/integrations',integration_view)
+            context.route('**/api/discovery/places?*',lambda route:route.fulfill(json={'items':[{'label':'Głogów, syntetyczne centrum','latitude':51.66,'longitude':16.08}]}))
+            context.route('**/api/discovery?*',lambda route:route.fulfill(json={'items':[{'name':'[TEST] Salon promień '+label,'city':'Głogów','address':'Syntetyczna 1','source_url':'https://www.openstreetmap.org/node/900000000001','acquired_at':'2026-11-05T12:00:00+00:00','distance_km':1.25}]}))
         page=context.new_page();errors=[]
         page.on('pageerror',lambda err:errors.append(str(err)))
         page.goto(origin);page.get_by_label('Adres e-mail').fill(credentials['email']);page.get_by_label('Hasło',exact=True).fill(credentials['password']);page.get_by_role('button',name='Wejdź do swojej przestrzeni').click()
@@ -55,6 +62,18 @@ with sync_playwright() as p:
         if isolated:
             if label=='webkit-iphone':page.get_by_label('Otwórz menu').click()
             page.get_by_role('button',name='Agent sprzedaży',exact=False).click()
+            page.get_by_label('Miasto',exact=True).fill('Głogów')
+            page.get_by_role('button',name='Znajdź miejscowość',exact=True).click()
+            page.get_by_label('Miejscowość i centrum').select_option(index=1)
+            page.get_by_label('Promień (km)').fill('10')
+            page.get_by_role('button',name='Szukaj w promieniu',exact=True).click()
+            page.get_by_text('[TEST] Salon promień '+label,exact=True).wait_for()
+            assert page.evaluate('document.documentElement.scrollWidth<=innerWidth')
+            page.get_by_role('button',name='Sprawdź i dodaj [TEST] Salon promień '+label,exact=True).click()
+            page.get_by_role('dialog').wait_for()
+            assert page.get_by_label('Nazwa salonu',exact=True).input_value()=='[TEST] Salon promień '+label
+            page.get_by_role('button',name='Zapisz salon',exact=True).click()
+            page.get_by_role('status').filter(has_text='Salon został zapisany').wait_for()
             page.locator('select[name="salon_id"]').select_option(label='[TEST TECHNICZNY] Ai Focus 3.0 · Głogów')
             page.get_by_role('button',name='Zleć analizę i szkic').click()
             page.get_by_text('Proponowany priorytet:',exact=True).first.wait_for(timeout=20000)

@@ -12,6 +12,7 @@ from openpyxl import Workbook, load_workbook
 from backend.db import Session, User, LoginSession, LoginAttempt, Salon, Activity, Appointment, Job, Training, now
 from backend.security import database, current, manager, digest, expires, secure, ph, public_user
 from backend.schemas import *
+from backend.discovery import enabled as radius_discovery_enabled
 
 logging.basicConfig(level=logging.INFO)
 log = logging.getLogger('focus')
@@ -250,7 +251,7 @@ def integrations(user=Depends(current),db=Depends(database)):
         try:
             require_config('diagnostics');meta.update(connected=bool(credentials(db)),mode='development')
         except HTTPException:meta['mode']='needs_configuration'
-    return {'instagram':meta,'google_calendar':{'connected':False,'mode':'manual_link'},'livespace':{'connected':False,'mode':'adapter_schema_ready'},'agent':{'mode':'openai' if os.getenv('AI_PAID_PROCESSING_APPROVED','false').lower()=='true' and os.getenv('OPENAI_API_KEY') else 'rules','qualification_enabled':os.getenv('AGENT_V2_ENABLED','false').lower()=='true','outbound':False},'discovery':{'provider':'OpenStreetMap','connected':True,'note':'Publiczne wpisy wymagają weryfikacji; nie stanowią zgody na kontakt.'}}
+    return {'instagram':meta,'google_calendar':{'connected':False,'mode':'manual_link'},'livespace':{'connected':False,'mode':'adapter_schema_ready'},'agent':{'mode':'openai' if os.getenv('AI_PAID_PROCESSING_APPROVED','false').lower()=='true' and os.getenv('OPENAI_API_KEY') else 'rules','qualification_enabled':os.getenv('AGENT_V2_ENABLED','false').lower()=='true','outbound':False},'discovery':{'provider':'OpenStreetMap','radius_enabled':radius_discovery_enabled(),'connected':True,'note':'Publiczne wpisy wymagają weryfikacji; nie stanowią zgody na kontakt.'}}
 @app.post('/api/agent/jobs',status_code=202)
 def queue_job(payload:JobIn,user=Depends(current),db=Depends(database)):
     from backend.contact_guard import lock_contact
@@ -269,8 +270,17 @@ def jobs(user=Depends(current),db=Depends(database)):
     stmt=select(Job)
     if user.role!='manager': stmt=stmt.join(Salon,Salon.id==Job.salon_id).where(Job.user_id==user.id,Salon.owner_id==user.id)
     return [serial(j) for j in db.scalars(stmt.order_by(Job.created_at.desc()).limit(100))]
+@app.get('/api/discovery/places')
+def discovery_places(city:str=Query(min_length=2,max_length=80),user=Depends(current),db=Depends(database)):
+    from backend.discovery import places
+    return places(city,db)
+
 @app.get('/api/discovery')
-def discovery(city:str=Query(min_length=2,max_length=80),user=Depends(current)):
+def discovery(city:str=Query(min_length=2,max_length=80),radius_km:float|None=Query(default=None,ge=1,le=50),latitude:float|None=Query(default=None,ge=-90,le=90),longitude:float|None=Query(default=None,ge=-180,le=180),user=Depends(current)):
+    if any(v is not None for v in (radius_km,latitude,longitude)):
+        if any(v is None for v in (radius_km,latitude,longitude)):raise HTTPException(422,'Wybierz miejscowość, punkt i promień')
+        from backend.discovery import search_radius
+        return search_radius(city,latitude,longitude,radius_km)
     import httpx
     # JSON quoting prevents Overpass query injection. No arbitrary URL fetching.
     city_json=json.dumps(city)
