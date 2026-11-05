@@ -1,5 +1,10 @@
 # Issue #4 — decyzja release gate
 
+> Sesja 008: zgoda A i kontrolowany tryb workera **zatwierdzone przez właściciela**.
+> Kanał SQL nadal BLOCKED (puste granty TCP); 0 zapytań. RPO 60 niepotwierdzone.
+> Poprawka supervisora przetestowana lokalnie na mockach; brak deployu i zmian produkcji.
+> [Raport 008](../../sessions/session-008/REPORT.md). Historyczne zapisy o braku A nie są aktualne.
+
 > Aktualizacja 2026-11-02 (sesja 006): właściciel zatwierdził **RPO = 60 minut**.
 > Bieżący gate wydania: **BLOCKED**. PITR AVAILABLE nie dowodzi latest recoverable point
 > ≤60 min; ostatni eksport jest starszy niż limit. Historyczne READY poniżej dotyczyło

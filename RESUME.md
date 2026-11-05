@@ -1,15 +1,46 @@
-# AI FOCUS 3.0.4 — punkt wznowienia, aktualizacja po sesji 007
+# AI FOCUS 3.0.4 — punkt wznowienia po sesji 008
 
-Pierwotny checkpoint: 2 listopada; aktualizacja sesji 007: 5 listopada 2026, Europe/Warsaw. **Status wydania: BLOCKED.**
-Następny krok: **zgoda A i wewnętrzny dostęp SQL**, następnie kontynuacja sesji 007, nie deploy.
+**Status wydania: BLOCKED.** Raport: [sesja 008](docs/sessions/session-008/REPORT.md).
 
-> Wykonano odczyty wznowienia 5 listopada: [raport sesji 007](docs/sessions/session-007/REPORT.md).
-> Checkpoint 60644d8 i jego checks potwierdzone. Render nadal live d15265b; recovery
-> AVAILABLE ze startsAt 2026-11-01T06:32:50Z, bez latest point. Eksport z 1 listopada
-> miał przy odczycie 337161 s (93h39m21s); nie spełnia RPO 60. Meta/DM OFF w zapisanej
-> konfiguracji. Nie powtarzano restore ani lokalnej regresji. **A nadal nieudzielona**,
-> granty TCP puste. [Minimalny zakres A](docs/sessions/session-007/AUTHORIZATION_REQUEST.md).
-> Bez nowej zgody/kanału lub zmiany faktów nie powtarzać zakończonych testów i tych samych planów.
+Właściciel w poleceniu sesji 008 potwierdził **zgodę A** na dokładnie cztery SELECT-y
+przez autoryzowany wewnętrzny kanał READ ONLY oraz **kontrolowany tryb workera**.
+Zapis/push tej gałęzi są zatwierdzone. Wcześniejsze ograniczenie wyłącznie lokalnej
+pracy oraz historyczne „A nieudzielona” nie opisują aktualnej decyzji. Nie prosić o A ponownie.
+RPO=3600 s pozostaje wymagane i niepotwierdzone.
+
+Checkpoint wejściowy 008: **33790a728493e3a19d97fc455b1f76be6d452ce0**;
+PR #3 open/Draft, baza d15265b; CI PR 42062017735 success.
+W 008 potwierdzono running/connected/current środowiska, ale polityka TCP nadal ma
+`domains=[]`, `ip_ranges=[]`, VPN=false. **Brak grantu SSH; 0 prób SSH, 0 SELECT-ów.**
+Jedyna bieżąca czynność odblokowująca dostęp: w konfiguracji środowiska Codex zatwierdzić
+ograniczony grant TCP do `ssh.frankfurt.render.com:22`. Nie zmieniać allowlisty PostgreSQL.
+Po grancie najpierw zweryfikować host key/autoryzację/kanał; nie zakładać ich dostępności.
+Identyfikatory kont wymagają prywatnego potwierdzenia; nie zgadywać ich.
+
+Nowa rzeczywista poprawka 008: supervisor obejmuje start dzieci procedurą zamykania,
+aby błąd uruchomienia workera nie zostawiał API bez nadzoru. Pięć nowych testów na mockach;
+lokalnie 12/12 PASS łącznie z istniejącymi testami gate i offsite. Bez zmiany flag,
+poleceń startowych, schematu, semantyki workera lub limitu zamykania 25 s.
+Pełna regresja jest sprawdzana w standardowym CI gałęzi; wynik dokładnego końcowego SHA
+odczytać w Checks. Nie przypisywać wyniku checkpointu nowemu commitowi.
+Nie powtarzano restore eksportu, nie uruchamiano późniejszych nieudanych prób lokalnego startu.
+
+## Następna sesja — bez powtarzania zamkniętych etapów
+
+1. Sprawdzić HEAD/PR/CI ostatniego commita i stan grantu TCP.
+2. Bez grantu nie próbować SSH. Po grancie zweryfikować zaufaną tożsamość hosta i kanał READ ONLY;
+   potem dokładnie cztery zatwierdzone SELECT-y z sesji 005, bez DML/DDL i danych osobowych.
+3. RPO: nadal brak dowodu latest recoverable point ≤60 min i skuteczności tej ścieżki.
+   AVAILABLE i snapshot 17/23/004 nie zamykają tej bramki. Restore/testowa recovery DB,
+   nowe kopie/eksporty, koszty i zmiany konfiguracji wymagają osobnej zgody.
+4. Potwierdzić dostępność artefaktu/env rollbacku i kontrolę zapisów/retencji workera
+   przed osobno zatwierdzonym wydaniem. Kontrolowany tryb zaakceptowano, nie wykonano rollout.
+5. Bez merge/deploy/restartu/cleanup/migracji produkcji/aktywacji Meta i realnych DM.
+
+Pozostaje szacunkowo **5 sesji podstawowych + ≥1 dotycząca DM**; licznik nie maleje
+za poprawkę kodu i dokumentacji przy otwartych bramkach operacyjnych. Nie jest to termin gwarantowany.
+SHA aktualizacji: `git log -1 --format=%H -- RESUME.md`. Raport końcowy rozmowy wskazuje
+zweryfikowany SHA i CI. Poniżej zachowano historyczne dowody sesji 001–007.
 
 ## Źródło prawdy i zapisany commit
 
