@@ -1,0 +1,17 @@
+{
+  "issue": 4,
+  "code_release": "READY",
+  "meta_activation": "BLOCKED",
+  "unit_tests": {
+    "tests": 105,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0
+  },
+  "live_internal_sql": "BLOCKED",
+  "export_restore": "PASS",
+  "pitr_restore_executed": false,
+  "production_writes": 0,
+  "paid_resources_created": 0,
+  "code_release_scope": "owner approval of code-only release with all Meta modules OFF; not deploy authorization"
+}

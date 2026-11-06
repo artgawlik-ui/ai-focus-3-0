@@ -1,0 +1,58 @@
+{
+  "snapshot_scope": "saved_configuration_not_process_environment",
+  "groups_count": 0,
+  "mutations": 0,
+  "flags": {
+    "META_ENABLED": {
+      "effective": "OFF",
+      "format_valid": true,
+      "inherits_legacy": false
+    },
+    "META_OAUTH_ENABLED": {
+      "effective": "OFF",
+      "format_valid": true,
+      "inherits_legacy": true
+    },
+    "META_WEBHOOK_VERIFY_ENABLED": {
+      "effective": "OFF",
+      "format_valid": true,
+      "inherits_legacy": true
+    },
+    "META_INGEST_ENABLED": {
+      "effective": "OFF",
+      "format_valid": true,
+      "inherits_legacy": true
+    },
+    "META_CRM_HISTORY_ENABLED": {
+      "effective": "OFF",
+      "format_valid": true,
+      "inherits_legacy": true
+    },
+    "META_DIAGNOSTICS_ENABLED": {
+      "effective": "OFF",
+      "format_valid": true,
+      "inherits_legacy": true
+    },
+    "META_DM_TRANSPORT_ENABLED": {
+      "effective": "OFF",
+      "format_valid": true,
+      "inherits_legacy": false
+    },
+    "AGENT_V2_ENABLED": {
+      "effective": "ON",
+      "format_valid": true,
+      "inherits_legacy": false
+    },
+    "AI_PAID_PROCESSING_APPROVED": {
+      "effective": "OFF",
+      "format_valid": true,
+      "inherits_legacy": false
+    },
+    "OFFSITE_BACKUP_ENABLED": {
+      "effective": "OFF",
+      "format_valid": true,
+      "inherits_legacy": false
+    }
+  },
+  "evidence_file_written_at_utc": "2026-11-05T16:07:00.424347+00:00"
+}

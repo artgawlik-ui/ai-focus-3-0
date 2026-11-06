@@ -1,0 +1,42 @@
+{
+  "synthetic_only": true,
+  "production_connections": 0,
+  "render_connections": 0,
+  "real_meta_requests": 0,
+  "backend": {
+    "tests": "133",
+    "failures": "0",
+    "errors": "0",
+    "skipped": "0",
+    "time": "47.177"
+  },
+  "commands": {
+    "backend": "DATABASE_URL=<local synthetic focus3_test> python -m pytest -q --tb=no --show-capture=no --junitxml=<private output>",
+    "encrypted_restore": "pytest tests/test_synthetic_recovery.py",
+    "export_restore": "python -m scripts.synthetic_export_probe --output docs/sessions/session-001/synthetic-restore.json",
+    "frontend": "npm run build --prefix frontend",
+    "e2e": "env -u PYTHONPATH DATABASE_URL=<local synthetic focus3_test> python -m tests.ci_e2e",
+    "pip_audit": "pip-audit -r requirements.txt --cache-dir /tmp/focus3-pip-audit --format=json",
+    "npm_audit": "npm audit --prefix frontend --json"
+  },
+  "frontend": "PASS",
+  "browser_results": [
+    "chromium-desktop: PASS",
+    "webkit-iphone: PASS"
+  ],
+  "pip_audit": {
+    "dependencies": 32,
+    "vulnerabilities": 0
+  },
+  "npm_audit": {
+    "info": 0,
+    "low": 0,
+    "moderate": 0,
+    "high": 0,
+    "critical": 0,
+    "total": 0
+  },
+  "physical_iphone_test_this_session": false,
+  "baseline": "INVALID: overlapping synthetic database sessions; see REPORT.md",
+  "e2e_import_environment": "No inherited PYTHONPATH; child invoked as module"
+}

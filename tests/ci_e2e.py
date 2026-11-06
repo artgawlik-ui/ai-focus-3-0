@@ -10,15 +10,19 @@ admin=source.set(database='postgres').render_as_string(hide_password=False)
 url=source.set(database=name).render_as_string(hide_password=False)
 with psycopg.connect(admin,autocommit=True) as db:db.execute('CREATE DATABASE '+name)
 child=None;proxy=None
+fixture_dir=tempfile.TemporaryDirectory(prefix='focus3-e2e-http-')
+Path(fixture_dir.name,'sitecustomize.py').write_text('import os\ntry:\n from tests.e2e_discovery_transport import install\n install()\nexcept BaseException:\n os._exit(78)\n')
 credential_fd,credential_name=tempfile.mkstemp(prefix='focus3-ci-',suffix='.json')
 os.close(credential_fd)
 credential_path=Path(credential_name)
 try:
     env={**os.environ,'AGENT_V2_ENABLED':'true','AI_PAID_PROCESSING_APPROVED':'false','DATABASE_URL':url,'APP_ENV':'test','PORT':'8005','APP_ORIGIN':'http://127.0.0.1:8006','FOCUS_TEST_ORIGIN':'http://127.0.0.1:8006','FOCUS_TEST_OFFLINE_FLAG':'/tmp/focus3-test-network-down','FOCUS_TEST_CREDENTIAL_FILE':str(credential_path)}
+    env.update({'DISCOVERY_RADIUS_ENABLED':'true','VISIT_PLANNER_ENABLED':'true','PYTHONPATH':fixture_dir.name+os.pathsep+str(Path(__file__).resolve().parents[1])})
+    env.update({'FOCUS_CALENDAR_SCHEMA_ENABLED':'true','FOCUS_CALENDAR_ENABLED':'true','GOOGLE_SCHEMA_ENABLED':'false','GOOGLE_CALENDAR_ENABLED':'false','GOOGLE_CALENDAR_WRITE_ENABLED':'false','GOOGLE_CLIENT_ID':'synthetic-google-client','GOOGLE_CLIENT_SECRET':'synthetic-google-secret','GOOGLE_REDIRECT_URI':'http://127.0.0.1:8006/api/google-calendar/oauth/callback','GOOGLE_ENCRYPTION_KEY':__import__('cryptography.fernet',fromlist=['Fernet']).Fernet.generate_key().decode(),'FOCUS_TEST_GOOGLE_STORE':str(Path(fixture_dir.name)/'google.json')})
     from cryptography.fernet import Fernet
     env.update({'META_ENABLED':'true','META_MODE':'development','META_APP_ID':'123456','META_CONFIG_ID':'ci-synthetic','META_APP_SECRET':uuid.uuid4().hex,'META_VERIFY_TOKEN':uuid.uuid4().hex,'META_ENCRYPTION_KEY':Fernet.generate_key().decode(),'META_TEST_ACCOUNT_ID':'90001','META_REDIRECT_URI':'https://test.invalid/api/meta/oauth/callback','BOOTSTRAP_EMAIL':'verification@focus.invalid'})
     os.environ.update({k:env[k] for k in ['DATABASE_URL','APP_ENV']+list(k for k in env if k.startswith('META_'))})
-    subprocess.run([sys.executable,'-m','alembic','upgrade','head'],env=env,check=True)
+    subprocess.run([sys.executable,'-m','alembic','-c','native-alembic.ini','upgrade','head'],env=env,check=True)
     from backend.db import Session,User,Salon
     from backend.security import ph
     from backend.main import key
@@ -46,7 +50,7 @@ try:
     Path('/tmp/focus3-test-network-down').unlink(missing_ok=True)
     proxy=subprocess.Popen([sys.executable,'-m','tests.offline_proxy'],stdout=subprocess.DEVNULL,stderr=subprocess.DEVNULL)
     time.sleep(.5)
-    subprocess.run([sys.executable,'tests/production_browser_check.py'],env=env,check=True)
+    subprocess.run([sys.executable,'-m','tests.production_browser_check'],env=env,check=True)
 finally:
     Path('/tmp/focus3-test-network-down').unlink(missing_ok=True);credential_path.unlink(missing_ok=True)
     if proxy:proxy.terminate();proxy.wait(timeout=10)
@@ -56,3 +60,4 @@ finally:
         engine.dispose()
     except ImportError:pass
     with psycopg.connect(admin,autocommit=True) as db:db.execute('DROP DATABASE '+name)
+    fixture_dir.cleanup()

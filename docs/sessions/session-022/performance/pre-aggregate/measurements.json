@@ -1,0 +1,456 @@
+{
+  "synthetic": true,
+  "production": false,
+  "postgres_cpu_limit": 1,
+  "postgres_memory_mib": 512,
+  "api_process": "host Python TestClient; not Render hardware",
+  "clock": "perf_counter",
+  "samples": "one warm-up then five samples (before indexes three)",
+  "results": [
+    {
+      "salons": 300,
+      "tasks": 300,
+      "visits": 300,
+      "activities": 600,
+      "server_version": "17.11 (Debian 17.11-1.pgdg13+2)",
+      "legacy_monitor": {
+        "elapsed_ms": 558.74,
+        "sql_queries": 1501
+      },
+      "before_indexes": {
+        "median_ms": 14.402,
+        "min_ms": 14.127,
+        "max_ms": 14.485,
+        "samples_ms": [
+          14.127,
+          14.402,
+          14.485
+        ],
+        "payload_bytes": 8101
+      },
+      "reminders": {
+        "inserted": 600,
+        "batches": [
+          600,
+          0
+        ],
+        "elapsed_ms": 25.695
+      },
+      "api": {
+        "contacts": {
+          "median_ms": 13.435,
+          "min_ms": 12.953,
+          "max_ms": 15.563,
+          "samples_ms": [
+            13.435,
+            12.953,
+            13.107,
+            13.866,
+            15.563
+          ],
+          "payload_bytes": 8101
+        },
+        "tasks": {
+          "median_ms": 5.945,
+          "min_ms": 5.721,
+          "max_ms": 6.534,
+          "samples_ms": [
+            5.824,
+            5.721,
+            5.945,
+            6.221,
+            6.534
+          ],
+          "payload_bytes": 9021
+        },
+        "visits": {
+          "median_ms": 7.457,
+          "min_ms": 6.833,
+          "max_ms": 8.634,
+          "samples_ms": [
+            8.634,
+            7.457,
+            7.265,
+            7.971,
+            6.833
+          ],
+          "payload_bytes": 12401
+        },
+        "notifications": {
+          "median_ms": 6.168,
+          "min_ms": 6.155,
+          "max_ms": 6.506,
+          "samples_ms": [
+            6.506,
+            6.168,
+            6.157,
+            6.155,
+            6.352
+          ],
+          "payload_bytes": 61
+        },
+        "report": {
+          "median_ms": 40.679,
+          "min_ms": 39.311,
+          "max_ms": 44.257,
+          "samples_ms": [
+            39.311,
+            40.679,
+            44.257,
+            40.015,
+            42.041
+          ],
+          "payload_bytes": 61333
+        }
+      },
+      "pagination": {
+        "records_seen": 300,
+        "unique": 300,
+        "page_size": 100,
+        "pages": 3,
+        "elapsed_ms": 49.538
+      }
+    },
+    {
+      "salons": 1000,
+      "tasks": 1000,
+      "visits": 1000,
+      "activities": 2000,
+      "server_version": "17.11 (Debian 17.11-1.pgdg13+2)",
+      "legacy_monitor": {
+        "elapsed_ms": 1937.112,
+        "sql_queries": 5001
+      },
+      "before_indexes": {
+        "median_ms": 31.297,
+        "min_ms": 31.171,
+        "max_ms": 32.412,
+        "samples_ms": [
+          32.412,
+          31.171,
+          31.297
+        ],
+        "payload_bytes": 8102
+      },
+      "reminders": {
+        "inserted": 2000,
+        "batches": [
+          1000,
+          1000,
+          0
+        ],
+        "elapsed_ms": 75.911
+      },
+      "api": {
+        "contacts": {
+          "median_ms": 30.261,
+          "min_ms": 29.811,
+          "max_ms": 30.655,
+          "samples_ms": [
+            30.239,
+            30.261,
+            29.811,
+            30.464,
+            30.655
+          ],
+          "payload_bytes": 8102
+        },
+        "tasks": {
+          "median_ms": 7.949,
+          "min_ms": 7.887,
+          "max_ms": 8.503,
+          "samples_ms": [
+            8.503,
+            7.887,
+            7.937,
+            7.949,
+            8.265
+          ],
+          "payload_bytes": 9022
+        },
+        "visits": {
+          "median_ms": 10.143,
+          "min_ms": 9.36,
+          "max_ms": 11.582,
+          "samples_ms": [
+            10.246,
+            11.582,
+            9.792,
+            10.143,
+            9.36
+          ],
+          "payload_bytes": 12402
+        },
+        "notifications": {
+          "median_ms": 7.617,
+          "min_ms": 7.526,
+          "max_ms": 7.849,
+          "samples_ms": [
+            7.605,
+            7.849,
+            7.617,
+            7.789,
+            7.526
+          ],
+          "payload_bytes": 61
+        },
+        "report": {
+          "median_ms": 82.753,
+          "min_ms": 82.663,
+          "max_ms": 84.024,
+          "samples_ms": [
+            83.839,
+            84.024,
+            82.684,
+            82.753,
+            82.663
+          ],
+          "payload_bytes": 61366
+        }
+      },
+      "pagination": {
+        "records_seen": 1000,
+        "unique": 1000,
+        "page_size": 100,
+        "pages": 10,
+        "elapsed_ms": 341.229
+      }
+    },
+    {
+      "salons": 5000,
+      "tasks": 5000,
+      "visits": 5000,
+      "activities": 10000,
+      "server_version": "17.11 (Debian 17.11-1.pgdg13+2)",
+      "legacy_monitor": {
+        "elapsed_ms": 9272.536,
+        "sql_queries": 25001
+      },
+      "before_indexes": {
+        "median_ms": 140.563,
+        "min_ms": 138.729,
+        "max_ms": 147.677,
+        "samples_ms": [
+          138.729,
+          140.563,
+          147.677
+        ],
+        "payload_bytes": 8102
+      },
+      "reminders": {
+        "inserted": 10000,
+        "batches": [
+          1000,
+          1000,
+          1000,
+          1000,
+          1000,
+          1000,
+          1000,
+          1000,
+          1000,
+          1000,
+          0
+        ],
+        "elapsed_ms": 786.959
+      },
+      "api": {
+        "contacts": {
+          "median_ms": 130.621,
+          "min_ms": 128.629,
+          "max_ms": 158.689,
+          "samples_ms": [
+            129.927,
+            137.33,
+            128.629,
+            130.621,
+            158.689
+          ],
+          "payload_bytes": 8102
+        },
+        "tasks": {
+          "median_ms": 14.067,
+          "min_ms": 13.844,
+          "max_ms": 19.744,
+          "samples_ms": [
+            19.744,
+            16.677,
+            13.844,
+            14.067,
+            13.904
+          ],
+          "payload_bytes": 9022
+        },
+        "visits": {
+          "median_ms": 16.565,
+          "min_ms": 16.184,
+          "max_ms": 19.358,
+          "samples_ms": [
+            16.565,
+            16.275,
+            19.358,
+            16.614,
+            16.184
+          ],
+          "payload_bytes": 12402
+        },
+        "notifications": {
+          "median_ms": 6.368,
+          "min_ms": 6.275,
+          "max_ms": 6.653,
+          "samples_ms": [
+            6.368,
+            6.653,
+            6.479,
+            6.286,
+            6.275
+          ],
+          "payload_bytes": 61
+        },
+        "report": {
+          "median_ms": 367.11,
+          "min_ms": 360.671,
+          "max_ms": 370.433,
+          "samples_ms": [
+            360.671,
+            367.11,
+            370.433,
+            366.022,
+            368.308
+          ],
+          "payload_bytes": 61387
+        }
+      },
+      "pagination": {
+        "records_seen": 5000,
+        "unique": 5000,
+        "page_size": 100,
+        "pages": 50,
+        "elapsed_ms": 7435.617
+      }
+    },
+    {
+      "salons": 10000,
+      "tasks": 10000,
+      "visits": 10000,
+      "activities": 20000,
+      "server_version": "17.11 (Debian 17.11-1.pgdg13+2)",
+      "legacy_monitor": {
+        "elapsed_ms": 19727.814,
+        "sql_queries": 50001
+      },
+      "before_indexes": {
+        "median_ms": 267.229,
+        "min_ms": 264.225,
+        "max_ms": 268.876,
+        "samples_ms": [
+          264.225,
+          268.876,
+          267.229
+        ],
+        "payload_bytes": 8103
+      },
+      "reminders": {
+        "inserted": 20000,
+        "batches": [
+          1000,
+          1000,
+          1000,
+          1000,
+          1000,
+          1000,
+          1000,
+          1000,
+          1000,
+          1000,
+          1000,
+          1000,
+          1000,
+          1000,
+          1000,
+          1000,
+          1000,
+          1000,
+          1000,
+          1000,
+          0
+        ],
+        "elapsed_ms": 2488.16
+      },
+      "api": {
+        "contacts": {
+          "median_ms": 289.761,
+          "min_ms": 287.985,
+          "max_ms": 291.409,
+          "samples_ms": [
+            289.761,
+            289.177,
+            291.186,
+            291.409,
+            287.985
+          ],
+          "payload_bytes": 8103
+        },
+        "tasks": {
+          "median_ms": 22.193,
+          "min_ms": 21.876,
+          "max_ms": 22.48,
+          "samples_ms": [
+            22.221,
+            21.876,
+            22.114,
+            22.48,
+            22.193
+          ],
+          "payload_bytes": 9023
+        },
+        "visits": {
+          "median_ms": 26.786,
+          "min_ms": 25.904,
+          "max_ms": 27.341,
+          "samples_ms": [
+            26.786,
+            25.904,
+            26.86,
+            26.076,
+            27.341
+          ],
+          "payload_bytes": 12403
+        },
+        "notifications": {
+          "median_ms": 6.674,
+          "min_ms": 6.297,
+          "max_ms": 7.324,
+          "samples_ms": [
+            7.324,
+            6.674,
+            6.297,
+            6.857,
+            6.641
+          ],
+          "payload_bytes": 61
+        },
+        "report": {
+          "median_ms": 824.613,
+          "min_ms": 814.468,
+          "max_ms": 829.985,
+          "samples_ms": [
+            814.468,
+            823.877,
+            829.985,
+            825.346,
+            824.613
+          ],
+          "payload_bytes": 61400
+        }
+      },
+      "pagination": {
+        "records_seen": 10000,
+        "unique": 10000,
+        "page_size": 100,
+        "pages": 100,
+        "elapsed_ms": 33051.414
+      }
+    }
+  ]
+}

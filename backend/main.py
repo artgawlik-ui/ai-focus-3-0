@@ -12,10 +12,12 @@ from openpyxl import Workbook, load_workbook
 from backend.db import Session, User, LoginSession, LoginAttempt, Salon, Activity, Appointment, Job, Training, now
 from backend.security import database, current, manager, digest, expires, secure, ph, public_user
 from backend.schemas import *
+from backend.discovery import enabled as radius_discovery_enabled
+from backend.visit_planner import enabled as visit_planner_enabled
 
 logging.basicConfig(level=logging.INFO)
 log = logging.getLogger('focus')
-app = FastAPI(title='Ai Focus 3.0', version='3.0.3')
+app = FastAPI(title='Ai Focus 3.0', version='3.0.4')
 from backend.limits import BodyLimitMiddleware
 app.add_middleware(BodyLimitMiddleware)
 uid = lambda: str(uuid.uuid4())
@@ -62,7 +64,7 @@ async def headers(request: Request, call_next):
 @app.get('/api/health')
 def health(db=Depends(database)):
     db.execute(select(func.count()).select_from(User))
-    return {'status':'ok','version':'3.0.3'}
+    return {'status':'ok','version':'3.0.4'}
 
 @app.post('/api/auth/login')
 def login(payload:LoginIn, request:Request, response:Response, db=Depends(database)):
@@ -138,6 +140,8 @@ def activities(id:str,user=Depends(current),db=Depends(database)):
     return [serial(a) for a in db.scalars(select(Activity).where(Activity.salon_id==id).order_by(Activity.created_at.desc()))]
 @app.post('/api/salons/{id}/activities',status_code=201)
 def add_activity(id:str,payload:ActivityIn,user=Depends(current),db=Depends(database)):
+    from backend.contact_guard import lock_contact
+    lock_contact(db,id)
     salon=salon_access(db,id,user); record(db,salon,user,payload.kind,payload.body); db.commit()
     return {'ok':True}
 
@@ -188,8 +192,14 @@ async def import_excel(file:UploadFile=File(...),dry_run:bool=True,user=Depends(
     return {'dry_run':dry_run,'accepted':len(accepted),'errors':errors,'saved':0 if dry_run else len(accepted)}
 
 @app.get('/api/appointments')
-def appointments(day:str='',user=Depends(current),db=Depends(database)):
+def appointments(day:str='',user=Depends(current),db=Depends(database),days:int=1,representative_id:str='',limit:int=100,offset:int=0,status_filter:str='',response:Response=None):
+    if days not in ((1,7,28,29,30,31) if __import__('backend.native_planning',fromlist=['enabled']).enabled() else (1,7)):raise HTTPException(422,'Wybierz dzień lub tydzień')
+    if representative_id and user.role!='manager' and representative_id!=user.id:raise HTTPException(403,'Niedozwolony kalendarz')
+    if not 1<=limit<=100 or not 0<=offset<=100000:raise HTTPException(422,'Nieprawidłowa strona')
+    if status_filter not in ('','proposed','confirmed','completed','cancelled'):raise HTTPException(422,'Nieprawidłowy status')
     stmt=select(Appointment,Salon).join(Salon,Salon.id==Appointment.salon_id)
+    if status_filter:stmt=stmt.where(Appointment.status==status_filter)
+    if representative_id:stmt=stmt.where(Appointment.user_id==representative_id)
     if user.role!='manager': stmt=stmt.where(Appointment.user_id==user.id,Salon.owner_id==user.id)
     if day:
         try: date.fromisoformat(day)
@@ -197,32 +207,96 @@ def appointments(day:str='',user=Depends(current),db=Depends(database)):
         # Europe/Warsaw day boundaries, including DST.
         from zoneinfo import ZoneInfo
         start=datetime.combine(date.fromisoformat(day),datetime.min.time(),ZoneInfo('Europe/Warsaw'))
-        stmt=stmt.where(Appointment.starts_at>=start.astimezone(timezone.utc).isoformat(),Appointment.starts_at<(start+timedelta(days=1)).astimezone(timezone.utc).isoformat())
-    return [{**serial(a),'salon_name':s.name,'city':s.city,'address':s.address} for a,s in db.execute(stmt.order_by(Appointment.starts_at))]
+        stmt=stmt.where(Appointment.starts_at>=start.astimezone(timezone.utc).isoformat(),Appointment.starts_at<(start+timedelta(days=days)).astimezone(timezone.utc).isoformat())
+    if response is not None:
+        total=db.scalar(select(func.count()).select_from(stmt.subquery()))
+        response.headers['X-Focus-Total']=str(total);response.headers['X-Focus-Has-More']=str(offset+limit<total).lower()
+    from backend.visit_planner import verified,links,revision
+    return [{**serial(a),'salon_name':s.name,'city':s.city,'address':s.address,'revision':revision(a),**links(a,s,verified(db,s))} for a,s in db.execute(stmt.order_by(Appointment.starts_at,Appointment.id).limit(limit).offset(offset))]
 @app.post('/api/appointments',status_code=201)
 def add_appointment(payload:AppointmentIn,user=Depends(current),db=Depends(database)):
     salon=salon_access(db,payload.salon_id,user)
+    if visit_planner_enabled():
+        from backend.contact_guard import lock_contact
+        lock_contact(db,salon.id)
+        from backend.meta_models import MetaConversation
+        if salon.status=='do_not_contact' or db.scalar(select(MetaConversation.id).where(MetaConversation.salon_id==salon.id,MetaConversation.opted_out==1).limit(1)):raise HTTPException(409,'Kontakt zablokowany')
     if payload.starts_at.tzinfo is None: raise HTTPException(422,'Termin wymaga strefy czasowej')
     start=payload.starts_at.astimezone(timezone.utc); end=start+timedelta(minutes=payload.minutes)
     owner=salon.owner_id
-    db.scalar(select(User).where(User.id==owner).with_for_update())
+    assigned=db.scalar(select(User).where(User.id==owner).with_for_update(key_share=True))
+    if visit_planner_enabled():
+        salon=db.get(Salon,salon.id,populate_existing=True,with_for_update={'key_share':True})
+        if not assigned or not assigned.active or salon.owner_id!=owner:raise HTTPException(409,'Opiekun salonu zmieniony lub nieaktywny')
+        salon_access(db,salon.id,user)
+        if salon.status=='do_not_contact':raise HTTPException(409,'Kontakt zablokowany')
     overlap=db.scalar(select(Appointment).where(Appointment.user_id==owner,Appointment.status.in_(['proposed','confirmed']),Appointment.starts_at<end.isoformat(),Appointment.ends_at>start.isoformat()))
     if overlap: raise HTTPException(409,'Termin koliduje z inną wizytą')
+    from backend.visit_planner import enabled
+    if enabled() and payload.status=='confirmed' and user.role!='manager':raise HTTPException(403,'Potwierdzenie wizyty wymaga menedżera')
+    if enabled() and payload.status=='confirmed' and not payload.confirmation_recorded:raise HTTPException(422,'Potwierdź, że klient uzgodnił wizytę')
     a=Appointment(id=uid(),salon_id=salon.id,user_id=owner,starts_at=start.isoformat(),ends_at=end.isoformat(),status=payload.status,notes=payload.notes)
     db.add(a); record(db,salon,user,'appointment','Zaplanowano wizytę '+a.starts_at+' ('+a.status+')'); db.commit(); return serial(a)
 @app.patch('/api/appointments/{id}')
 def appointment_status(id:str,payload:AppointmentStatus,user=Depends(current),db=Depends(database)):
     a=db.get(Appointment,id)
-    if not a or (user.role!='manager' and a.user_id!=user.id): raise HTTPException(404,'Brak wizyty')
+    if not a or (user.role!='manager' and a.user_id!=user.id):raise HTTPException(404,'Brak wizyty')
     salon_access(db,a.salon_id,user)
-    db.scalar(select(User).where(User.id==a.user_id).with_for_update())
+    if visit_planner_enabled() and payload.status in ('proposed','confirmed'):
+        from backend.contact_guard import lock_contact
+        lock_contact(db,a.salon_id)
+        from backend.meta_models import MetaConversation
+        salon=salon_access(db,a.salon_id,user)
+        if salon.status=='do_not_contact' or db.scalar(select(MetaConversation.id).where(MetaConversation.salon_id==salon.id,MetaConversation.opted_out==1).limit(1)):raise HTTPException(409,'Kontakt zablokowany')
+    # Same user lock as creation, then refresh the appointment to avoid stale writes.
+    db.scalar(select(User).where(User.id==a.user_id).with_for_update(key_share=True))
+    a=db.scalar(select(Appointment).where(Appointment.id==id).with_for_update().execution_options(populate_existing=True))
+    salon=db.get(Salon,a.salon_id,populate_existing=True)
+    salon_access(db,a.salon_id,user)
+    if visit_planner_enabled() and payload.status in ('proposed','confirmed') and salon.status=='do_not_contact':raise HTTPException(409,'Kontakt zablokowany')
+    from backend.visit_planner import revision
+    if payload.expected_revision is not None and payload.expected_revision!=revision(a):raise HTTPException(409,'Wizyta została zmieniona; odśwież plan')
+    from backend.visit_planner import enabled
+    if any(v is not None for v in (payload.starts_at,payload.minutes,payload.notes)) and not enabled():raise HTTPException(404,'Zmiana terminu wyłączona')
+    if payload.status=='confirmed' and enabled() and user.role!='manager':raise HTTPException(403,'Potwierdzenie wizyty wymaga menedżera')
+    if payload.status=='confirmed' and enabled() and not payload.confirmation_recorded:raise HTTPException(422,'Potwierdź, że klient uzgodnił wizytę')
+    if payload.starts_at is not None and payload.starts_at.tzinfo is None:raise HTTPException(422,'Termin wymaga strefy czasowej')
+    start=payload.starts_at.astimezone(timezone.utc) if payload.starts_at is not None else datetime.fromisoformat(a.starts_at)
+    minutes=payload.minutes if payload.minutes is not None else int((datetime.fromisoformat(a.ends_at)-datetime.fromisoformat(a.starts_at)).total_seconds()/60)
+    end=start+timedelta(minutes=minutes)
     if payload.status in ('confirmed','proposed'):
-        overlap=db.scalar(select(Appointment).where(Appointment.id!=id,Appointment.user_id==a.user_id,Appointment.status.in_(['proposed','confirmed']),Appointment.starts_at<a.ends_at,Appointment.ends_at>a.starts_at))
-        if overlap: raise HTTPException(409,'Termin koliduje z inną wizytą')
-    a.status=payload.status; record(db,db.get(Salon,a.salon_id),user,'visit' if a.status=='completed' else 'appointment','Status wizyty: '+a.status); db.commit(); return serial(a)
+        overlap=db.scalar(select(Appointment).where(Appointment.id!=id,Appointment.user_id==a.user_id,Appointment.status.in_(['proposed','confirmed']),Appointment.starts_at<end.isoformat(),Appointment.ends_at>start.isoformat()))
+        if overlap:raise HTTPException(409,'Termin koliduje z inną wizytą')
+    a.starts_at=start.isoformat();a.ends_at=end.isoformat();a.status=payload.status
+    if payload.notes is not None:a.notes=payload.notes
+    record(db,db.get(Salon,a.salon_id),user,'visit' if a.status=='completed' else 'appointment','Zaktualizowano wizytę: '+a.starts_at+' ('+a.status+')')
+    db.commit();return serial(a)
+
+@app.post('/api/salons/{id}/verify-address')
+def verify_address(id:str,payload:AddressVerificationIn,user=Depends(current),db=Depends(database)):
+    salon=salon_access(db,id,user)
+    from backend.contact_guard import lock_contact
+    lock_contact(db,id)
+    db.scalar(select(Salon).where(Salon.id==id).with_for_update().execution_options(populate_existing=True))
+    salon=salon_access(db,id,user)
+    if payload.address.strip()!=salon.address.strip() or payload.city.strip()!=salon.city.strip():raise HTTPException(409,'Adres zmieniono; sprawdź aktualny profil')
+    from backend.visit_planner import address_text
+    record(db,salon,user,'address_verified',address_text(salon));db.commit()
+    return {'address_verified':True,'method':'manual_user_confirmation'}
+
+@app.get('/api/appointments/{id}/calendar-preview')
+def calendar_preview(id:str,user=Depends(current),db=Depends(database)):
+    a=db.get(Appointment,id)
+    if not a or (user.role!='manager' and a.user_id!=user.id):raise HTTPException(404,'Brak wizyty')
+    salon=salon_access(db,a.salon_id,user)
+    from backend.calendar_preview import google_event
+    from backend.visit_planner import verified
+    return {'mode':'preview','connected':False,'external_write':False,'requires_owner_approval':True,'event':google_event(a,salon,verified(db,salon))}
+
 @app.get('/api/routes')
-def routes(day:str,user=Depends(current),db=Depends(database)):
-    visits=[v for v in appointments(day,user,db) if v['status']=='confirmed' and v['address']]
+def routes(day:str,user=Depends(current),db=Depends(database),representative_id:str=''):
+    visits=[v for v in appointments(day,user,db,1,representative_id,status_filter='confirmed') if v['status']=='confirmed' and v['address_verified']]
+    if len({v['user_id'] for v in visits})>1:return {'visits':visits,'url':None,'note':'Wybierz jednego handlowca do planu trasy.'}
     stops=[v['address']+', '+v['city']+', Polska' for v in visits]
     params={'api':'1','travelmode':'driving'}
     if stops:
@@ -250,12 +324,17 @@ def integrations(user=Depends(current),db=Depends(database)):
         try:
             require_config('diagnostics');meta.update(connected=bool(credentials(db)),mode='development')
         except HTTPException:meta['mode']='needs_configuration'
-    return {'instagram':meta,'google_calendar':{'connected':False,'mode':'manual_link'},'livespace':{'connected':False,'mode':'adapter_schema_ready'},'agent':{'mode':'openai' if os.getenv('AI_PAID_PROCESSING_APPROVED','false').lower()=='true' and os.getenv('OPENAI_API_KEY') else 'rules','qualification_enabled':os.getenv('AGENT_V2_ENABLED','false').lower()=='true','outbound':False},'discovery':{'provider':'OpenStreetMap','connected':True,'note':'Publiczne wpisy wymagają weryfikacji; nie stanowią zgody na kontakt.'}}
+    return {'instagram':meta,'google_calendar':{'connected':False,'mode':'manual_link','local_planner_enabled':visit_planner_enabled()},'livespace':{'connected':False,'mode':'adapter_schema_ready'},'agent':{'mode':'openai' if os.getenv('AI_PAID_PROCESSING_APPROVED','false').lower()=='true' and os.getenv('OPENAI_API_KEY') else 'rules','qualification_enabled':os.getenv('AGENT_V2_ENABLED','false').lower()=='true','outbound':False},'discovery':{'provider':'OpenStreetMap','radius_enabled':radius_discovery_enabled(),'connected':True,'note':'Publiczne wpisy wymagają weryfikacji; nie stanowią zgody na kontakt.'}}
 @app.post('/api/agent/jobs',status_code=202)
 def queue_job(payload:JobIn,user=Depends(current),db=Depends(database)):
+    from backend.contact_guard import lock_contact
+    from backend.meta_models import MetaConversation
     salon=salon_access(db,payload.salon_id,user)
-    if salon.status=='do_not_contact': raise HTTPException(409,'Salon ma zablokowany kontakt')
-    db.scalar(select(Salon).where(Salon.id==salon.id).with_for_update())
+    lock_contact(db,salon.id)
+    db.scalar(select(Salon).where(Salon.id==salon.id).with_for_update().execution_options(populate_existing=True))
+    salon=salon_access(db,payload.salon_id,user)
+    opted_out=db.scalar(select(MetaConversation.id).where(MetaConversation.salon_id==salon.id,MetaConversation.opted_out==1).limit(1))
+    if salon.status=='do_not_contact' or opted_out: raise HTTPException(409,'Salon ma zablokowany kontakt')
     pending=db.scalar(select(Job).where(Job.salon_id==salon.id,Job.status.in_(['queued','running'])))
     if pending: raise HTTPException(409,'Analiza salonu już oczekuje')
     job=Job(id=uid(),salon_id=salon.id,user_id=user.id,evidence=payload.evidence); db.add(job); db.commit(); return serial(job)
@@ -264,8 +343,17 @@ def jobs(user=Depends(current),db=Depends(database)):
     stmt=select(Job)
     if user.role!='manager': stmt=stmt.join(Salon,Salon.id==Job.salon_id).where(Job.user_id==user.id,Salon.owner_id==user.id)
     return [serial(j) for j in db.scalars(stmt.order_by(Job.created_at.desc()).limit(100))]
+@app.get('/api/discovery/places')
+def discovery_places(city:str=Query(min_length=2,max_length=80),user=Depends(current),db=Depends(database)):
+    from backend.discovery import places
+    return places(city,db)
+
 @app.get('/api/discovery')
-def discovery(city:str=Query(min_length=2,max_length=80),user=Depends(current)):
+def discovery(city:str=Query(min_length=2,max_length=80),radius_km:float|None=Query(default=None,ge=1,le=50),latitude:float|None=Query(default=None,ge=-90,le=90),longitude:float|None=Query(default=None,ge=-180,le=180),user=Depends(current)):
+    if any(v is not None for v in (radius_km,latitude,longitude)):
+        if any(v is None for v in (radius_km,latitude,longitude)):raise HTTPException(422,'Wybierz miejscowość, punkt i promień')
+        from backend.discovery import search_radius
+        return search_radius(city,latitude,longitude,radius_km)
     import httpx
     # JSON quoting prevents Overpass query injection. No arbitrary URL fetching.
     city_json=json.dumps(city)
@@ -326,7 +414,7 @@ def deactivate_user(id:str,user=Depends(manager),db=Depends(database)):
 @app.get('/api/admin/integrity')
 def database_integrity(user=Depends(manager)):
     from scripts.backup import fingerprint
-    return {'tables':fingerprint(os.environ['DATABASE_URL'],include_metadata=True),'version':'3.0.3'}
+    return {'tables':fingerprint(os.environ['DATABASE_URL'],include_metadata=True),'version':'3.0.4'}
 
 @app.post('/api/admin/backup')
 def download_backup(payload:BackupIn,user=Depends(manager)):
@@ -344,6 +432,12 @@ def download_backup(payload:BackupIn,user=Depends(manager)):
 
 from backend.meta import router as meta_router
 app.include_router(meta_router)
+from backend.google_calendar import router as google_router
+app.include_router(google_router)
+
+from backend.native_planning import router as native_router
+from backend import native_retention
+app.include_router(native_router)
 
 DIST=Path(__file__).resolve().parent.parent/'frontend'/'dist'
 if DIST.exists():

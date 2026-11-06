@@ -1,6 +1,6 @@
 # Ai Focus 3.0
 
-Aktualny raport integracji Meta: [docs/meta/REPORT.md](docs/meta/REPORT.md). CRM działa przez HTTPS na wydaniu cd22a44 (3.0.2); integracje zewnętrzne i automatyczne kopie offsite wymagają dalszych prac.
+Aktualny punkt wznowienia i ograniczenia wydania: [RESUME.md](RESUME.md). Ostatni odczyt produkcji w sesji 012 potwierdził d15265b (3.0.3); kandydat 3.0.4 pozostaje w Draft PR #3, bez deployu. Raport Meta: [docs/meta/REPORT.md](docs/meta/REPORT.md).
 
 Osobny CRM sprzedaży NAK Hair / muk Haircare. React 19 + TypeScript, FastAPI, SQLAlchemy, PostgreSQL 17, Alembic. Polskie UI, responsywna PWA, indywidualne konta menedżera i handlowców. Bez automatycznej wysyłki wiadomości.
 
@@ -11,7 +11,7 @@ Osobny CRM sprzedaży NAK Hair / muk Haircare. React 19 + TypeScript, FastAPI, S
 - Excel: eksport, podgląd importu, transakcyjny zapis bez częściowego importu, wykrywanie duplikatów nazwa/miasto, limity rozmiaru, ochrona przed formułami.
 - Agent: trwała kolejka PostgreSQL, osobny proces, analiza historii, kontrola niedawnego kontaktu i zakazu kontaktu, szkice. Domyślnie reguły; opcjonalny adapter modelu OpenAI wymaga konfiguracji i osobnej zgody na koszty. Żadnej wysyłki.
 - Odkrywanie salonów: publiczny serwis Overpass/OpenStreetMap, jawne źródła, ręczna weryfikacja i dodanie do CRM. Dostępność i kompletność zależy od zewnętrznego serwisu.
-- Kalendarz: propozycje i potwierdzenia, wykrywanie kolizji, historia wizyt, ręczny link Google Calendar, Google Maps w kolejności godzin.
+- Kalendarz: propozycje i potwierdzenia, wykrywanie kolizji, historia wizyt, natywny plan Focus i Google Maps w kolejności godzin.
 - Raporty: lejek aktualnego stanu, aktywności dzienne/tygodniowe/miesięczne, KPI zespołu, potencjał, orientacyjna prognoza ważona i konwersja. Brak udawanych danych o przychodach.
 - Planowanie szkoleń zespołu przez menedżera.
 - PWA: manifest, ikony, widok mobilny, ekran offline. CRM wymaga połączenia; dane prywatne nie są cache'owane.
@@ -31,8 +31,7 @@ alembic upgrade head
 # Ustaw BOOTSTRAP_EMAIL i BOOTSTRAP_PASSWORD przez bezpieczne zmienne środowiska.
 python -m scripts.bootstrap
 sh scripts/start.sh
-# W osobnym procesie, z tym samym DATABASE_URL:
-python -m backend.worker
+# start.sh uruchamia supervisor, API i worker; nie uruchamiaj drugiego workera.
 ```
 
 Nie uruchamiaj seedera na produkcji. `scripts/seed_test.py` wymaga `APP_ENV=test` i pustej bazy. Testy API odmawiają pracy na bazie innej niż jawnie wskazana baza testowa.
@@ -57,7 +56,7 @@ Blueprint generuje hasło początkowego konta w bezpiecznym środowisku Render. 
 
 ## Granice integracji
 
-- Google Calendar: działa ręczne otwieranie formularza, brak OAuth i synchronizacji dwukierunkowej.
+- Google Calendar: rozwój wycofany decyzją właściciela z 2026-11-06; kod/testy/dane zachowane bez aktywacji. Kalendarz Focus jest natywny.
 - Instagram: adapter Unified Login i podpisane webhooki wdrożone za wyłącznikiem; rzeczywista autoryzacja konta testowego czeka na właściciela. Brak transportu wysyłki.
 - Livespace: przygotowana tabela mapowania zewnętrznych ID/kursora z unikalnością; brak aktywnej synchronizacji i adaptera sieciowego. Wymaga uzgodnienia źródła prawdy i API.
 - OpenAI: adapter przygotowany, domyślnie nieaktywny, brak testu realnego modelu bez autoryzowanego sekretu i zgody kosztowej.
@@ -66,3 +65,59 @@ Blueprint generuje hasło początkowego konta w bezpiecznym środowisku Render. 
 - Konta: tworzenie i zmiana własnego hasła, bez samoobsługowego resetu e-mail/MFA i bez panelu dezaktywacji.
 
 Szczegóły testów i blokad: [docs/STATUS.md](docs/STATUS.md). Odtwarzanie: [docs/RECOVERY.md](docs/RECOVERY.md).
+
+## Wyszukiwanie miejscowości i promienia (kandydat 013)
+
+`DISCOVERY_RADIUS_ENABLED=false` domyślnie zachowuje dotychczasowe wyszukiwanie miasta.
+Po osobnej aktywacji dostępne są wybór centrum miejscowości w Polsce i promień 1–50 km,
+odległości w linii prostej, źródła OSM i czas odczytu. Dodanie do CRM wymaga formularza
+weryfikacji; brakujące dane pozostają puste. Geokodowanie wysyła tylko wpisaną miejscowość,
+nie dane CRM. Nominatim jest wywoływany przyciskiem (bez autocomplete), z User-Agent,
+cache do 128 miejscowości/24 h i limitem 1 żądania/s współdzielonym przez PostgreSQL.
+Krótka transakcja geokodowania zajmuje połączenie do 10 s; kolejne równoległe żądania
+są odrzucane 429 zamiast kolejkowane. Nie włączać na innym backendzie bazy bez analizy limitu.
+`GEOCODING_SEARCH_URL` pozwala operatorowi zmienić kompatybilną usługę bez aktualizacji kodu;
+tylko HTTPS bez sekretów w URL i bez przekierowań. Zmiana produkcyjna wymaga zgody.
+Źródła są niekompletne, wyniki ograniczone do 100; brak wyniku nie oznacza braku salonów.
+Publiczny serwis nie ma gwarancji dostępności. Polityka sprawdzona 5 listopada 2026:
+https://operations.osmfoundation.org/policies/nominatim/ (HTTP 200). Brak nowych płatnych usług.
+
+## Plan wizyt (kandydat sesji 014)
+
+`VISIT_PLANNER_ENABLED=false` domyślnie. Po zatwierdzonej aktywacji: dzień/tydzień
+Europe/Warsaw, filtr handlowca dla managera, propozycja domyślnie 20 min w formularzu,
+zmiana terminu/notatek/statusu i odwołanie. CRM jest źródłem prawdy. Nowy workflow
+pozwala handlowcowi proponować, a potwierdzenie wymaga managera i jawnej deklaracji,
+że klient uzgodnił termin. Brak automatycznych wydarzeń, wiadomości i potwierdzeń.
+`calendar-preview` to wyłącznie payload przyszłego adaptera, nie OAuth ani synchronizacja.
+Nawigacja i lokalizacja Google wymagają ręcznej weryfikacji aktualnego adresu w profilu;
+zmiana profilu unieważnia weryfikację. Zabezpieczenie tras działa również przy fladze OFF.
+Projekt integracji: [GOOGLE_CALENDAR_PLAN.md](docs/integrations/GOOGLE_CALENDAR_PLAN.md).
+
+## Opcjonalny Google Calendar (sesja 015)
+
+OAuth per użytkownik, dedykowany kalendarz, zatwierdzane zlecenia synchronizacji i panel
+statusu są przygotowane za trzema domyślnie wyłączonymi flagami. Osobny profil Alembic
+005 nie zmienia standardowego schematu 004. Nie uruchamiaj profilu na produkcji bez
+zgody i zamknięcia bramek recovery. Konfiguracja, wymagania Google, ograniczenia testów
+i plan wycofania: [GOOGLE_CALENDAR_PLAN](docs/integrations/GOOGLE_CALENDAR_PLAN.md).
+
+## Natywny kalendarz i monitoring kontaktów (017–019)
+
+Google Calendar wycofano z dalszego rozwoju decyzją właściciela. Kod i dane zachowane.
+Nowy FocusWorkPanel oferuje plan kontaktów, zadania cykliczne, centrum powiadomień
+i raport dnia/menedżera. Plan wizyt wykorzystuje dotychczasowe appointments.
+FOCUS_CALENDAR_SCHEMA_ENABLED (domyślnie false) po zatwierdzonym ustawieniu true wybiera profil native-alembic.ini/006,
+FOCUS_CALENDAR_ENABLED=false steruje funkcjami; obie domyślnieOFF. Produkcyjna migracja
+wymaga osobnej zgody i recovery gate. Profil006 opiera się na004 i nie łączy automatycznie005.
+Kontakt jest jawnie zarejestrowanym zdarzeniem, nie szkicem/zadaniem/wizytą planowaną.
+Raporty i ograniczenia: docs/reports/MORNING_PROGRESS_REPORT.md, RESUME.md.
+
+## Paginacja i retencja (sesja022)
+
+Natywne listy używają stron1–100 i filtrów wSQL. Pełne counts raportu są niezależne
+od podglądów20. Stare listy zachowują format z limit/offset i nagłówkami total.
+Opcjonalny profil native ma terazhead007 (indeksy, bez nowych tabel); nie uruchamiaj
+migracji produkcyjnej bez zgody. Retencja dostępna tylko jako managerpreview, bez
+wykonawcy i bez kasowania klientów/historii. Pomiary,EXPLAIN i ograniczenia:
+docs/sessions/session-022/REPORT.md. Domyślne flagi i wszystkie bramki wydania pozostają.

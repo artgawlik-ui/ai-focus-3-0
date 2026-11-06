@@ -3,6 +3,8 @@ import os,json,uuid
 from pathlib import Path
 import psycopg
 from scripts.backup import restore,fingerprint
+from scripts.local_test_policy import require_historical_artifact_consent
+require_historical_artifact_consent()
 credentials=json.loads(Path('.render-auth/verification.json').read_text())
 name='focus3_restore_'+uuid.uuid4().hex[:10]
 admin='postgresql://postgres@127.0.0.1:55432/postgres'

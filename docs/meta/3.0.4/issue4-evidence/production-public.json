@@ -1,0 +1,80 @@
+{
+  "origin": "https://ai-focus-3-0.onrender.com",
+  "expected_version": "3.0.3",
+  "requests": {
+    "/api/health": {
+      "status": 200,
+      "expected_status": 200,
+      "duration_ms": 531,
+      "no_store": true,
+      "hsts": true,
+      "nosniff": true,
+      "frame_deny": true,
+      "csp": true,
+      "version": "3.0.3"
+    },
+    "/api/auth/me": {
+      "status": 401,
+      "expected_status": 401,
+      "duration_ms": 194,
+      "no_store": true,
+      "hsts": true,
+      "nosniff": true,
+      "frame_deny": true,
+      "csp": true
+    },
+    "/api/salons": {
+      "status": 401,
+      "expected_status": 401,
+      "duration_ms": 232,
+      "no_store": true,
+      "hsts": true,
+      "nosniff": true,
+      "frame_deny": true,
+      "csp": true
+    },
+    "/api/meta/status": {
+      "status": 401,
+      "expected_status": 401,
+      "duration_ms": 201,
+      "no_store": true,
+      "hsts": true,
+      "nosniff": true,
+      "frame_deny": true,
+      "csp": true
+    },
+    "/api/meta/webhook": {
+      "status": 404,
+      "expected_status": 404,
+      "duration_ms": 171,
+      "no_store": true,
+      "hsts": true,
+      "nosniff": true,
+      "frame_deny": true,
+      "csp": true
+    },
+    "/api/meta/oauth/callback": {
+      "status": 404,
+      "expected_status": 404,
+      "duration_ms": 173,
+      "no_store": true,
+      "hsts": true,
+      "nosniff": true,
+      "frame_deny": true,
+      "csp": true
+    },
+    "/manifest.webmanifest": {
+      "status": 200,
+      "expected_status": 200,
+      "duration_ms": 288,
+      "standalone": true
+    },
+    "/sw.js": {
+      "status": 200,
+      "expected_status": 200,
+      "duration_ms": 466
+    }
+  },
+  "mutations": 0,
+  "status": "PASS"
+}

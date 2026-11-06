@@ -1,0 +1,53 @@
+{
+  "baseline_sha": "bc78b7cb4dce2fdf2864047301aacb5ce886433a",
+  "code_commit": "84e8bed",
+  "select_tests": {
+    "tests": "3",
+    "failures": "0",
+    "errors": "0",
+    "skipped": "0",
+    "time": "1.820"
+  },
+  "owner_verified_snapshot": {
+    "date": "2026-11-01",
+    "postgres_version": "17.11",
+    "tables": 17,
+    "records": 23,
+    "alembic": "004",
+    "artifact_sha_provided_by_owner": false,
+    "current_production_verified": false
+  },
+  "independent_restore": {
+    "status": "PASS_EXPORT_RESTORE_ONLY",
+    "production_mutations": 0,
+    "new_exports_created": 0,
+    "real_meta_requests": 0,
+    "export_created_at_utc": "2026-11-01T18:25:00Z",
+    "export_id": "dpg-dbh1b0gm7kps73f0p2m0-a/2026-11-01T18:25Z",
+    "checked_at_utc": "2026-11-01T22:53:30.283624+00:00",
+    "age_seconds_at_check": 16110,
+    "archive_bytes": 8996,
+    "archive_sha256": "c7fcd97d374cd3d3696b9ea35a1a99dc83a944e460c890131ad5966d97232a8c",
+    "restore_status": "RESTORE_AND_EXPORT_POINT_INTEGRITY_PASS",
+    "container_removed": true,
+    "plaintext_removed_by_validator": true,
+    "table_count": 17,
+    "records_total": 23,
+    "revision": "004",
+    "download_plaintext_removed": true
+  },
+  "commands": [
+    "DATABASE_URL=<local focus3_test> python -m pytest tests/test_release_selects.py -q --tb=no --show-capture=no",
+    "python -m scripts.release_selects",
+    "python -m scripts.release_selects --psql",
+    "python -m scripts.isolated_export_restore --archive <private temporary export> --sha256 <verified sha256> --output <private result>",
+    "python -m alembic heads",
+    "git diff origin/main -- migrations backend/db.py backend/meta_models.py",
+    "git diff --check"
+  ],
+  "remaining_basic_sessions": 5,
+  "remaining_dm_min": 1,
+  "decision": "BLOCKED",
+  "production_mutations": 0,
+  "real_meta_requests": 0
+}
