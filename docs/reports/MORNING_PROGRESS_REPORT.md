@@ -2,10 +2,10 @@
 
 ## Ukończony zakres i punkt wznowienia
 
-Sesje017–020 ukończone i zweryfikowane wCI;021 ma testy lokalne, czeka na pełneCI. Sesja016 została zamknięta po nowej decyzji
+Sesje017–021 ukończone i zweryfikowane wCI. Sesja016 została zamknięta po nowej decyzji
 właściciela: rezygnacja z dalszej integracji Google Calendar. Nie deklarujemy jej napraw
 lub testuGoogle live. Nowy kierunek to natywny Focus, bez kasowania kodu/tabel/danych005.
-Ostatni commit kodu7afb5bffaa11f4549f7f7a1d695b38bc38d36493; końcowy dopisek dokumentacyjny
+Ostatni commit aplikacji800c1721b9a079cbc60b6b22f81248fff5f6e199; końcowy dopisek dokumentacyjny
 jest oddzielnym commitem i również wymaga zielonegoCI wChecksPR3.
 PR3Draft: https://github.com/artgawlik-ui/ai-focus-3-0/pull/3.
 RESUME.md zawiera plan kolejnego etapu. Nie ma deklaracji działania w tle po zakończeniu.
@@ -39,10 +39,12 @@ Audyt zachowuje obie daty. FaktycznySIGKILL przedcommit nie zostawia częściowy
 
 ## Komendy i wyniki
 
-**45 nowych przypadków od015:25w017+9w018+4w019+3w020+4w021. Ostatni potwierdzony pełnyCI:300PASS(020).**
+**45 nowych przypadków od015:25w017+9w018+4w019+3w020+4w021. PełnyCI:304PASS.**
 -017 ad348f0045529a6fa2170b54a69df4f3177d034f — CI42302108082 SUCCESS/284PASS.
 -018 8c64fa0ec9189aa95d8e14929f0106f6ede1e649 — CI42303042647 SUCCESS/293PASS.
 -019 cb01fd8bb0574362ee1721fa3d061e83dfbe22a4 — CI42304747622 SUCCESS/297PASS.
+-021 800c1721b9a079cbc60b6b22f81248fff5f6e199 — CI42306632204 SUCCESS/304PASS:
+ https://github.com/artgawlik-ui/ai-focus-3-0/actions/runs/42306632204.
 -020 7afb5bffaa11f4549f7f7a1d695b38bc38d36493 — CI42305590784 SUCCESS/300PASS:
  https://github.com/artgawlik-ui/ai-focus-3-0/actions/runs/42305590784.
 Każdy z tychCI: build, chromium-desktop, webkit-iphone, npm audit i pip-auditPASS,
@@ -84,5 +86,11 @@ jakimkolwiek wydaniem konieczne zamknięcie recovery/SQL oraz osobna zgoda wła�
 
 Naprawiono dryf02:30->03:30 w cyklu przy wiosennej zmianie czasu. Nieistniejące
 wystąpienie pomijane, jesienią wybierane pierwsze; godzina lokalna nie dryfuje.
-4nowe testy lokalnePASS/0.46s, bezDB/HTTP. Całość po tej zmianie wymaga końcowegoCI.
+4nowe testy lokalnePASS/0.46s, bezDB/HTTP. PełnyCI304PASS, Chromium/WebKit/audytyPASS.
 Raport021 zapisany. Kolejny etap nadal retencja/skala, bez dalszego rozwoju Google.
+
+Końcowy zapis zawiera również korektę fixture dzisiejszego kontaktu (czas aktualny,
+nie przyszłe12:00 przy uruchomieniu rano). Brak zmian historii produkcyjnej. Końcowy
+SHA zapisu należy potwierdzić wChecksPR3; wyniku aplikacji nie przypisywać automatycznie
+commitowi testów/dokumentacji. Raport jest zapisanym punktem wznowienia, nie deklaracją
+pracy w tle. Kolejny etap: retencja, skala/paginacja i operacyjne bramki recovery.

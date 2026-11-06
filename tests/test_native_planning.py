@@ -39,7 +39,7 @@ def setup(isolated,monkeypatch):
 def old_contact(factory,salon,days,kind='call'):
     with factory() as db:
         db.get(Salon,salon['id']).created_at=(datetime.now(timezone.utc)-timedelta(days=100)).isoformat()
-        db.add(Activity(id=str(uuid.uuid4()),salon_id=salon['id'],user_id='rep1',kind=kind,body='Syntetyczny wynik',created_at=datetime.combine(native.today()-timedelta(days=days),__import__('datetime').time(12),native.ZONE).astimezone(timezone.utc).isoformat()));db.commit()
+        db.add(Activity(id=str(uuid.uuid4()),salon_id=salon['id'],user_id='rep1',kind=kind,body='Syntetyczny wynik',created_at=(datetime.now(timezone.utc).isoformat() if days==0 else datetime.combine(native.today()-timedelta(days=days),__import__('datetime').time(12),native.ZONE).astimezone(timezone.utc).isoformat())));db.commit()
 def task(c,salon,**kw):return c.post('/api/focus-calendar/tasks',json={'salon_id':salon['id'],'title':'Test','due_at':'2020-01-01T10:00:00Z',**kw})
 @pytest.mark.parametrize('days,threshold',[(7,7),(14,14),(30,30),(60,60)])
 def test_contact_buckets(setup,days,threshold):

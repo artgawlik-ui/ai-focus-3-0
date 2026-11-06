@@ -21,3 +21,12 @@ Render/sieci/sekretów,005 ani zakresuA. Bez merge/deploy/eksportów/restore/Met
 nowych płatnych zasobów; Focus1/2 nietknięte. Szacunek≥5 podstawowych+≥1DM.
 Następny etap: retencja i skala/paginacja. RESUME i raport poranny zawierają punkt
 wznowienia. Nie deklarujemy pracy w tle po zakończeniu wykonania.
+
+## Potwierdzone CI021 i końcowy zapis
+
+800c1721b9a079cbc60b6b22f81248fff5f6e199 / CI42306632204 SUCCESS:
+https://github.com/artgawlik-ui/ai-focus-3-0/actions/runs/42306632204,
+304PASS, Chromium/WebKit/build/audytyPASS,0 znanych podatności. Kod021PASS.
+Dodatkowo poprawiono fixture „kontakt dzisiaj”: używa aktualnego czasu zamiast12:00,
+aby poranne uruchomienie testu nie tworzyło przyszłego kontaktu. To dane syntetyczne,
+nie zmiana historii CRM. Końcowy SHA tego zapisu również wymaga zielonegoCI.

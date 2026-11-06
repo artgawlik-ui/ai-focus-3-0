@@ -1,3 +1,18 @@
+# Końcowy punkt wznowienia sesji021
+
+800c1721b9a079cbc60b6b22f81248fff5f6e199: CI42306632204 SUCCESS/304PASS,
+Chromium/WebKit/build/audytyPASS,0 znanych podatności. Łącznie45 nowych przypadków.
+Końcowy dopisek zawiera raporty i korektę czasu fixture dnia0 (bez przyszłego12:00);
+CI tegoSHA również potwierdzić wChecksPR3. Sesje017–021 ukończone na syntetycznych danych.
+Raport zbiorczy: docs/reports/MORNING_PROGRESS_REPORT.md. Następny etap: retencja,
+skala/paginacja natywnego modułu, bez powrotu do Google. Nie powtarzać zamkniętych
+testów bez nowej zmiany. Feature/schema domyślnieOFF, opcjonalny006 bez migracji produkcji.
+WydanieBLOCKED: aktualnySQL004/17, RPO60, magazyn-klucz, rollback/handoff. A aktualna,
+nie rozszerzona. PR3Draft; bez merge/deploy/realGoogle/Meta/DM/kosztów. ≥5+≥1DM.
+Zachować prywatneZIP-y; nie deklarować pracy w tle po zakończeniu wykonania.
+
+---
+
 # Wznowienie po poprawce021
 
 Po zielonym020 wykryto i naprawiono dryf czasu w cyklu przy DST. Generator pomija
