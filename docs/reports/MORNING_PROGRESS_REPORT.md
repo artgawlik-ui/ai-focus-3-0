@@ -2,8 +2,8 @@
 
 ## Aktualny stan
 
-Sesja016 zamknięta po decyzji właściciela o rezygnacji z Google. Sesja017 i018 ukończone,
-019: implementacja i testy lokalne ukończone, pełny CI bieżącego HEAD do potwierdzenia.
+Sesja016 zamknięta po decyzji właściciela o rezygnacji z Google. Sesje017–019 ukończone z zielonymCI.020: implementacja i testy lokalne ukończone,
+pełny CI bieżącego HEAD do potwierdzenia.
 PR3 pozostaje Draft: https://github.com/artgawlik-ui/ai-focus-3-0/pull/3.
 Nie ma działania w tle po zakończeniu bieżącego wykonania. RESUME zawiera plan wznowienia.
 
@@ -28,7 +28,7 @@ Google kod/tabele005 zachowane, panel i linki kalendarza wycofane; bez OAuth/API
 -018: 8c64fa0ec9189aa95d8e14929f0106f6ede1e649, CI42303042647 SUCCESS/293PASS,
  Chromium/WebKit/build/audytyPASS,0 znanych podatności. Lokalnie48PASS.
 -019: lokalnie68PASS/0failed/0skipped/34.13s; build/compile/diffPASS. Nowe4 testy,
- łącznie38 nowych przypadków od015 (25+9+4). Nie sumować lokalnych nakładających się zbiorów.
+ łącznie41 nowych przypadków od015 (25+9+4+3). Nie sumować lokalnych nakładających się zbiorów.
  E2E rozszerzone: zadanie->jawnykontakt->nowa data->zmiana okresu klienta, oba silniki.
  Końcowy SHA i CI: ChecksPR3 / git log -1 -- docs/sessions/session-019/REPORT.md.
 Prywatne ZIP-y zachowane pozaGit. Raporty sesji opisują błędy i ich poprawki.
@@ -54,3 +54,12 @@ plan wydania z funkcjamiOFF. Brak deklaracji gotowości produkcyjnej na podstawi
 
 019pierwszy1efb1d7/CI42304066743:297backendPASS, E2EFAIL na etykiecie select.
 Jawne aria-label poprawione; bez osłabienia testu. Konieczne CI nowego SHA.
+
+## Domknięcie019 i wykonane020
+
+cb01fd8 / CI42304747622 SUCCESS:297PASS, Chromium/WebKit/build/audytyPASS,0 podatności.
+LokalnyChromiumPASS, WebKit lokalny nie wystartował przez brak pliku; wCI pełnyPASS.
+020 dodaje audyt before/after terminu i rzeczywistą próbęSIGKILL przedcommit,
+rollback częściowych zapisów oraz pojedyncze odtworzenie zadania bez fikcyjnego kontaktu.
+Lokalnie55PASS/25.35s;3 nowe przypadki. Łącznie41 nowych od punktu015.
+Ostatni etap020; końcowy SHA/CI wChecksPR3 i dopisku końcowym. Raport020 iRESUME zapisane.

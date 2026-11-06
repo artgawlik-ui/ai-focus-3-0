@@ -50,3 +50,11 @@ pracy w tle po zakończeniu wykonania. Raport poranny i RESUME są punktem wznow
 etykiecie select „Czy rzeczywiście odbył się kontakt?”. Dodano jawne aria-label do
 tego select oraz wyboru klienta w formularzu okresu. Bez pomijania kroku/większego
 timeoutu. Pełny CI poprawionego SHA wymagany przed PASS019.
+
+## Końcowe CI019
+
+cb01fd8bb0574362ee1721fa3d061e83dfbe22a4 / CI42304747622 SUCCESS:
+297PASS, Chromium/WebKit PASS, build i audytyPASS,0 znanych podatności. Kod019 PASS.
+Dodatkowa lokalna próba E2E:ChromiumPASS; WebKit nie wystartował, bo stary lokalny
+runner wskazuje brakujący MiniBrowser. Nie uznano tego za wynik aplikacji; niezależny
+WebKit wCI zakończył pełny scenariusz. Kontynuacja020: audyt i restart transakcji.

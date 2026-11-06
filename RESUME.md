@@ -1,3 +1,18 @@
+# Wznowienie po sesji020
+
+019cb01fd8 CI42304747622 SUCCESS/297PASS (Chromium/WebKit/audytyPASS).
+020: szczegółowy audyt deadline/status/owner/revision i realnySIGKILL procesu przedcommit,
+bez częściowych zapisów/duplikacji po restarcie. Lokalnie55PASS; pełnyCI tegoHEAD
+sprawdzić przedPASS. Łącznie41 nowych testów od015. Raport020 i raport poranny zapisane.
+Google rozwój zakończony; kod/dane005 zachowane, brak aktywacji. Nowy moduł natywny
+za schema/runtime domyślnieOFF,006 z004. Nie mieszać005/006 ani nie migrować produkcji.
+Następne zadanie: retencja/skala/paginacja nowego modułu. ProdukcyjneSQL004/17, RPO60,
+magazyn-klucz i rollback/handoff wciążBLOCKED; zgodaA aktualna, nie rozszerzona.
+PR3Draft, bez merge/deploy/Meta/DM/realGoogle/kosztów. ≥5 podstawowych +≥1DM.
+Zachować prywatneZIP-y. Nie deklarować pracy w tle po zakończeniu wykonania.
+
+---
+
 # Wznowienie po sesji019 — kalendarz Focus i monitoring
 
 Google wycofany decyzją właściciela; nie rozwijać OAuth/sync ani nie usuwać jego danych.

@@ -243,3 +243,46 @@ def test_planned_visit_does_not_count_as_registered_completed_visit(setup):
     rep=next(r for r in data['team'] if r['representative_id']=='rep1')
     assert rep['visits_completed_recorded']==0 and rep['visits_uncompleted']==1
     assert c.get('/api/focus-calendar/contacts').json()[0]['last_contact_at'] is None
+
+def test_audit_keeps_previous_and_new_deadline_and_actor(setup):
+    c=client('rep1');s=add(c);r=task(c,s).json()
+    response=c.patch('/api/focus-calendar/tasks/'+r['id'],json={'version':1,'due_at':'2027-06-01T10:00:00Z','status':'planned'})
+    assert response.status_code==200
+    with setup() as db:
+        entries=list(db.scalars(select(Activity).where(Activity.kind=='focus_task')))
+        audit=next(a for a in entries if '"before"' in a.body)
+        assert audit.user_id=='rep1' and r['due_at'] in audit.body and '2027-06-01T10:00:00+00:00' in audit.body
+
+def test_sigkill_before_commit_rolls_back_and_next_tick_deduplicates(isolated,setup,tmp_path):
+    c=client('rep1');s=add(c);factory,engine,env=isolated;marker=tmp_path/'uncommitted'
+    script="""import os,signal
+from pathlib import Path
+from backend import native_planning as n
+def stop_before_commit(db):
+ db.flush()
+ Path(os.environ['FOCUS_CRASH_MARKER']).write_text('uncommitted')
+ os.kill(os.getpid(),signal.SIGKILL)
+n.reminders=stop_before_commit
+n.tick()
+"""
+    result=subprocess.run([sys.executable,'-c',script],env={**env,'FOCUS_CALENDAR_ENABLED':'true','FOCUS_CALENDAR_SCHEMA_ENABLED':'true','FOCUS_CRASH_MARKER':str(marker)},capture_output=True,timeout=20)
+    assert marker.exists() and result.returncode==-9
+    with factory() as db:
+        assert list(db.scalars(select(Task)))==[]
+        assert list(db.scalars(select(Activity).where(Activity.kind=='focus_task')))==[]
+    import time
+    deadline=time.monotonic()+5
+    while not native.tick():
+        assert time.monotonic()<deadline
+        time.sleep(.1)
+    assert native.tick()
+    assert len(c.get('/api/focus-calendar/tasks').json())==1
+    assert c.get('/api/focus-calendar/contacts').json()[0]['last_contact_at'] is None
+
+def test_native_worker_failure_does_not_log_exception_payload(setup,monkeypatch,caplog):
+    from backend import worker
+    monkeypatch.setattr(worker,'_last_native_tick',-60)
+    def fail():raise RuntimeError('synthetic-private-details')
+    monkeypatch.setattr(native,'tick',fail)
+    assert worker.process_native_once() is False
+    assert 'synthetic-private-details' not in caplog.text

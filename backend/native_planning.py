@@ -186,11 +186,12 @@ def edit_task(id:str,body:TaskEdit,user=Depends(current),db=Depends(database)):
     if row.status in ('completed','cancelled'):raise HTTPException(409,'Zadanie już zamknięte')
     if body.status=='completed' and not body.result.strip():raise HTTPException(422,'Zapisz wynik działania')
     if body.contact_kind and (body.status!='completed' or blocked(db,s)):raise HTTPException(409,'Nie można zarejestrować kontaktu')
+    before={k:getattr(row,k) for k in ('due_at','status','assignee_id','version')}
     if body.due_at and body.local_due:raise HTTPException(422,'Podaj jeden termin')
     if body.local_due:row.due_at=local_stamp(body.local_due,body.fold)
     elif body.due_at:row.due_at=stamp(body.due_at).isoformat()
     row.assignee_id=s.owner_id;row.status=body.status;row.result=body.result;row.version+=1
-    audit(db,s,user,'Zmieniono zadanie '+row.id+': '+body.status+'. '+body.result)
+    audit(db,s,user,'Zmieniono zadanie '+row.id+': '+json.dumps({'before':before,'after':{k:getattr(row,k) for k in ('due_at','status','assignee_id','version')}},ensure_ascii=False)+'. Wynik: '+body.result)
     if body.status=='completed':
         row.completed_at=now()
         if body.contact_kind:db.add(Activity(id=str(uuid.uuid4()),salon_id=s.id,user_id=user.id,kind=body.contact_kind,body=body.result))
