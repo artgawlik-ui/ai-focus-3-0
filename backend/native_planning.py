@@ -205,17 +205,29 @@ def tasks(user=Depends(current),db=Depends(database)):
     if user.role!='manager':query=query.where(Salon.owner_id==user.id)
     return [task_view(t) for t in db.scalars(query.order_by(Task.due_at).limit(1000))]
 @router.get('/report')
-def report(day:str='',user=Depends(current),db=Depends(database)):
-    require();d=day_value(day);rows=list_due(db,user,d);due=[r for r in rows if r['requires_contact']]
+def report(day:str='',representative_id:str='',user=Depends(current),db=Depends(database)):
+    require();d=day_value(day);rows=list_due(db,user,d,representative_id);due=[r for r in rows if r['requires_contact']]
     task_rows=tasks(user,db)
-    owner_by_salon={s.id:s.owner_id for s in db.scalars(select(Salon))} if user.role=='manager' else {}
+    owners={s.id:s.owner_id for s in db.scalars(select(Salon).where(Salon.id.in_([t['salon_id'] for t in task_rows])))}
+    if representative_id:task_rows=[t for t in task_rows if owners.get(t['salon_id'])==representative_id]
+    start=datetime.combine(d,time.min,ZONE).astimezone(timezone.utc)
+    end=datetime.combine(d+timedelta(days=1),time.min,ZONE).astimezone(timezone.utc)
+    instant=datetime.now(timezone.utc)
+    query=select(Appointment,Salon).join(Salon,Salon.id==Appointment.salon_id).where(Appointment.user_id==Salon.owner_id,Appointment.starts_at>=start.isoformat(),Appointment.starts_at<end.isoformat())
+    if user.role!='manager':query=query.where(Appointment.user_id==user.id)
+    if representative_id:query=query.where(Appointment.user_id==representative_id)
+    visits=[{'id':a.id,'salon_id':a.salon_id,'salon_name':s.name,'representative_id':a.user_id,'starts_at':a.starts_at,'ends_at':a.ends_at,'status':a.status} for a,s in db.execute(query.order_by(Appointment.starts_at))]
+    salon_ids=[r['salon_id'] for r in rows]
+    contacts=list(db.scalars(select(Activity).where(Activity.salon_id.in_(salon_ids),Activity.kind.in_(CONTACT_KINDS),Activity.created_at>=start.isoformat(),Activity.created_at<end.isoformat(),Activity.created_at<=instant.isoformat())))
     groups=[]
     if user.role=='manager':
         for u in db.scalars(select(User).where(User.active==1)):
-            subset=[r for r in due if r['owner_id']==u.id]
-            owned=[t for t in task_rows if owner_by_salon.get(t['salon_id'])==u.id]
-            groups.append({'representative_id':u.id,'name':u.name,'neglected':len(subset),'high_priority':sum(r['priority'] in ('A+','A') for r in subset),'overdue_tasks':sum(t['overdue'] for t in owned),'completed_tasks':sum(t['status']=='completed' for t in owned),'completed_on_time':sum(t['status']=='completed' and t['completed_at']<=t['due_at'] for t in owned)})
-    return {'day':d.isoformat(),'requires_contact':due,'team':groups,'tasks':task_rows,'tasks_today':[t for t in task_rows if stamp(t['due_at']).astimezone(ZONE).date()==d],'overdue_tasks':[t for t in task_rows if t['overdue']],'due_next_24h':[t for t in task_rows if t['status'] in ('planned','in_progress') and datetime.now(timezone.utc)<=stamp(t['due_at'])<=datetime.now(timezone.utc)+timedelta(hours=24)],'rules':'Tylko zarejestrowane kontakty. Brak kontaktu i wiek rekordu oznaczane osobno.'}
+            if representative_id and u.id!=representative_id:continue
+            subset=[r for r in due if r['owner_id']==u.id];owned=[t for t in task_rows if owners.get(t['salon_id'])==u.id]
+            groups.append({'representative_id':u.id,'name':u.name,'neglected':len(subset),'high_priority':sum(r['priority'] in ('A+','A') for r in subset),'overdue_tasks':sum(t['overdue'] for t in owned),'completed_tasks':sum(t['status']=='completed' for t in owned),'completed_on_time':sum(t['status']=='completed' and stamp(t['completed_at'])<=stamp(t['due_at']) for t in owned),'contacts_recorded':sum(a.user_id==u.id for a in contacts),'visits_completed_recorded':sum(v['representative_id']==u.id and v['status']=='completed' for v in visits),'visits_uncompleted':sum(v['representative_id']==u.id and v['status'] in ('proposed','confirmed') and stamp(v['ends_at'])<instant for v in visits)})
+    upcoming_tasks=[t for t in task_rows if t['status'] in ('planned','in_progress') and instant<=stamp(t['due_at'])<=instant+timedelta(hours=24)]
+    return {'day':d.isoformat(),'generated_at':instant.isoformat(),'time_zone':'Europe/Warsaw','requires_contact':due,'all_contacts':rows,'team':groups,'tasks':task_rows,'tasks_today':[t for t in task_rows if stamp(t['due_at']).astimezone(ZONE).date()==d],'overdue_tasks':[t for t in task_rows if t['overdue']],'due_next_24h':upcoming_tasks,'visits_today':visits,'visits_next_2h':[v for v in visits if v['status']=='confirmed' and instant<=stamp(v['starts_at'])<=instant+timedelta(hours=2)],'at_risk_tasks':[t for t in upcoming_tasks if t['status']=='planned' and stamp(t['due_at'])<=instant+timedelta(hours=2)],'rules':'Tylko zarejestrowane kontakty. Ryzyko: zadanie nierozpoczęte z terminem do2h. Niewykonana wizyta: koniec minął, nadal proposed/confirmed; to brak rejestracji, nie dowód nieobecności.'}
+
 
 def reminders(db):
     for t in db.scalars(select(Task).where(Task.status.in_(('planned','in_progress'))).order_by(Task.due_at).limit(500)):

@@ -202,3 +202,44 @@ def test_task_creation_waits_for_optout_update_and_rechecks(setup):
             try:assert started.wait(3) and not done.wait(.2)
             finally:db.commit()
             assert future.result(timeout=10).status_code==409
+
+def test_report_contains_daily_plan_risk_and_actual_contact_only(setup):
+    from backend.db import Appointment
+    c=client('rep1');s=add(c);old_contact(setup,s,0)
+    instant=datetime.now(timezone.utc)
+    with setup() as db:
+        db.add(Appointment(id=str(uuid.uuid4()),salon_id=s['id'],user_id='rep1',starts_at=(instant+timedelta(minutes=20)).isoformat(),ends_at=(instant+timedelta(minutes=40)).isoformat(),status='confirmed'))
+        db.commit()
+    task(c,s,due_at=(instant+timedelta(minutes=45)).isoformat())
+    data=c.get('/api/focus-calendar/report').json()
+    # If the interval crosses local midnight, the visit belongs to the next selected day.
+    expected=(instant+timedelta(minutes=20)).astimezone(native.ZONE).date()==native.today()
+    assert len(data['visits_today'])==int(expected) and len(data['visits_next_2h'])==int(expected)
+    assert len(data['due_next_24h'])==1 and len(data['at_risk_tasks'])==1
+    assert data['all_contacts'][0]['last_contact_at'] is not None
+
+def test_manager_report_filter_does_not_expose_other_salesperson(setup):
+    a=client('rep1');b=client('rep2');one=add(a,'Salon pierwszy');two=add(b,'Salon drugi')
+    task(a,one);task(b,two)
+    data=client().get('/api/focus-calendar/report?representative_id=rep1').json()
+    assert {t['salon_id'] for t in data['tasks']}=={one['id']}
+    assert [r['representative_id'] for r in data['team']]==['rep1']
+    assert b.get('/api/focus-calendar/report?representative_id=rep1').status_code==403
+
+def test_policy_can_be_changed_before_customer_is_overdue(setup):
+    c=client('rep1');s=add(c);old_contact(setup,s,0)
+    assert not c.get('/api/focus-calendar/contacts').json()[0]['requires_contact']
+    assert c.put('/api/focus-calendar/contacts/'+s['id']+'/policy',json={'interval_days':45}).status_code==200
+    assert c.get('/api/focus-calendar/report').json()['all_contacts'][0]['interval_days']==45
+
+def test_planned_visit_does_not_count_as_registered_completed_visit(setup):
+    from backend.db import Appointment
+    c=client('rep1');s=add(c);instant=datetime.now(timezone.utc)
+    # Fixed noon in the selected day avoids wall-clock midnight dependence.
+    day=native.today()-timedelta(days=1);start=datetime.combine(day,__import__('datetime').time(10),native.ZONE).astimezone(timezone.utc)
+    with setup() as db:
+        db.add(Appointment(id=str(uuid.uuid4()),salon_id=s['id'],user_id='rep1',starts_at=start.isoformat(),ends_at=(start+timedelta(minutes=20)).isoformat(),status='confirmed'));db.commit()
+    data=client().get('/api/focus-calendar/report?day='+day.isoformat()).json()
+    rep=next(r for r in data['team'] if r['representative_id']=='rep1')
+    assert rep['visits_completed_recorded']==0 and rep['visits_uncompleted']==1
+    assert c.get('/api/focus-calendar/contacts').json()[0]['last_contact_at'] is None

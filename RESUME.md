@@ -1,3 +1,23 @@
+# Wznowienie po sesji019 — kalendarz Focus i monitoring
+
+Google wycofany decyzją właściciela; nie rozwijać OAuth/sync ani nie usuwać jego danych.
+017ad348f0 CI42302108082 SUCCESS/284;0188c64fa0 CI42303042647 SUCCESS/293.
+019raport dnia/2h/24h, filtr managera, jawne reguły ryzyka i indywidualny okres każdego
+klienta. Lokalnie68PASS/buildPASS. Końcowy CI bieżącego HEAD sprawdzić przed PASS.
+Raport poranny: docs/reports/MORNING_PROGRESS_REPORT.md; raporty017–019 zawierają dowody.
+Natywny moduł za dwoma flagami domyślnieOFF: FOCUS_CALENDAR_SCHEMA_ENABLED wybiera
+profil006 z004, FOCUS_CALENDAR_ENABLED wyłącznie funkcje/worker. FeatureOFF nie wymaga
+downgrade.005 i006 to osobne profile: nie łączyć ich bez zatwierdzonego planu.
+Rzeczywisty kontakt tylko Activity call/visit/email_received/instagram_received; brak
+kontaktuNULL. Plan, szkic i task nie resetują licznika. ContactPolicy per salon i ustawienia
+per priorytet; zadania i przypomnienia deduplikowane. DatyWarszawa/DST, salonlock i RBAC.
+Następny etap: retencja/skala/restart natywnego workera; nie wracać do Google.
+Nadal BLOCKED: aktualny SQL004/17, RPO60, magazyn-klucz, rollback/handoff. A aktualna
+i nie rozszerzona na006. PR3 Draft; bez merge/deploy/produkcji/eksportu/restore/Meta/DM/kosztów.
+Brak nowych grantówTCP; nie ponawiać SSH. Zachować prywatne ZIP-y. ≥5 podstawowych+≥1DM.
+
+---
+
 # Wznowienie po sesji018
 
 017 ad348f0 CI42302108082 SUCCESS/284PASS. 018: osobna flaga schematu

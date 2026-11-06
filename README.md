@@ -101,3 +101,14 @@ statusu są przygotowane za trzema domyślnie wyłączonymi flagami. Osobny prof
 005 nie zmienia standardowego schematu 004. Nie uruchamiaj profilu na produkcji bez
 zgody i zamknięcia bramek recovery. Konfiguracja, wymagania Google, ograniczenia testów
 i plan wycofania: [GOOGLE_CALENDAR_PLAN](docs/integrations/GOOGLE_CALENDAR_PLAN.md).
+
+## Natywny kalendarz i monitoring kontaktów (017–019)
+
+Google Calendar wycofano z dalszego rozwoju decyzją właściciela. Kod i dane zachowane.
+Nowy FocusWorkPanel oferuje plan kontaktów, zadania cykliczne, centrum powiadomień
+i raport dnia/menedżera. Plan wizyt wykorzystuje dotychczasowe appointments.
+FOCUS_CALENDAR_SCHEMA_ENABLED=false wybiera opcjonalny profil native-alembic.ini/006,
+FOCUS_CALENDAR_ENABLED=false steruje funkcjami; obie domyślnieOFF. Produkcyjna migracja
+wymaga osobnej zgody i recovery gate. Profil006 opiera się na004 i nie łączy automatycznie005.
+Kontakt jest jawnie zarejestrowanym zdarzeniem, nie szkicem/zadaniem/wizytą planowaną.
+Raporty i ograniczenia: docs/reports/MORNING_PROGRESS_REPORT.md, RESUME.md.
