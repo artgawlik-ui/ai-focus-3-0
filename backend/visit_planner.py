@@ -6,7 +6,7 @@ from sqlalchemy import select
 from backend.db import Activity
 
 
-def enabled():return os.getenv('VISIT_PLANNER_ENABLED','false').lower()=='true'
+def enabled():return os.getenv('VISIT_PLANNER_ENABLED','false').lower()=='true' or os.getenv('FOCUS_CALENDAR_ENABLED','false').strip().lower()=='true'
 
 
 def address_text(salon):return f'Ręcznie sprawdzono adres: {salon.address.strip()}, {salon.city.strip()}.'

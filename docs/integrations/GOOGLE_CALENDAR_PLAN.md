@@ -1,3 +1,7 @@
+> Decyzja właściciela 2026-11-06: integracja Google wycofana z dalszego rozwoju.
+> Poniższy dokument jest historycznym opisem kodu015. Flagi pozostają OFF;
+> kod/tabele/historia zachowane bez destrukcyjnego rollbacku. Nowy kierunek: natywny Focus.
+
 # Google Calendar — implementacja 015, integracja na żywo nieaktywna
 
 ## Zakres

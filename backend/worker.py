@@ -105,6 +105,17 @@ def process_meta_once():
         log.warning('Meta cycle deferred; CRM queue continues')
         return False
 
+_last_native_tick=-60
+def process_native_once():
+    global _last_native_tick
+    from backend.native_planning import enabled,tick
+    if not enabled() or time.monotonic()-_last_native_tick<60:return False
+    try:
+        result=tick();_last_native_tick=time.monotonic();return result
+    except Exception:
+        log.warning('Native planner deferred; no contact or delivery assumed')
+        return False
+
 def process_google_once():
     from backend.google_transport import writable
     if not writable():return False
@@ -138,6 +149,8 @@ def main():
                 process_meta_once()
                 if stop_event.is_set() or paused():continue
                 process_google_once()
+                if stop_event.is_set() or paused():continue
+                process_native_once()
                 if stop_event.is_set() or paused():continue
                 run_once()
                 publish('idle')

@@ -140,6 +140,8 @@ def activities(id:str,user=Depends(current),db=Depends(database)):
     return [serial(a) for a in db.scalars(select(Activity).where(Activity.salon_id==id).order_by(Activity.created_at.desc()))]
 @app.post('/api/salons/{id}/activities',status_code=201)
 def add_activity(id:str,payload:ActivityIn,user=Depends(current),db=Depends(database)):
+    from backend.contact_guard import lock_contact
+    lock_contact(db,id)
     salon=salon_access(db,id,user); record(db,salon,user,payload.kind,payload.body); db.commit()
     return {'ok':True}
 
@@ -191,7 +193,7 @@ async def import_excel(file:UploadFile=File(...),dry_run:bool=True,user=Depends(
 
 @app.get('/api/appointments')
 def appointments(day:str='',user=Depends(current),db=Depends(database),days:int=1,representative_id:str=''):
-    if days not in (1,7):raise HTTPException(422,'Wybierz dzień lub tydzień')
+    if days not in ((1,7,28,29,30,31) if __import__('backend.native_planning',fromlist=['enabled']).enabled() else (1,7)):raise HTTPException(422,'Wybierz dzień lub tydzień')
     if representative_id and user.role!='manager' and representative_id!=user.id:raise HTTPException(403,'Niedozwolony kalendarz')
     stmt=select(Appointment,Salon).join(Salon,Salon.id==Appointment.salon_id)
     if representative_id:stmt=stmt.where(Appointment.user_id==representative_id)
@@ -426,6 +428,9 @@ from backend.meta import router as meta_router
 app.include_router(meta_router)
 from backend.google_calendar import router as google_router
 app.include_router(google_router)
+
+from backend.native_planning import router as native_router
+app.include_router(native_router)
 
 DIST=Path(__file__).resolve().parent.parent/'frontend'/'dist'
 if DIST.exists():

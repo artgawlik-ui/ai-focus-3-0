@@ -18,7 +18,7 @@ def test_pause_fail_closed(monkeypatch,tmp_path,value,expected):
     assert worker_control.paused()
 
 
-@pytest.mark.parametrize('stage',['paused','maintenance','meta','google','job'])
+@pytest.mark.parametrize('stage',['paused','maintenance','meta','google','native','job'])
 def test_stop_never_starts_next_stage(monkeypatch,stage):
     handlers={};calls=[]
     def register(sig,handler):
@@ -29,7 +29,7 @@ def test_stop_never_starts_next_stage(monkeypatch,stage):
         calls.append(state)
         if state=='paused':handlers[signal.SIGTERM]()
     monkeypatch.setattr(worker_control,'publish',publish)
-    for name,label in [('maintain_meta_once','maintenance'),('process_meta_once','meta'),('process_google_once','google'),('run_once','job')]:
+    for name,label in [('maintain_meta_once','maintenance'),('process_meta_once','meta'),('process_google_once','google'),('process_native_once','native'),('run_once','job')]:
         def action(label=label):
             calls.append(label)
             if label==stage:handlers[signal.SIGTERM]()
@@ -39,7 +39,8 @@ def test_stop_never_starts_next_stage(monkeypatch,stage):
     if stage=='paused':assert not any(s in calls for s in ('maintenance','meta','job'))
     if stage=='maintenance':assert 'meta' not in calls and 'job' not in calls
     if stage=='meta':assert 'google' not in calls and 'job' not in calls
-    if stage=='google':assert 'job' not in calls
+    if stage=='google':assert 'native' not in calls and 'job' not in calls
+    if stage=='native':assert 'job' not in calls
 
 
 def test_status_has_only_operational_fields(monkeypatch,tmp_path):

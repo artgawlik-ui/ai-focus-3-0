@@ -1,3 +1,22 @@
+# Wznowienie po zmianie priorytetu — sesja017
+
+Właściciel wycofał Google Calendar. Nie rozwijać OAuth/sync. Kod/dane005 zachowane,
+panel i linki kalendarza Google wycofane. Sesja016: raport stanu, brak live/testów naprawy.
+Natywny moduł: backend/native_planning.py, NativeBase, FocusWorkPanel; flagfalse domyślnie.
+Opcjonalny native-alembic.ini ->006 z004, bez zależności005. Nie łączyć profili ani
+nie wykonywać downgrade na produkcji. Standardowy004 nie zmieniony.
+Kontakt = Activity call/visit/email_received/instagram_received. Brak kontaktu toNULL,
+nie data dodania; zadania/szkice/wizyty planowane nie resetują licznika. Cadence per salon
+oraz per priorytet. Zadania, wyniki, przypomnienia i raporty mają RBAC i opt-out.
+Raport: docs/sessions/session-017/REPORT.md. Raport poranny: docs/reports/MORNING_PROGRESS_REPORT.md.
+Końcowy CI tego HEAD sprawdzić przed PASS; nie kopiować 259 z wejściowego c754a36.
+Prywatne nieśledzone ZIP-y zachować. PR3 Draft, bez merge/deploy/produkcji/Meta/DM/kosztów.
+Nadal BLOCKED: SQL004/17, RPO60, magazyn/klucz, rollback/handoff. A nie rozszerzona na006.
+Następny development: ergonomia dat Warszawa i pełniejsze raporty dnia; webpush/dragdrop
+niezaimplementowane. Szacunek nadal≥5 podstawowych +≥1DM. Brak podstaw do redukcji.
+
+---
+
 # Wznowienie po sesji 015
 
 [Raport 015](docs/sessions/session-015/REPORT.md),
