@@ -35,3 +35,22 @@ class Notification(NativeBase):
     appointment_id:Mapped[str]=mapped_column(String(36),default='')
     at:Mapped[str]=mapped_column(String(40))
     read:Mapped[int]=mapped_column(Integer,default=0)
+
+def register_performance_indexes():
+    """Only the optional native migration profile registers cross-metadata indexes."""
+    from sqlalchemy import Index
+    from backend.db import Activity,Appointment
+    from backend.meta_models import MetaConversation
+    definitions=[
+        ('ix_focus_contact_activity',Activity.__table__,['salon_id','kind','created_at','id']),
+        ('ix_focus_task_queue',Task.__table__,['status','due_at','id']),
+        ('ix_focus_task_salon_cycle',Task.__table__,['salon_id','status','cycle_key']),
+        ('ix_focus_notice_feed',Notification.__table__,['user_id','at','key']),
+        ('ix_focus_visit_window',Appointment.__table__,['status','starts_at','id']),
+        ('ix_focus_meta_optout',MetaConversation.__table__,['salon_id','opted_out']),
+    ]
+    result=[]
+    for name,table,columns in definitions:
+        existing=next((i for i in table.indexes if i.name==name),None)
+        result.append(existing or Index(name,*[table.c[c] for c in columns]))
+    return result

@@ -1,3 +1,20 @@
+# Aktualizacja2026-11-07 — sesja022
+
+Paginacja/filtry, zbiorczy monitoring, pełne agregaty i partie przypomnień ukończone
+lokalnie. Retencja tylkopreview/OFF, bez wykonawcy.27nowych przypadków, regresja98PASS;
+pełnyCI dokładnegoHEAD wymaga potwierdzenia przedPASS. LokalnyChromium nowego flowPASS.
+Pomiary orazEXPLAIN dla300/1000/5000/10000: docs/sessions/session-022/performance/README.md.
+Mediany kontaktów9.917/14.208/39.001/80.369ms; raportu31.099/50.067/173.006/320.594ms.
+Powiadomienia wypełnionego konta10.996/31.750/53.573/101.467ms. PG17.11,1CPU/512MiB,
+API na hoście, nie sprzętRender.10tys unikalnych salonów/100stron,20tys przypomnień
+bez duplikacji, czas samego generowania2566.5ms. To nieSLA ani fizycznyiPhone.
+Indeksy007 opcjonalne, bez nowych tabel. A nadal004/17. Raport022 opisuje próby i ograniczenia.
+ProdukcjaBLOCKED(SQL/RPO60/magazyn-klucz/rollback-handoff); PR3Draft. Bez merge/deploy/
+produkcji/Google/Meta/DM/kosztów, Focus1/2 nietknięte. ≥5podstawowych+≥1DM bez redukcji.
+Następny etap: diagnostyka kolejki i previewretencji w panelu managera.
+
+---
+
 # Raport poranny Ai Focus3.0.4 — 2026-11-06 (Europe/Warsaw)
 
 ## Ukończony zakres i punkt wznowienia

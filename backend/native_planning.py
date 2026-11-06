@@ -3,7 +3,7 @@ import os,json,uuid,hashlib,calendar
 from datetime import datetime,date,time,timedelta,timezone
 from zoneinfo import ZoneInfo
 from typing import Literal
-from fastapi import APIRouter,Depends,HTTPException
+from fastapi import APIRouter,Depends,HTTPException,Response
 from pydantic import BaseModel,Field,field_validator,model_validator
 from sqlalchemy import select
 from backend.db import Session,Salon,User,Activity,Appointment,now
@@ -63,34 +63,14 @@ def settings(db,user_id):
     row=db.get(WorkSettings,user_id)
     return json.loads(row.intervals) if row else DEFAULTS.copy()
 def list_due(db,user,day,representative_id='',salon_id=''):
-    if representative_id and user.role!='manager' and representative_id!=user.id:raise HTTPException(403,'Niedozwolony handlowiec')
-    query=select(Salon).join(User,User.id==Salon.owner_id).where(User.active==1)
-    if user.role!='manager':query=query.where(Salon.owner_id==user.id)
-    if representative_id:query=query.where(Salon.owner_id==representative_id)
-    if salon_id:query=query.where(Salon.id==salon_id)
-    result=[]
-    for s in db.scalars(query):
-        if blocked(db,s):continue
-        # Only explicitly registered contact evidence counts, never scheduling/drafts/tasks.
-        contacts=[]
-        for a in db.scalars(select(Activity).where(Activity.salon_id==s.id,Activity.kind.in_(CONTACT_KINDS))):
-            try:at=stamp(a.created_at)
-            except HTTPException:continue
-            if at<=datetime.now(timezone.utc) and at.astimezone(ZONE).date()<=day:contacts.append((at,a.id))
-        last=max(contacts,default=None)
-        base=last[0].astimezone(ZONE).date() if last else stamp(s.created_at).astimezone(ZONE).date()
-        elapsed=max(0,(day-base).days)
-        policy=db.get(ContactPolicy,s.id);interval=policy.interval_days if policy else settings(db,s.owner_id).get(s.priority,30)
-        due=base+timedelta(days=interval)
-        # Never-contacted leads appear immediately; age is explicitly since registration.
-        cycle=last[1] if last else 'never'
-        task=db.scalar(select(Task).where(Task.salon_id==s.id,Task.cycle_key.like('followup:%'),Task.status.in_(('planned','in_progress'))))
-        result.append({'salon_id':s.id,'salon_name':s.name,'owner_id':s.owner_id,'priority':s.priority,'last_contact_at':last[0].isoformat() if last else None,'days_since_contact':elapsed if last else None,'days_since_registration':max(0,(day-stamp(s.created_at).astimezone(ZONE).date()).days),'threshold':max([v for v in (7,14,30,60) if elapsed>=v],default=0),'interval_days':interval,'due_on':due.isoformat() if last else day.isoformat(),'requires_contact':not last or day>=due,'overdue_days':max(0,(day-due).days) if last else elapsed,'cycle':cycle,'task_id':task.id if task else None})
-    return sorted(result,key=lambda r:({'A+':0,'A':1,'B':2,'C':3}.get(r['priority'],4),-r['overdue_days'],r['salon_name']))
+    # Compatibility list is bounded. Worker and UI use their own bounded queries.
+    from backend.native_queries import contacts_page
+    return contacts_page(db,user,day,representative_id,limit=100,salon=salon_id)['items']
 
 def ensure_followups(db,user,day):
     made=0
-    for candidate in list_due(db,user,day):
+    from backend.native_queries import contact_work
+    for candidate in contact_work(db,user,day):
         lock_contact(db,candidate['salon_id']);s=access(db,candidate['salon_id'],user)
         # Re-evaluate contact/opt-out under the same lock used by the recorder.
         row=next((r for r in list_due(db,user,day,s.owner_id,s.id) if r['salon_id']==s.id),None)
@@ -112,8 +92,12 @@ def ensure_followups(db,user,day):
 @router.get('/status')
 def status(user=Depends(current)):return {'enabled':enabled(),'schema_enabled':schema_enabled(),'external_messages':False,'push':'not_configured'}
 @router.get('/contacts')
-def contacts(day:str='',representative_id:str='',user=Depends(current),db=Depends(database)):
-    require();return list_due(db,user,day_value(day),representative_id)
+def contacts(response:Response,day:str='',representative_id:str='',limit:int=100,offset:int=0,user=Depends(current),db=Depends(database)):
+    require()
+    from backend.native_queries import contacts_page
+    page=contacts_page(db,user,day_value(day),representative_id,limit,offset)
+    response.headers['X-Focus-Total']=str(page['total']);response.headers['X-Focus-Has-More']=str(page['has_more']).lower()
+    return page['items']
 class PolicyIn(BaseModel):interval_days:int=Field(ge=1,le=365)
 @router.put('/contacts/{id}/policy')
 def policy(id:str,body:PolicyIn,user=Depends(current),db=Depends(database)):
@@ -211,68 +195,82 @@ def edit_task(id:str,body:TaskEdit,user=Depends(current),db=Depends(database)):
             db.add(Task(id=str(uuid.uuid4()),salon_id=s.id,assignee_id=s.owner_id,title=row.title,due_at=due,priority=row.priority,repeat_days=row.repeat_days,cycle_key='repeat:'+row.id))
     db.commit();return task_view(row)
 @router.get('/tasks')
-def tasks(user=Depends(current),db=Depends(database)):
-    require();query=select(Task).join(Salon,Salon.id==Task.salon_id)
-    if user.role!='manager':query=query.where(Salon.owner_id==user.id)
-    return [task_view(t) for t in db.scalars(query.order_by(Task.due_at).limit(1000))]
+def tasks(response:Response,limit:int=100,offset:int=0,user=Depends(current),db=Depends(database)):
+    require()
+    from backend.native_queries import tasks_page
+    page=tasks_page(db,user,limit=limit,offset=offset)
+    response.headers['X-Focus-Total']=str(page['total']);response.headers['X-Focus-Has-More']=str(page['has_more']).lower()
+    return page['items']
+
 @router.get('/report')
 def report(day:str='',representative_id:str='',user=Depends(current),db=Depends(database)):
-    require();d=day_value(day);rows=list_due(db,user,d,representative_id);due=[r for r in rows if r['requires_contact']]
-    task_rows=tasks(user,db)
-    owners={s.id:s.owner_id for s in db.scalars(select(Salon).where(Salon.id.in_([t['salon_id'] for t in task_rows])))}
-    if representative_id:task_rows=[t for t in task_rows if owners.get(t['salon_id'])==representative_id]
-    start=datetime.combine(d,time.min,ZONE).astimezone(timezone.utc)
-    end=datetime.combine(d+timedelta(days=1),time.min,ZONE).astimezone(timezone.utc)
+    require();d=day_value(day)
+    from backend.native_queries import contacts_page,tasks_page,report_summary
+    counts,team=report_summary(db,user,d,representative_id)
+    cp=contacts_page(db,user,d,representative_id,limit=20,due_only=True)
+    all_cp=contacts_page(db,user,d,representative_id,limit=20)
+    tp=tasks_page(db,user,representative_id,limit=20)
+    vp=visits_page(day=day,days=1,representative_id=representative_id,user=user,db=db)
     instant=datetime.now(timezone.utc)
-    query=select(Appointment,Salon).join(Salon,Salon.id==Appointment.salon_id).where(Appointment.user_id==Salon.owner_id,Appointment.starts_at>=start.isoformat(),Appointment.starts_at<end.isoformat())
-    if user.role!='manager':query=query.where(Appointment.user_id==user.id)
-    if representative_id:query=query.where(Appointment.user_id==representative_id)
-    visits=[{'id':a.id,'salon_id':a.salon_id,'salon_name':s.name,'representative_id':a.user_id,'starts_at':a.starts_at,'ends_at':a.ends_at,'status':a.status} for a,s in db.execute(query.order_by(Appointment.starts_at))]
-    salon_ids=[r['salon_id'] for r in rows]
-    contacts=list(db.scalars(select(Activity).where(Activity.salon_id.in_(salon_ids),Activity.kind.in_(CONTACT_KINDS),Activity.created_at>=start.isoformat(),Activity.created_at<end.isoformat(),Activity.created_at<=instant.isoformat())))
-    groups=[]
-    if user.role=='manager':
-        for u in db.scalars(select(User).where(User.active==1)):
-            if representative_id and u.id!=representative_id:continue
-            subset=[r for r in due if r['owner_id']==u.id];owned=[t for t in task_rows if owners.get(t['salon_id'])==u.id]
-            groups.append({'representative_id':u.id,'name':u.name,'neglected':len(subset),'high_priority':sum(r['priority'] in ('A+','A') for r in subset),'overdue_tasks':sum(t['overdue'] for t in owned),'completed_tasks':sum(t['status']=='completed' for t in owned),'completed_on_time':sum(t['status']=='completed' and stamp(t['completed_at'])<=stamp(t['due_at']) for t in owned),'contacts_recorded':sum(a.user_id==u.id for a in contacts),'visits_completed_recorded':sum(v['representative_id']==u.id and v['status']=='completed' for v in visits),'visits_uncompleted':sum(v['representative_id']==u.id and v['status'] in ('proposed','confirmed') and stamp(v['ends_at'])<instant for v in visits)})
-    upcoming_tasks=[t for t in task_rows if t['status'] in ('planned','in_progress') and instant<=stamp(t['due_at'])<=instant+timedelta(hours=24)]
-    return {'day':d.isoformat(),'generated_at':instant.isoformat(),'time_zone':'Europe/Warsaw','requires_contact':due,'all_contacts':rows,'team':groups,'tasks':task_rows,'tasks_today':[t for t in task_rows if stamp(t['due_at']).astimezone(ZONE).date()==d],'overdue_tasks':[t for t in task_rows if t['overdue']],'due_next_24h':upcoming_tasks,'visits_today':visits,'visits_next_2h':[v for v in visits if v['status']=='confirmed' and instant<=stamp(v['starts_at'])<=instant+timedelta(hours=2)],'at_risk_tasks':[t for t in upcoming_tasks if t['status']=='planned' and stamp(t['due_at'])<=instant+timedelta(hours=2)],'rules':'Tylko zarejestrowane kontakty. Ryzyko: zadanie nierozpoczęte z terminem do2h. Niewykonana wizyta: koniec minął, nadal proposed/confirmed; to brak rejestracji, nie dowód nieobecności.'}
+    return {'day':d.isoformat(),'generated_at':instant.isoformat(),'time_zone':'Europe/Warsaw','counts':counts,'pages':{'contacts':cp['total'],'all_contacts':all_cp['total'],'tasks':tp['total'],'visits':vp['total']},'requires_contact':cp['items'],'all_contacts':all_cp['items'],'team':team,'tasks':tp['items'],'tasks_today':[t for t in tp['items'] if stamp(t['due_at']).astimezone(ZONE).date()==d],'overdue_tasks':[t for t in tp['items'] if t['overdue']],'due_next_24h':[t for t in tp['items'] if t['status'] in ('planned','in_progress') and instant<=stamp(t['due_at'])<=instant+timedelta(hours=24)],'visits_today':vp['items'],'visits_next_2h':[v for v in vp['items'] if v['status']=='confirmed' and instant<=stamp(v['starts_at'])<=instant+timedelta(hours=2)],'at_risk_tasks':[t for t in tp['items'] if t['status']=='planned' and instant<=stamp(t['due_at'])<=instant+timedelta(hours=2)],'rules':'Agregaty counts obejmują cały zakres; listy są podglądem20 rekordów. Ryzyko: nierozpoczęte zadanie do2h. Plan nie jest kontaktem ani dowodem odbycia wizyty.'}
 
+
+def filters_valid(from_date,to_date,priority,allowed):
+    if from_date:day_value(from_date)
+    if to_date:day_value(to_date)
+    if from_date and to_date and from_date>to_date:raise HTTPException(422,'Odwrócony zakres dat')
+    if priority and priority not in allowed:raise HTTPException(422,'Nieprawidłowy priorytet')
+
+@router.get('/contacts/page')
+def contacts_paged(day:str='',representative_id:str='',search:str='',priority:str='',due_only:bool=False,from_date:str='',to_date:str='',limit:int=20,offset:int=0,user=Depends(current),db=Depends(database)):
+    require();filters_valid(from_date,to_date,priority,DEFAULTS)
+    if len(search)>160:raise HTTPException(422,'Za długie wyszukiwanie')
+    from backend.native_queries import contacts_page
+    return contacts_page(db,user,day_value(day),representative_id,limit,offset,search=search,priority=priority,due_only=due_only,from_date=from_date,to_date=to_date)
+
+@router.get('/tasks/page')
+def tasks_paged(representative_id:str='',search:str='',priority:str='',status:str='',from_date:str='',to_date:str='',limit:int=20,offset:int=0,user=Depends(current),db=Depends(database)):
+    require();filters_valid(from_date,to_date,priority,('low','normal','high','urgent'))
+    if len(search)>160 or status not in ('','planned','in_progress','completed','cancelled'):raise HTTPException(422,'Nieprawidłowy filtr')
+    from backend.native_queries import tasks_page
+    return tasks_page(db,user,representative_id,limit,offset,search=search,priority=priority,status=status,from_date=from_date,to_date=to_date)
+
+@router.get('/visits/page')
+def visits_page(day:str='',days:int=1,representative_id:str='',search:str='',priority:str='',status:str='',limit:int=20,offset:int=0,user=Depends(current),db=Depends(database)):
+    require()
+    from backend.native_queries import bounds,scope
+    from sqlalchemy import func
+    bounds(limit,offset);scope(user,representative_id)
+    if days not in (1,7,28,29,30,31) or len(search)>160 or priority not in ('','A+','A','B','C') or status not in ('','proposed','confirmed','completed','cancelled'):raise HTTPException(422,'Nieprawidłowy filtr planu')
+    d=day_value(day);start=datetime.combine(d,time.min,ZONE).astimezone(timezone.utc);end=datetime.combine(d+timedelta(days=days),time.min,ZONE).astimezone(timezone.utc)
+    q=select(Appointment,Salon).join(Salon,Salon.id==Appointment.salon_id).join(User,User.id==Appointment.user_id).where(Appointment.starts_at>=start.isoformat(),Appointment.starts_at<end.isoformat())
+    if user.role!='manager':q=q.where(Salon.owner_id==user.id,Appointment.user_id==user.id)
+    if representative_id:q=q.where(Appointment.user_id==representative_id)
+    if priority:q=q.where(Salon.priority==priority)
+    if status:q=q.where(Appointment.status==status)
+    if search:q=q.where((func.strpos(func.lower(Salon.name),search.lower())>0) | (func.strpos(func.lower(User.name),search.lower())>0))
+    total=db.scalar(select(func.count()).select_from(q.subquery()))
+    from backend.visit_planner import verified,links,revision
+    items=[{**{k:getattr(a,k) for k in ('id','salon_id','user_id','starts_at','ends_at','status','notes')},'salon_name':s.name,'city':s.city,'address':s.address,'revision':revision(a),**links(a,s,verified(db,s))} for a,s in db.execute(q.order_by(Appointment.starts_at,Appointment.id).limit(limit).offset(offset))]
+    return {'items':items,'total':total,'limit':limit,'offset':offset,'has_more':offset+limit<total}
 
 def reminders(db):
-    for t in db.scalars(select(Task).where(Task.status.in_(('planned','in_progress'))).order_by(Task.due_at).limit(500)):
-        s=db.get(Salon,t.salon_id)
-        if blocked(db,s):continue
-        key='task:'+t.id+':'+str(t.version)
-        if stamp(t.due_at)<=datetime.now(timezone.utc):
-            notification=db.get(Notification,key)
-            if not notification:db.add(Notification(key=key,user_id=s.owner_id,task_id=t.id,at=now()))
-            elif notification.user_id!=s.owner_id:notification.user_id=s.owner_id;notification.read=0
-    for a in db.scalars(select(Appointment).where(Appointment.status=='confirmed')):
-        s=db.get(Salon,a.salon_id)
-        if s.owner_id!=a.user_id or blocked(db,s):continue
-        config=db.get(WorkSettings,a.user_id);minutes=json.loads(config.reminders) if config else [1440,120,30]
-        delta=(stamp(a.starts_at)-datetime.now(timezone.utc)).total_seconds()/60
-        eligible=[m for m in minutes if 0<=delta<=m]
-        for offset in ([min(eligible)] if eligible else []):
-            key='visit:'+a.id+':'+hashlib.sha256(a.starts_at.encode()).hexdigest()[:16]+':'+str(offset)
-            if 0<=delta<=offset and not db.get(Notification,key):db.add(Notification(key=key,user_id=a.user_id,appointment_id=a.id,at=now()))
+    from backend.native_notifications import generate
+    return generate(db)
+
 @router.get('/notifications')
-def notifications(user=Depends(current),db=Depends(database)):
-    require();result=[]
-    for n in db.scalars(select(Notification).where(Notification.user_id==user.id).order_by(Notification.at.desc()).limit(100)):
-        t=db.get(Task,n.task_id) if n.task_id else None;a=db.get(Appointment,n.appointment_id) if n.appointment_id else None
-        s=db.get(Salon,t.salon_id if t else a.salon_id) if t or a else None
-        if not s or s.owner_id!=user.id or blocked(db,s):continue
-        if t and (t.status not in ('planned','in_progress') or n.key!='task:'+t.id+':'+str(t.version)):continue
-        if a:
-            config=db.get(WorkSettings,a.user_id);minutes=json.loads(config.reminders) if config else [1440,120,30]
-            delta=(stamp(a.starts_at)-datetime.now(timezone.utc)).total_seconds()/60
-            eligible=[m for m in minutes if 0<=delta<=m]
-            if a.status!='confirmed' or hashlib.sha256(a.starts_at.encode()).hexdigest()[:16] not in n.key or not eligible or n.key.rsplit(':',1)[-1]!=str(min(eligible)):continue
-        result.append({'key':n.key,'title':t.title if t else 'Zbliża się wizyta: '+s.name,'at':n.at,'read':bool(n.read)})
-    return result
+def notifications(response:Response,limit:int=100,offset:int=0,user=Depends(current),db=Depends(database)):
+    require()
+    from backend.native_notifications import page
+    data=page(db,user,limit,offset)
+    response.headers['X-Focus-Total']=str(data['total']);response.headers['X-Focus-Has-More']=str(data['has_more']).lower()
+    return data['items']
+
+@router.get('/notifications/page')
+def notifications_paged(limit:int=20,offset:int=0,user=Depends(current),db=Depends(database)):
+    require()
+    from backend.native_notifications import page
+    return page(db,user,limit,offset)
 @router.post('/notifications/{key}/read')
 def read_notification(key:str,user=Depends(current),db=Depends(database)):
     require();n=db.get(Notification,key)

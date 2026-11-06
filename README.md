@@ -112,3 +112,12 @@ FOCUS_CALENDAR_ENABLED=false steruje funkcjami; obie domyślnieOFF. Produkcyjna 
 wymaga osobnej zgody i recovery gate. Profil006 opiera się na004 i nie łączy automatycznie005.
 Kontakt jest jawnie zarejestrowanym zdarzeniem, nie szkicem/zadaniem/wizytą planowaną.
 Raporty i ograniczenia: docs/reports/MORNING_PROGRESS_REPORT.md, RESUME.md.
+
+## Paginacja i retencja (sesja022)
+
+Natywne listy używają stron1–100 i filtrów wSQL. Pełne counts raportu są niezależne
+od podglądów20. Stare listy zachowują format z limit/offset i nagłówkami total.
+Opcjonalny profil native ma terazhead007 (indeksy, bez nowych tabel); nie uruchamiaj
+migracji produkcyjnej bez zgody. Retencja dostępna tylko jako managerpreview, bez
+wykonawcy i bez kasowania klientów/historii. Pomiary,EXPLAIN i ograniczenia:
+docs/sessions/session-022/REPORT.md. Domyślne flagi i wszystkie bramki wydania pozostają.

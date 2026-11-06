@@ -1,5 +1,5 @@
 """Real HTTPS browser checks in Chromium desktop and WebKit with iPhone emulation."""
-import json, os
+import json, os, time
 from pathlib import Path
 from urllib.parse import urlsplit,parse_qs,urlencode
 from playwright.sync_api import sync_playwright
@@ -10,10 +10,11 @@ credentials=json.loads(Path(os.environ['FOCUS_TEST_CREDENTIAL_FILE']).read_text(
 results=[]
 with sync_playwright() as p:
     cases=[('chromium-desktop',p.chromium,{'viewport':{'width':1440,'height':1050}},os.getenv('FOCUS_TEST_CHROMIUM_EXECUTABLE','/usr/bin/chromium')),('webkit-iphone',p.webkit,p.devices['iPhone 13'],os.getenv('FOCUS_TEST_WEBKIT_EXECUTABLE','/workspace/ai-focus-3-0/.tools/run-webkit.sh'))]
+    if isolated and not os.getenv('CI') and os.getenv('FOCUS_TEST_LOCAL_CHROMIUM_ONLY')=='true':cases=cases[:1]
     for label,engine,options,executable in cases:
         browser=engine.launch(executable_path=executable if Path(executable).exists() else None,headless=True,args=['--no-sandbox'] if label.startswith('chromium') else [])
         context=browser.new_context(**options)
-        page=context.new_page();errors=[]
+        page=context.new_page();errors=[];native_metrics={}
         page.on('pageerror',lambda err:errors.append(str(err)))
         page.goto(origin);page.get_by_label('Adres e-mail').fill(credentials['email']);page.get_by_label('Hasło',exact=True).fill(credentials['password']);page.get_by_role('button',name='Wejdź do swojej przestrzeni').click()
         page.get_by_role('heading',name='Dzień dobry, Weryfikacja.').wait_for()
@@ -149,12 +150,31 @@ with sync_playwright() as p:
             section.get_by_label('Liczba dni między kontaktami',exact=True).fill('21')
             section.get_by_role('button',name='Zapisz indywidualny okres',exact=True).click()
             page.wait_for_function("""async id=>{const rows=await(await fetch('/api/focus-calendar/contacts')).json();return rows.some(r=>r.salon_id===id&&r.interval_days===21)}""",arg=saved['salon_id'])
+            token=page.request.get(origin+'/api/auth/me').json()['csrf']
+            for index in range(45):
+                response=page.request.post(origin+'/api/focus-calendar/tasks',headers={'X-CSRF-Token':token},data={'salon_id':saved['salon_id'],'title':'[PAGE] '+label+' '+str(index).zfill(2),'due_at':'2027-04-10T09:00:00Z'})
+                assert response.status==201
+            started=time.perf_counter()
+            section.get_by_label('Szukaj w planie',exact=True).fill('[PAGE] '+label)
+            page.wait_for_function("""prefix=>Array.from(document.querySelectorAll('[aria-label="Centrum pracy Focus"] article strong')).filter(n=>n.textContent.startsWith(prefix)).length===20""",arg='[PAGE] '+label)
+            native_metrics['search_first_page_ms']=round((time.perf_counter()-started)*1000,2)
+            first=section.locator('article strong').all_text_contents()
+            started=time.perf_counter();button=section.get_by_role('button',name='Następna strona zadań',exact=True)
+            if label=='webkit-iphone':button.tap()
+            else:button.click()
+            page.wait_for_function("""old=>{const titles=Array.from(document.querySelectorAll('[aria-label="Centrum pracy Focus"] article strong')).map(n=>n.textContent);return titles.length===20&&!titles.includes(old[0])}""",arg=first)
+            second=section.locator('article strong').all_text_contents()
+            assert not set(first)&set(second)
+            native_metrics['next_page_ms']=round((time.perf_counter()-started)*1000,2)
+            section.get_by_label('Filtr statusu zadania',exact=True).select_option('completed')
+            section.get_by_label('Strony zadań',exact=True).get_by_text('0 / 0',exact=True).wait_for()
+            native_metrics['page_size']=20;native_metrics['records_in_test']=45
             assert page.evaluate('document.documentElement.scrollWidth<=innerWidth')
         if label=='webkit-iphone':page.get_by_label('Otwórz menu').click()
         page.get_by_label('Wyloguj',exact=True).click()
         page.get_by_role('heading',name='Zaloguj się do Ai Focus').wait_for()
         assert page.request.get(origin+'/api/salons').status==401
         assert not errors,errors
-        results.append({'browser':label,'login':True,'logout':True,'private_data_not_in_service_worker_cache':True,'crm_read':True,'crm_write_on_isolated_copy':isolated,'no_horizontal_scroll':True,'pwa_manifest_icons':True,'apple_standalone_meta':True,'service_worker_offline_fallback':True,'javascript_errors':errors})
-        context.close();browser.close();print(label+': PASS')
+        results.append({'browser':label,'login':True,'logout':True,'private_data_not_in_service_worker_cache':True,'crm_read':True,'crm_write_on_isolated_copy':isolated,'no_horizontal_scroll':True,'pwa_manifest_icons':True,'apple_standalone_meta':True,'service_worker_offline_fallback':True,'javascript_errors':errors,'native_pagination':native_metrics})
+        context.close();browser.close();print(label+': PASS '+json.dumps({'native_pagination':native_metrics}))
 Path('test-results/production-browser-check.json').write_text(json.dumps(results,indent=2))

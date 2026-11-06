@@ -192,10 +192,13 @@ async def import_excel(file:UploadFile=File(...),dry_run:bool=True,user=Depends(
     return {'dry_run':dry_run,'accepted':len(accepted),'errors':errors,'saved':0 if dry_run else len(accepted)}
 
 @app.get('/api/appointments')
-def appointments(day:str='',user=Depends(current),db=Depends(database),days:int=1,representative_id:str=''):
+def appointments(day:str='',user=Depends(current),db=Depends(database),days:int=1,representative_id:str='',limit:int=100,offset:int=0,status_filter:str='',response:Response=None):
     if days not in ((1,7,28,29,30,31) if __import__('backend.native_planning',fromlist=['enabled']).enabled() else (1,7)):raise HTTPException(422,'Wybierz dzień lub tydzień')
     if representative_id and user.role!='manager' and representative_id!=user.id:raise HTTPException(403,'Niedozwolony kalendarz')
+    if not 1<=limit<=100 or not 0<=offset<=100000:raise HTTPException(422,'Nieprawidłowa strona')
+    if status_filter not in ('','proposed','confirmed','completed','cancelled'):raise HTTPException(422,'Nieprawidłowy status')
     stmt=select(Appointment,Salon).join(Salon,Salon.id==Appointment.salon_id)
+    if status_filter:stmt=stmt.where(Appointment.status==status_filter)
     if representative_id:stmt=stmt.where(Appointment.user_id==representative_id)
     if user.role!='manager': stmt=stmt.where(Appointment.user_id==user.id,Salon.owner_id==user.id)
     if day:
@@ -205,8 +208,11 @@ def appointments(day:str='',user=Depends(current),db=Depends(database),days:int=
         from zoneinfo import ZoneInfo
         start=datetime.combine(date.fromisoformat(day),datetime.min.time(),ZoneInfo('Europe/Warsaw'))
         stmt=stmt.where(Appointment.starts_at>=start.astimezone(timezone.utc).isoformat(),Appointment.starts_at<(start+timedelta(days=days)).astimezone(timezone.utc).isoformat())
+    if response is not None:
+        total=db.scalar(select(func.count()).select_from(stmt.subquery()))
+        response.headers['X-Focus-Total']=str(total);response.headers['X-Focus-Has-More']=str(offset+limit<total).lower()
     from backend.visit_planner import verified,links,revision
-    return [{**serial(a),'salon_name':s.name,'city':s.city,'address':s.address,'revision':revision(a),**links(a,s,verified(db,s))} for a,s in db.execute(stmt.order_by(Appointment.starts_at))]
+    return [{**serial(a),'salon_name':s.name,'city':s.city,'address':s.address,'revision':revision(a),**links(a,s,verified(db,s))} for a,s in db.execute(stmt.order_by(Appointment.starts_at,Appointment.id).limit(limit).offset(offset))]
 @app.post('/api/appointments',status_code=201)
 def add_appointment(payload:AppointmentIn,user=Depends(current),db=Depends(database)):
     salon=salon_access(db,payload.salon_id,user)
@@ -289,7 +295,7 @@ def calendar_preview(id:str,user=Depends(current),db=Depends(database)):
 
 @app.get('/api/routes')
 def routes(day:str,user=Depends(current),db=Depends(database),representative_id:str=''):
-    visits=[v for v in appointments(day,user,db,1,representative_id) if v['status']=='confirmed' and v['address_verified']]
+    visits=[v for v in appointments(day,user,db,1,representative_id,status_filter='confirmed') if v['status']=='confirmed' and v['address_verified']]
     if len({v['user_id'] for v in visits})>1:return {'visits':visits,'url':None,'note':'Wybierz jednego handlowca do planu trasy.'}
     stops=[v['address']+', '+v['city']+', Polska' for v in visits]
     params={'api':'1','travelmode':'driving'}
@@ -430,6 +436,7 @@ from backend.google_calendar import router as google_router
 app.include_router(google_router)
 
 from backend.native_planning import router as native_router
+from backend import native_retention
 app.include_router(native_router)
 
 DIST=Path(__file__).resolve().parent.parent/'frontend'/'dist'

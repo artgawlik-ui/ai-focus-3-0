@@ -1,3 +1,19 @@
+# Wznowienie po sesji022
+
+Wejścieffeabe0/CI42307197721 SUCCESS/304 potwierdzone, PR3Draft. Nowe: paginacja
+contacts/tasks/visits/notifications, filtry, pełne agregaty bez limitu1000, zbiorczy
+monitoring i sprawiedliwe partie przypomnień (do500+500). Źródło feedMATERIALIZED
+z wczesnym scope. PWA i selektory klientów stronicowane.27nowych testów, lokalnie98PASS.
+Pomiary300/1000/5000/10000 iEXPLAIN zapisane wdocs/sessions/session-022/performance.
+Retencja wyłączniepreview, bez kasowania nawet przyflagtrue. Nowa007 tylko indeksy
+w opcjonalnym profilu native, dane/tabele zachowane; bez migracji produkcyjnej.
+Raport022 i raportporanny zapisane. KońcowyCI tegoHEAD sprawdzić przedPASS.
+Następny etap: diagnostyka kolejki i panelpreviewretencji managera. Nie wracać doGoogle.
+WydanieBLOCKED: SQL004/17,RPO60,magazyn-klucz,rollback/handoff. A nie rozszerzona.
+PR3Draft, bez merge/deploy/produkcji/Meta/DM/kosztów. ≥5podstawowych+≥1DM. ZIP-y zachować.
+
+---
+
 # Końcowy punkt wznowienia sesji021
 
 800c1721b9a079cbc60b6b22f81248fff5f6e199: CI42306632204 SUCCESS/304PASS,
