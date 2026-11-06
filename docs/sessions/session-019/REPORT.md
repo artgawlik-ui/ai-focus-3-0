@@ -43,3 +43,10 @@ pozostają otwarte. Nadal≥5 sesji podstawowych +≥1DM, bez fikcyjnego obniże
 Następny krok techniczny: przegląd retencji, wydajności i scenariuszy restartu natywnego
 workera, następnie osobno zatwierdzony plan wdrożenia z funkcjamiOFF. Nie deklarujemy
 pracy w tle po zakończeniu wykonania. Raport poranny i RESUME są punktem wznowienia.
+
+## Pierwszy CI019 i korekta
+
+1efb1d7 / CI42304066743:297backendPASS, buildPASS, E2E zatrzymało się na dokładnej
+etykiecie select „Czy rzeczywiście odbył się kontakt?”. Dodano jawne aria-label do
+tego select oraz wyboru klienta w formularzu okresu. Bez pomijania kroku/większego
+timeoutu. Pełny CI poprawionego SHA wymagany przed PASS019.

@@ -51,3 +51,6 @@ Raport tasków limit1000, reminders batch500; większa skala wymaga dodatkowych 
 Szacunek nadal co najmniej5 sesji podstawowych +≥1DM; nie zmniejszony bez zamknięcia bramek.
 Najważniejszy dalszy etap: walidacja retencji/skali i restartu, następnie zatwierdzony
 plan wydania z funkcjamiOFF. Brak deklaracji gotowości produkcyjnej na podstawie mocków.
+
+019pierwszy1efb1d7/CI42304066743:297backendPASS, E2EFAIL na etykiecie select.
+Jawne aria-label poprawione; bez osłabienia testu. Konieczne CI nowego SHA.
