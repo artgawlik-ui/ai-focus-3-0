@@ -1,3 +1,17 @@
+# Potwierdzony punkt wznowienia natywnego Focus
+
+Kod0207afb5bffaa11f4549f7f7a1d695b38bc38d36493: CI42305590784 SUCCESS/300PASS,
+Chromium/WebKit/build/audytyPASS,0 znanych podatności. Łącznie41 nowych przypadków.
+Dopisek dokumentacyjny ma osobny SHA: jego końcowyCI potwierdzić wChecksPR3.
+Raport poranny zawiera zbiorcze dowody i ograniczenia: docs/reports/MORNING_PROGRESS_REPORT.md.
+017–020 ukończone na syntetycznych danych; produkcyjne wydanie nadalBLOCKED.
+Następny etap: retencja, skala i paginacja natywnego modułu. Google rozwój zakończony.
+Nie powtarzać zakończonych testów bez nowej zmiany. Nie aktywować flag/migracji/Meta/DM.
+ZgodaA nie rozszerzona; SQL004/17 iRPO60 pozostają otwarte. PR3Draft, ≥5podstawowych+≥1DM.
+Brak działania w tle po zakończeniu wykonania. Dalsze szczegóły poniżej.
+
+---
+
 # Wznowienie po sesji020
 
 019cb01fd8 CI42304747622 SUCCESS/297PASS (Chromium/WebKit/audytyPASS).

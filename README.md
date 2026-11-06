@@ -11,7 +11,7 @@ Osobny CRM sprzedaży NAK Hair / muk Haircare. React 19 + TypeScript, FastAPI, S
 - Excel: eksport, podgląd importu, transakcyjny zapis bez częściowego importu, wykrywanie duplikatów nazwa/miasto, limity rozmiaru, ochrona przed formułami.
 - Agent: trwała kolejka PostgreSQL, osobny proces, analiza historii, kontrola niedawnego kontaktu i zakazu kontaktu, szkice. Domyślnie reguły; opcjonalny adapter modelu OpenAI wymaga konfiguracji i osobnej zgody na koszty. Żadnej wysyłki.
 - Odkrywanie salonów: publiczny serwis Overpass/OpenStreetMap, jawne źródła, ręczna weryfikacja i dodanie do CRM. Dostępność i kompletność zależy od zewnętrznego serwisu.
-- Kalendarz: propozycje i potwierdzenia, wykrywanie kolizji, historia wizyt, ręczny link Google Calendar, Google Maps w kolejności godzin.
+- Kalendarz: propozycje i potwierdzenia, wykrywanie kolizji, historia wizyt, natywny plan Focus i Google Maps w kolejności godzin.
 - Raporty: lejek aktualnego stanu, aktywności dzienne/tygodniowe/miesięczne, KPI zespołu, potencjał, orientacyjna prognoza ważona i konwersja. Brak udawanych danych o przychodach.
 - Planowanie szkoleń zespołu przez menedżera.
 - PWA: manifest, ikony, widok mobilny, ekran offline. CRM wymaga połączenia; dane prywatne nie są cache'owane.
@@ -56,7 +56,7 @@ Blueprint generuje hasło początkowego konta w bezpiecznym środowisku Render. 
 
 ## Granice integracji
 
-- Google Calendar: zachowany ręczny formularz. Opcjonalny adapter OAuth i zatwierdzana synchronizacja z sesji 015 są przetestowane na mockach, domyślnie OFF; brak potwierdzenia działania na żywo i synchronizacji dwukierunkowej.
+- Google Calendar: rozwój wycofany decyzją właściciela z 2026-11-06; kod/testy/dane zachowane bez aktywacji. Kalendarz Focus jest natywny.
 - Instagram: adapter Unified Login i podpisane webhooki wdrożone za wyłącznikiem; rzeczywista autoryzacja konta testowego czeka na właściciela. Brak transportu wysyłki.
 - Livespace: przygotowana tabela mapowania zewnętrznych ID/kursora z unikalnością; brak aktywnej synchronizacji i adaptera sieciowego. Wymaga uzgodnienia źródła prawdy i API.
 - OpenAI: adapter przygotowany, domyślnie nieaktywny, brak testu realnego modelu bez autoryzowanego sekretu i zgody kosztowej.
@@ -107,7 +107,7 @@ i plan wycofania: [GOOGLE_CALENDAR_PLAN](docs/integrations/GOOGLE_CALENDAR_PLAN.
 Google Calendar wycofano z dalszego rozwoju decyzją właściciela. Kod i dane zachowane.
 Nowy FocusWorkPanel oferuje plan kontaktów, zadania cykliczne, centrum powiadomień
 i raport dnia/menedżera. Plan wizyt wykorzystuje dotychczasowe appointments.
-FOCUS_CALENDAR_SCHEMA_ENABLED=false wybiera opcjonalny profil native-alembic.ini/006,
+FOCUS_CALENDAR_SCHEMA_ENABLED (domyślnie false) po zatwierdzonym ustawieniu true wybiera profil native-alembic.ini/006,
 FOCUS_CALENDAR_ENABLED=false steruje funkcjami; obie domyślnieOFF. Produkcyjna migracja
 wymaga osobnej zgody i recovery gate. Profil006 opiera się na004 i nie łączy automatycznie005.
 Kontakt jest jawnie zarejestrowanym zdarzeniem, nie szkicem/zadaniem/wizytą planowaną.

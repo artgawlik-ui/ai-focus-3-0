@@ -1,65 +1,81 @@
-# Raport postępu — 2026-11-06, Europe/Warsaw
+# Raport poranny Ai Focus3.0.4 — 2026-11-06 (Europe/Warsaw)
 
-## Aktualny stan
+## Ukończony zakres i punkt wznowienia
 
-Sesja016 zamknięta po decyzji właściciela o rezygnacji z Google. Sesje017–019 ukończone z zielonymCI.020: implementacja i testy lokalne ukończone,
-pełny CI bieżącego HEAD do potwierdzenia.
-PR3 pozostaje Draft: https://github.com/artgawlik-ui/ai-focus-3-0/pull/3.
-Nie ma działania w tle po zakończeniu bieżącego wykonania. RESUME zawiera plan wznowienia.
+Sesje017–020 ukończone i zweryfikowane wCI. Sesja016 została zamknięta po nowej decyzji
+właściciela: rezygnacja z dalszej integracji Google Calendar. Nie deklarujemy jej napraw
+lub testuGoogle live. Nowy kierunek to natywny Focus, bez kasowania kodu/tabel/danych005.
+Ostatni commit kodu7afb5bffaa11f4549f7f7a1d695b38bc38d36493; końcowy dopisek dokumentacyjny
+jest oddzielnym commitem i również wymaga zielonegoCI wChecksPR3.
+PR3Draft: https://github.com/artgawlik-ui/ai-focus-3-0/pull/3.
+RESUME.md zawiera plan kolejnego etapu. Nie ma deklaracji działania w tle po zakończeniu.
 
-## Dodane funkcje
+## Rzeczywiście dodane funkcje
 
-Natywny planer dzień/tydzień/miesiąc wykorzystuje dotychczasowe appointments.
-Monitoring rzeczywistych kontaktów, progi7/14/30/60, indywidualny okres klienta i per
-priorytet, A+/A pierwsze, brak zarejestrowanego kontaktu odróżniony od wieku rekordu.
-Trwałe, deduplikowane zadania z wynikiem, powtarzaniem i priorytetem; osobne jawne
-potwierdzenie kontaktu. Raporty dnia, okna2h/24h, jawne ryzyko do2h, manager/handlowiec,
-zaległości/terminowość i odnotowane zakończenia wizyt. Nie zakładamy odbycia spotkania.
-Konfigurowalne przypomnienia wewnętrzne, centrum powiadomień, odczyt ustawień,
-aktualizacja opiekuna i unieważnianie nieaktualnych przypomnień. Brak push.
-Datetime-local Warszawa z walidacją luki i dwuznacznościDST; blokady salonu/opt-out,
-rewizje zadań, brak zaliczania szkicu lub planu do rzeczywistych kontaktów.
-Google kod/tabele005 zachowane, panel i linki kalendarza wycofane; bez OAuth/API live.
+- Natywny kalendarz wykorzystuje dotychczasowe appointments: dzień/tydzień/miesiąc,
+ tworzenie/edycja/anulowanie, dotychczasowe sprawdzanie konfliktów i powiązanieCRM.
+- Monitoring rzeczywistych kontaktów: progi7/14/30/60, indywidualny okres1–365 dni
+ per salon i per priorytet, A+/A pierwsze. Brak kontaktuNULL, osobno wiek rekordu.
+ Szkic, task, follow_up o niejednoznacznej semantyce i plan wizyty nie resetują licznika.
+- Trwałe, deduplikowane zadania, priorytety, wynik, cykle i rozdział deklaracji kontaktu
+ od wykonania taska. Rzeczywisty kontakt wymaga jawnego wyboru rodzaju i wyniku.
+- Wewnętrzne centrum powiadomień, konfigurowalne przypomnienia wizyt, odczyt ustawień,
+ pojedynczy aktualny próg i obsługa zmiany terminu/odwołania/opiekuna. Nie ma webpush.
+- Raport dnia, okna2h/24h od teraz, zadania zaległe i jawne ryzyko (nierozpoczęte do2h),
+ managerfilter, kontakty odnotowane i terminowość. Brak wpisu zakończenia wizyty nie
+ jest przedstawiany jako dowód jej nieodbycia. Raporty zawierają moment wygenerowania.
+- Datetime-local wWarszawie, walidacja lukiDST i jawne rozróżnienie godziny jesiennej;
+ rewizje przeciw nadpisaniu, szczegółowy audyt starego/nowego terminu i wykonawcy.
+- RBAC aktualnego opiekuna, opt-out, blokady kontaktu i rekorduSalon. Worker używa
+ istniejącego procesu, respektuje pauzę/stop, nie wykonuje komunikacji z klientami.
 
-## Testy, commity i dowody
+## Naprawione problemy
 
--017: ad348f0045529a6fa2170b54a69df4f3177d034f, CI42302108082 SUCCESS/284PASS,
- Chromium/WebKit/build/audytyPASS,0 znanych podatności. Lokalnie55PASS.
--018: 8c64fa0ec9189aa95d8e14929f0106f6ede1e649, CI42303042647 SUCCESS/293PASS,
- Chromium/WebKit/build/audytyPASS,0 znanych podatności. Lokalnie48PASS.
--019: lokalnie68PASS/0failed/0skipped/34.13s; build/compile/diffPASS. Nowe4 testy,
- łącznie41 nowych przypadków od015 (25+9+4+3). Nie sumować lokalnych nakładających się zbiorów.
- E2E rozszerzone: zadanie->jawnykontakt->nowa data->zmiana okresu klienta, oba silniki.
- Końcowy SHA i CI: ChecksPR3 / git log -1 -- docs/sessions/session-019/REPORT.md.
-Prywatne ZIP-y zachowane pozaGit. Raporty sesji opisują błędy i ich poprawki.
+Nowy router przeniesiono przed SPA. Poprawiono fixture UTC/DST i zakres danych
+syntetycznych. Dodano jednoznaczneARIA do select kontaktu i wyboru klienta poFAIL
+pierwszegoE2E019. Oddzielono przełącznik schematu od runtime, aby featureOFF nie
+blokował startu po006. Stare przypomnienia są filtrowane po zmianie terminu/opiekuna.
+Audyt zachowuje obie daty. FaktycznySIGKILL przedcommit nie zostawia częściowych zapisów.
 
-## Wydanie i blokady
+## Komendy i wyniki
 
-Produkcja **BLOCKED**: bieżąca integralność/konta SQL004/17, RPO≤60min,
-trwały magazyn i klucz, rollback Render i handoff starych workerów. ZgodaA aktualna,
-nie rozszerzona na006. Nie powtarzano SSH; TCP puste. Brak nowych kosztów.
-Nowe FOCUS_CALENDAR_SCHEMA_ENABLED i FOCUS_CALENDAR_ENABLED domyślniefalse.
-Opcjonalny profil006 z004, bez Google005. Wymaga osobnej zgody na migrację/deploy;
-oba profile naraz mająSTOP. Zero produkcyjnych zmian/eksportów/restore/Meta/DM.
-Nie zmieniono Focus1.0/2.0. Google nie jest warunkiem nowej funkcji ani celem następnej sesji.
+**41 nowych przypadków od015:25w017+9w018+4w019+3w020. PełneCI:300PASS.**
+-017 ad348f0045529a6fa2170b54a69df4f3177d034f — CI42302108082 SUCCESS/284PASS.
+-018 8c64fa0ec9189aa95d8e14929f0106f6ede1e649 — CI42303042647 SUCCESS/293PASS.
+-019 cb01fd8bb0574362ee1721fa3d061e83dfbe22a4 — CI42304747622 SUCCESS/297PASS.
+-020 7afb5bffaa11f4549f7f7a1d695b38bc38d36493 — CI42305590784 SUCCESS/300PASS:
+ https://github.com/artgawlik-ui/ai-focus-3-0/actions/runs/42305590784.
+Każdy z tychCI: build, chromium-desktop, webkit-iphone, npm audit i pip-auditPASS,
+0 znanych podatności. Pełny workflow wykonuje pytest bez11 operatorskich cleanup.
+Krytyczne nowe funkcje nie są pomijane. Nie mierzono procentowego coverage.
 
-## Pozostałe zadania i szacunek
+Lokalnie syntetyczny PostgreSQL17/256MB/1CPU: pytest -q tests/test_native_planning.py
+ tests/test_visit_planner.py tests/test_worker_lifecycle.py:55PASS(017),
+48PASS(018,bezplanera),68PASS(019),55PASS(020,bezplanera). Są to nakładające się zbiory,
+nie sumować. Build/compileall/sh-n/diff-checkPASS. Dwa ostrzeżenia deprecacji narzędzi.
+E2E obu silników: generowanie zadania -> wykonanie z jawnym kontaktem -> nowa data ->
+indywidualny okres klienta. LokalnyChromiumPASS; lokalnyWebKit nie wystartował przez
+brak staregoMiniBrowser, niezależnyWebKit wCI przeszedł. Brak testu nowegoUI na fizycznym
+ iPhonie. Wcześniejszy testPWA właściciela nie jest przypisywany nowym funkcjom.
 
-Nie ma webpush, drag&drop ani testu nowego panelu na fizycznym iPhonie. Otwarta polityka
-retencji metadanych, testy skali/paginacji i twardsze próby restartu natywnego procesu.
-Raport tasków limit1000, reminders batch500; większa skala wymaga dodatkowych prac.
-Szacunek nadal co najmniej5 sesji podstawowych +≥1DM; nie zmniejszony bez zamknięcia bramek.
-Najważniejszy dalszy etap: walidacja retencji/skali i restartu, następnie zatwierdzony
-plan wydania z funkcjamiOFF. Brak deklaracji gotowości produkcyjnej na podstawie mocków.
+## Schemat, bezpieczeństwo i status
 
-019pierwszy1efb1d7/CI42304066743:297backendPASS, E2EFAIL na etykiecie select.
-Jawne aria-label poprawione; bez osłabienia testu. Konieczne CI nowego SHA.
+Kod/testy **PASS** na danych syntetycznych. Wydanie/uruchomienie produkcyjne **BLOCKED**.
+FOCUS_CALENDAR_SCHEMA_ENABLED=false (opcjonalny native-alembic.ini/006 z004),
+FOCUS_CALENDAR_ENABLED=false (runtime). Obie domyślnieOFF. Wyłączenie runtime nie
+wymaga downgrade. Profile005/006 nie są automatycznie łączone. Marker rollback006->004
+zachowuje tabele/dane; test fingerprintów wykonano lokalnie, bezprodukcji.
+ZgodaA pozostaje wyłącznie004/17. Nowa006 wymaga osobnej zgody i manifestu21tabel.
+Nie wykonano SQLprodukcji/SSH, migracji, eksportu, restore/PITR, merge/deploy, zmian
+Render/sieci/sekretów, aktywacjiGoogle/Meta/DM ani nowych płatnych zasobów. Focus1/2
+niezmienione; prywatne ZIP-y zachowano pozaGit. Nie ujawniono sekretów/danych klientów.
 
-## Domknięcie019 i wykonane020
+## Blokady i następny etap
 
-cb01fd8 / CI42304747622 SUCCESS:297PASS, Chromium/WebKit/build/audytyPASS,0 podatności.
-LokalnyChromiumPASS, WebKit lokalny nie wystartował przez brak pliku; wCI pełnyPASS.
-020 dodaje audyt before/after terminu i rzeczywistą próbęSIGKILL przedcommit,
-rollback częściowych zapisów oraz pojedyncze odtworzenie zadania bez fikcyjnego kontaktu.
-Lokalnie55PASS/25.35s;3 nowe przypadki. Łącznie41 nowych od punktu015.
-Ostatni etap020; końcowy SHA/CI wChecksPR3 i dopisku końcowym. Raport020 iRESUME zapisane.
+Aktualna integralność/kontaSQL004/17, RPO≤60min, trwały magazyn/klucz i operacyjny
+rollback/handoff pozostają niepotwierdzone. TCPgrant pusty, bez ponawianiaSSH.
+Brak webpush, drag&drop, zatwierdzonej retencji nowych metadanych i większych testów
+skali/paginacji (taskAPIlimit1000, remindersbatch500). Prace te nie są przedstawiane
+jako gotowe. Szacunek nadal≥5 sesji podstawowych +≥1DM, bez redukcji za same funkcje.
+Najważniejszy kolejny etap: retencja i pomiar skali/paginacja nowego modułu; przed
+jakimkolwiek wydaniem konieczne zamknięcie recovery/SQL oraz osobna zgoda właściciela.
