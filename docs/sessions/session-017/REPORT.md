@@ -83,3 +83,10 @@ Szacunek nadal co najmniej5 sesji podstawowych +≥1DM; nowy zakres nie zmniejsz
 Następne zadanie: lepszy formularz terminu Warszawa, pełniejszy raport dnia/przypomnienia
 oraz scenariusze awaryjne nowego workera. READY wyłącznie po końcowym zielonym CI kodu;
 wdrożenie i pełna gotowość operacyjna BLOCKED.
+
+## Potwierdzenie CI017
+
+Commit ad348f0045529a6fa2170b54a69df4f3177d034f, workflow42302108082,
+https://github.com/artgawlik-ui/ai-focus-3-0/actions/runs/42302108082: SUCCESS.
+Backend284PASS, Chromium/WebKit PASS, build i audyty PASS,0 znanych podatności.
+Kod017 PASS, produkcyjne wydanie nadal BLOCKED. Kontynuacja018 zgodnie z trybem nocnym.

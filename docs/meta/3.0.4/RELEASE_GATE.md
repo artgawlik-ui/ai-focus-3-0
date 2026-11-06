@@ -1,3 +1,12 @@
+> Aktualizacja natywnego kalendarza 2026-11-06: Google wycofany z dalszego rozwoju.
+> Opcjonalny profil native-alembic.ini dodaje006 z004 (21tabel), standardowy004 pozostaje.
+> Wybór profiluFOCUS_CALENDAR_SCHEMA_ENABLED niezależny od funkcjiFOCUS_CALENDAR_ENABLED,
+> obie domyślniefalse. Bez migracji/aktywacji produkcyjnej. Ścieżka005 Google zachowana,
+> nie łączyć jej automatycznie z006. Historyczne stwierdzenia „brak nowego schematu”
+> poniżej odnoszą się do starszego kandydata. Release BLOCKED aż do recovery/integralności
+> i osobnej zgody. ZgodaA dotyczy nadal wyłącznie004/17. Raporty017–018 i raport poranny
+> opisują aktualny zakres; zielone CI nie oznacza zgody na deploy.
+
 # Issue #4 — decyzja release gate
 
 > Sesja 008: zgoda A i kontrolowany tryb workera **zatwierdzone przez właściciela**.

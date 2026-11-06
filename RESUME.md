@@ -1,3 +1,18 @@
+# Wznowienie po sesji018
+
+017 ad348f0 CI42302108082 SUCCESS/284PASS. 018: osobna flaga schematu
+FOCUS_CALENDAR_SCHEMA_ENABLED=false + runtimeFOCUS_CALENDAR_ENABLED=false.
+Schema006 może zostać aktywny przy runtimeOFF bez blokowania startu aplikacji.
+Nie obowiązuje historyczny wybór profilu flagą funkcji z017. Bez produkcyjnej migracji.
+Nowe datetime-localWarszawa+fold/DST, settingsGET, pojedyncze aktualne przypomnienia
+i blokada salonu przeciw opt-out. Lokalnie48PASS; pełny CI bieżącego HEAD sprawdzić.
+Raport018 i raport poranny zapisane. Google rozwój zakończony; nic nie aktywować.
+Następne zadanie: pełny raport dnia i zbliżających się wizyt. Produkcyjny gate nadal
+BLOCKED (SQL004/17, RPO60, magazyn-klucz, rollback/handoff), ≥5 podstawowych +≥1DM.
+PR3 Draft, bez merge/deploy/kosztów/realDM/zmian produkcji. ZIP-y prywatne zachować.
+
+---
+
 # Wznowienie po zmianie priorytetu — sesja017
 
 Właściciel wycofał Google Calendar. Nie rozwijać OAuth/sync. Kod/dane005 zachowane,

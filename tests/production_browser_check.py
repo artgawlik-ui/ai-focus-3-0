@@ -132,7 +132,7 @@ with sync_playwright() as p:
             assert page.request.get(origin+'/api/focus-calendar/contacts').status==200
             assert page.request.get(origin+'/api/focus-calendar/tasks').json()
             section.get_by_label('Tytuł zadania',exact=True).fill('Syntetyczne zadanie '+label)
-            section.get_by_label('Termin zadania ze strefą',exact=True).fill('2027-03-20T10:00:00+01:00')
+            section.get_by_label('Termin zadania — Warszawa',exact=True).fill('2027-03-20T10:00')
             section.get_by_role('button',name='Dodaj zadanie',exact=True).click()
             section.get_by_text('Syntetyczne zadanie '+label,exact=True).wait_for()
             assert page.evaluate('document.documentElement.scrollWidth<=innerWidth')

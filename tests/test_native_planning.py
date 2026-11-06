@@ -33,7 +33,7 @@ def setup(isolated,monkeypatch):
         db.commit()
     def dependency():
         with factory() as db:yield db
-    app.dependency_overrides[database]=dependency;monkeypatch.setattr(native,'Session',factory);monkeypatch.setenv('FOCUS_CALENDAR_ENABLED','true');monkeypatch.setenv('VISIT_PLANNER_ENABLED','true')
+    app.dependency_overrides[database]=dependency;monkeypatch.setattr(native,'Session',factory);monkeypatch.setenv('FOCUS_CALENDAR_SCHEMA_ENABLED','true');monkeypatch.setenv('FOCUS_CALENDAR_ENABLED','true');monkeypatch.setenv('VISIT_PLANNER_ENABLED','true')
     yield factory
     app.dependency_overrides.pop(database,None)
 def old_contact(factory,salon,days,kind='call'):
@@ -151,3 +151,54 @@ def test_manual_task_duplicate_and_stale_revision(setup):
     assert task(c,s).status_code==409
     assert c.patch('/api/focus-calendar/tasks/'+r['id'],json={'version':1,'status':'in_progress'}).status_code==200
     assert c.patch('/api/focus-calendar/tasks/'+r['id'],json={'version':1,'status':'cancelled'}).status_code==409
+
+@pytest.mark.parametrize('value,fold,expected',[
+ ('2027-03-28T02:30',None,None),
+ ('2027-10-31T02:30',None,None),
+ ('2027-10-31T02:30',0,'2027-10-31T00:30:00+00:00'),
+ ('2027-10-31T02:30',1,'2027-10-31T01:30:00+00:00'),
+ ('2027-03-28T09:00',None,'2027-03-28T07:00:00+00:00')])
+def test_local_warsaw_time_gap_and_ambiguity(setup,value,fold,expected):
+    c=client('rep1');s=add(c)
+    response=c.post('/api/focus-calendar/tasks',json={'salon_id':s['id'],'title':'Lokalny termin','local_due':value,'fold':fold})
+    if expected is None:assert response.status_code==422
+    else:assert response.status_code==201 and response.json()['due_at']==expected
+
+def test_schema_and_feature_switches_are_independent(setup,monkeypatch):
+    c=client();monkeypatch.setenv('FOCUS_CALENDAR_ENABLED','false')
+    assert native.schema_enabled() and not native.enabled()
+    assert c.get('/api/focus-calendar/status').json()['schema_enabled']
+    assert c.get('/api/focus-calendar/tasks').status_code==404
+    monkeypatch.setenv('FOCUS_CALENDAR_ENABLED','true');monkeypatch.setenv('FOCUS_CALENDAR_SCHEMA_ENABLED','false')
+    assert not native.enabled()
+
+def test_saved_settings_are_read_back(setup):
+    c=client('rep1');body={'intervals':{'A+':3,'A':5,'B':12,'C':70},'reminders':[120,30]}
+    assert c.put('/api/focus-calendar/settings/rep1',json=body).status_code==200
+    assert c.get('/api/focus-calendar/settings').json()==body
+
+def test_appointment_has_one_current_reminder_and_none_after_start(setup):
+    from backend.db import Appointment
+    c=client('rep1');s=add(c);old_contact(setup,s,0)
+    with setup() as db:
+        start=datetime.now(timezone.utc)+timedelta(minutes=20)
+        a=Appointment(id=str(uuid.uuid4()),salon_id=s['id'],user_id='rep1',starts_at=start.isoformat(),ends_at=(start+timedelta(minutes=20)).isoformat(),status='confirmed');db.add(a);db.commit();id=a.id
+    native.tick();native.tick()
+    assert len(c.get('/api/focus-calendar/notifications').json())==1
+    with setup() as db:db.get(Appointment,id).starts_at=(datetime.now(timezone.utc)-timedelta(minutes=1)).isoformat();db.commit()
+    assert c.get('/api/focus-calendar/notifications').json()==[]
+
+def test_task_creation_waits_for_optout_update_and_rechecks(setup):
+    import threading
+    c=client('rep1');s=add(c);started=threading.Event();done=threading.Event()
+    with setup() as db:
+        row=db.get(Salon,s['id'],with_for_update=True);row.status='do_not_contact';db.flush()
+        def request():
+            started.set()
+            try:return task(c,s)
+            finally:done.set()
+        with ThreadPoolExecutor(max_workers=1) as pool:
+            future=pool.submit(request)
+            try:assert started.wait(3) and not done.wait(.2)
+            finally:db.commit()
+            assert future.result(timeout=10).status_code==409

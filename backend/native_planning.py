@@ -4,7 +4,7 @@ from datetime import datetime,date,time,timedelta,timezone
 from zoneinfo import ZoneInfo
 from typing import Literal
 from fastapi import APIRouter,Depends,HTTPException
-from pydantic import BaseModel,Field,field_validator
+from pydantic import BaseModel,Field,field_validator,model_validator
 from sqlalchemy import select
 from backend.db import Session,Salon,User,Activity,Appointment,now
 from backend.security import current,manager,database
@@ -16,7 +16,8 @@ router=APIRouter(prefix='/api/focus-calendar',tags=['Natywny kalendarz'])
 ZONE=ZoneInfo('Europe/Warsaw')
 DEFAULTS={'A+':7,'A':14,'B':30,'C':60}
 CONTACT_KINDS=('call','visit','email_received','instagram_received')
-def enabled():return os.getenv('FOCUS_CALENDAR_ENABLED','false').strip().lower()=='true'
+def schema_enabled():return os.getenv('FOCUS_CALENDAR_SCHEMA_ENABLED','false').strip().lower()=='true'
+def enabled():return schema_enabled() and os.getenv('FOCUS_CALENDAR_ENABLED','false').strip().lower()=='true'
 def require():
     if not enabled():raise HTTPException(404,'Kalendarz Focus wyłączony')
 def stamp(value):
@@ -25,12 +26,25 @@ def stamp(value):
         if d.tzinfo is None:raise ValueError()
         return d.astimezone(timezone.utc)
     except (ValueError,TypeError):raise HTTPException(422,'Wymagana poprawna data ze strefą') from None
+def local_stamp(value,fold=None):
+    try:
+        local=datetime.fromisoformat(value)
+        if local.tzinfo is not None:raise ValueError()
+    except (ValueError,TypeError):raise HTTPException(422,'Podaj lokalny termin Warszawy') from None
+    candidates={}
+    for n in (0,1):
+        zoned=local.replace(tzinfo=ZONE,fold=n);utc=zoned.astimezone(timezone.utc)
+        if utc.astimezone(ZONE).replace(tzinfo=None)==local:candidates[n]=utc
+    if not candidates:raise HTTPException(422,'Ta godzina nie istnieje podczas zmiany czasu')
+    if len(set(candidates.values()))>1 and fold is None:raise HTTPException(422,'Wybierz pierwsze lub drugie wystąpienie godziny')
+    return candidates.get(fold if fold is not None else 0,next(iter(candidates.values()))).isoformat()
+
 def today():return datetime.now(ZONE).date()
 def day_value(value):
     try:return date.fromisoformat(value) if value else today()
     except ValueError:raise HTTPException(422,'Nieprawidłowa data') from None
 def access(db,id,user):
-    salon=db.get(Salon,id,populate_existing=True)
+    salon=db.get(Salon,id,populate_existing=True,with_for_update={'key_share':True})
     if not salon or (user.role!='manager' and salon.owner_id!=user.id):raise HTTPException(404,'Brak salonu')
     return salon
 def blocked(db,s):return s.status=='do_not_contact' or bool(db.scalar(select(MetaConversation.id).where(MetaConversation.salon_id==s.id,MetaConversation.opted_out==1).limit(1)))
@@ -86,7 +100,7 @@ def ensure_followups(db,user,day):
     return made
 
 @router.get('/status')
-def status(user=Depends(current)):return {'enabled':enabled(),'external_messages':False,'push':'not_configured'}
+def status(user=Depends(current)):return {'enabled':enabled(),'schema_enabled':schema_enabled(),'external_messages':False,'push':'not_configured'}
 @router.get('/contacts')
 def contacts(day:str='',representative_id:str='',user=Depends(current),db=Depends(database)):
     require();return list_due(db,user,day_value(day),representative_id)
@@ -110,6 +124,11 @@ class SettingsIn(BaseModel):
     def valid_reminders(cls,v):
         if any(n<0 or n>10080 for n in v) or len(v)!=len(set(v)):raise ValueError('Minuty0–10080, bez duplikatów')
         return v
+@router.get('/settings')
+def get_settings(user=Depends(current),db=Depends(database)):
+    require();row=db.get(WorkSettings,user.id)
+    return {'intervals':settings(db,user.id),'reminders':json.loads(row.reminders) if row else [1440,120,30]}
+
 @router.put('/settings/{user_id}')
 def save_settings(user_id:str,body:SettingsIn,user=Depends(current),db=Depends(database)):
     require()
@@ -125,14 +144,22 @@ def prepare(user=Depends(current),db=Depends(database)):
 class TaskIn(BaseModel):
     salon_id:str
     title:str=Field(min_length=1,max_length=180)
-    due_at:str
+    due_at:str|None=None
+    local_due:str|None=None
+    fold:Literal[0,1]|None=None
     priority:Literal['low','normal','high','urgent']='normal'
     repeat_days:int=Field(default=0,ge=0,le=365)
     assignee_id:str=''
+    @model_validator(mode='after')
+    def one_time(self):
+        if bool(self.due_at)==bool(self.local_due):raise ValueError('Podaj dokładnie jeden termin')
+        return self
 class TaskEdit(BaseModel):
     version:int
     status:Literal['planned','in_progress','completed','cancelled']='planned'
     due_at:str|None=None
+    local_due:str|None=None
+    fold:Literal[0,1]|None=None
     result:str=Field(default='',max_length=4000)
     contact_kind:Literal['call','visit','email_received']|None=None
 
@@ -144,7 +171,7 @@ def create_task(body:TaskIn,user=Depends(current),db=Depends(database)):
     if blocked(db,s):raise HTTPException(409,'Kontakt zablokowany')
     assignee=body.assignee_id or s.owner_id
     if assignee!=s.owner_id:raise HTTPException(409,'Zadanie musi należeć do opiekuna salonu')
-    due=stamp(body.due_at).isoformat()
+    due=local_stamp(body.local_due,body.fold) if body.local_due else stamp(body.due_at).isoformat()
     duplicate=db.scalar(select(Task.id).where(Task.salon_id==s.id,Task.title==body.title,Task.due_at==due,Task.status.in_(('planned','in_progress'))))
     if duplicate:raise HTTPException(409,'Takie zadanie już istnieje')
     row=Task(id=str(uuid.uuid4()),salon_id=s.id,assignee_id=assignee,title=body.title,due_at=due,priority=body.priority,repeat_days=body.repeat_days)
@@ -159,7 +186,9 @@ def edit_task(id:str,body:TaskEdit,user=Depends(current),db=Depends(database)):
     if row.status in ('completed','cancelled'):raise HTTPException(409,'Zadanie już zamknięte')
     if body.status=='completed' and not body.result.strip():raise HTTPException(422,'Zapisz wynik działania')
     if body.contact_kind and (body.status!='completed' or blocked(db,s)):raise HTTPException(409,'Nie można zarejestrować kontaktu')
-    if body.due_at:row.due_at=stamp(body.due_at).isoformat()
+    if body.due_at and body.local_due:raise HTTPException(422,'Podaj jeden termin')
+    if body.local_due:row.due_at=local_stamp(body.local_due,body.fold)
+    elif body.due_at:row.due_at=stamp(body.due_at).isoformat()
     row.assignee_id=s.owner_id;row.status=body.status;row.result=body.result;row.version+=1
     audit(db,s,user,'Zmieniono zadanie '+row.id+': '+body.status+'. '+body.result)
     if body.status=='completed':
@@ -202,7 +231,8 @@ def reminders(db):
         if s.owner_id!=a.user_id or blocked(db,s):continue
         config=db.get(WorkSettings,a.user_id);minutes=json.loads(config.reminders) if config else [1440,120,30]
         delta=(stamp(a.starts_at)-datetime.now(timezone.utc)).total_seconds()/60
-        for offset in minutes:
+        eligible=[m for m in minutes if 0<=delta<=m]
+        for offset in ([min(eligible)] if eligible else []):
             key='visit:'+a.id+':'+hashlib.sha256(a.starts_at.encode()).hexdigest()[:16]+':'+str(offset)
             if 0<=delta<=offset and not db.get(Notification,key):db.add(Notification(key=key,user_id=a.user_id,appointment_id=a.id,at=now()))
 @router.get('/notifications')
@@ -213,7 +243,11 @@ def notifications(user=Depends(current),db=Depends(database)):
         s=db.get(Salon,t.salon_id if t else a.salon_id) if t or a else None
         if not s or s.owner_id!=user.id or blocked(db,s):continue
         if t and (t.status not in ('planned','in_progress') or n.key!='task:'+t.id+':'+str(t.version)):continue
-        if a and (a.status!='confirmed' or hashlib.sha256(a.starts_at.encode()).hexdigest()[:16] not in n.key):continue
+        if a:
+            config=db.get(WorkSettings,a.user_id);minutes=json.loads(config.reminders) if config else [1440,120,30]
+            delta=(stamp(a.starts_at)-datetime.now(timezone.utc)).total_seconds()/60
+            eligible=[m for m in minutes if 0<=delta<=m]
+            if a.status!='confirmed' or hashlib.sha256(a.starts_at.encode()).hexdigest()[:16] not in n.key or not eligible or n.key.rsplit(':',1)[-1]!=str(min(eligible)):continue
         result.append({'key':n.key,'title':t.title if t else 'Zbliża się wizyta: '+s.name,'at':n.at,'read':bool(n.read)})
     return result
 @router.post('/notifications/{key}/read')
