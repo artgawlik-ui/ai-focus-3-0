@@ -2,7 +2,7 @@
 
 ## Ukończony zakres i punkt wznowienia
 
-Sesje017–020 ukończone i zweryfikowane wCI. Sesja016 została zamknięta po nowej decyzji
+Sesje017–020 ukończone i zweryfikowane wCI;021 ma testy lokalne, czeka na pełneCI. Sesja016 została zamknięta po nowej decyzji
 właściciela: rezygnacja z dalszej integracji Google Calendar. Nie deklarujemy jej napraw
 lub testuGoogle live. Nowy kierunek to natywny Focus, bez kasowania kodu/tabel/danych005.
 Ostatni commit kodu7afb5bffaa11f4549f7f7a1d695b38bc38d36493; końcowy dopisek dokumentacyjny
@@ -39,7 +39,7 @@ Audyt zachowuje obie daty. FaktycznySIGKILL przedcommit nie zostawia częściowy
 
 ## Komendy i wyniki
 
-**41 nowych przypadków od015:25w017+9w018+4w019+3w020. PełneCI:300PASS.**
+**45 nowych przypadków od015:25w017+9w018+4w019+3w020+4w021. Ostatni potwierdzony pełnyCI:300PASS(020).**
 -017 ad348f0045529a6fa2170b54a69df4f3177d034f — CI42302108082 SUCCESS/284PASS.
 -018 8c64fa0ec9189aa95d8e14929f0106f6ede1e649 — CI42303042647 SUCCESS/293PASS.
 -019 cb01fd8bb0574362ee1721fa3d061e83dfbe22a4 — CI42304747622 SUCCESS/297PASS.
@@ -79,3 +79,10 @@ skali/paginacji (taskAPIlimit1000, remindersbatch500). Prace te nie są przedsta
 jako gotowe. Szacunek nadal≥5 sesji podstawowych +≥1DM, bez redukcji za same funkcje.
 Najważniejszy kolejny etap: retencja i pomiar skali/paginacja nowego modułu; przed
 jakimkolwiek wydaniem konieczne zamknięcie recovery/SQL oraz osobna zgoda właściciela.
+
+## Dodatkowa poprawka021
+
+Naprawiono dryf02:30->03:30 w cyklu przy wiosennej zmianie czasu. Nieistniejące
+wystąpienie pomijane, jesienią wybierane pierwsze; godzina lokalna nie dryfuje.
+4nowe testy lokalnePASS/0.46s, bezDB/HTTP. Całość po tej zmianie wymaga końcowegoCI.
+Raport021 zapisany. Kolejny etap nadal retencja/skala, bez dalszego rozwoju Google.

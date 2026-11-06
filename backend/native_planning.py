@@ -39,6 +39,16 @@ def local_stamp(value,fold=None):
     if len(set(candidates.values()))>1 and fold is None:raise HTTPException(422,'Wybierz pierwsze lub drugie wystąpienie godziny')
     return candidates.get(fold if fold is not None else 0,next(iter(candidates.values()))).isoformat()
 
+def recurring_due(value,days):
+    # Preserve the wall clock, skipping a nonexistent occurrence rather than drifting.
+    wall=stamp(value).astimezone(ZONE).replace(tzinfo=None)
+    for _ in range(3):
+        try:wall+=timedelta(days=days)
+        except OverflowError:raise HTTPException(422,'Koniec obsługiwanego zakresu cyklu') from None
+        candidate=wall.replace(tzinfo=ZONE,fold=0).astimezone(timezone.utc)
+        if candidate.astimezone(ZONE).replace(tzinfo=None)==wall:return candidate.isoformat()
+    raise HTTPException(422,'Nie można wyznaczyć następnego terminu')
+
 def today():return datetime.now(ZONE).date()
 def day_value(value):
     try:return date.fromisoformat(value) if value else today()
@@ -197,7 +207,7 @@ def edit_task(id:str,body:TaskEdit,user=Depends(current),db=Depends(database)):
         if body.contact_kind:db.add(Activity(id=str(uuid.uuid4()),salon_id=s.id,user_id=user.id,kind=body.contact_kind,body=body.result))
         if row.repeat_days and not blocked(db,s):
             # Next occurrence uses local wall time, preserving Warsaw DST transitions.
-            due=(stamp(row.due_at).astimezone(ZONE)+timedelta(days=row.repeat_days)).astimezone(timezone.utc).isoformat()
+            due=recurring_due(row.due_at,row.repeat_days)
             db.add(Task(id=str(uuid.uuid4()),salon_id=s.id,assignee_id=s.owner_id,title=row.title,due_at=due,priority=row.priority,repeat_days=row.repeat_days,cycle_key='repeat:'+row.id))
     db.commit();return task_view(row)
 @router.get('/tasks')

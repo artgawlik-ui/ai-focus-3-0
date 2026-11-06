@@ -1,3 +1,14 @@
+# Wznowienie po poprawce021
+
+Po zielonym020 wykryto i naprawiono dryf czasu w cyklu przy DST. Generator pomija
+nieistniejące wystąpienie i jesienią wybiera pierwsze, zachowując godzinę lokalną.
+4nowe testyPASS/0.46s; łącznie45 nowych od015. PełnyCI tegoSHA sprawdzić przedPASS.
+Raport021 i raport poranny zapisane. NadalBLOCKEDprodukcyjne SQL004/RPO60/magazyn-klucz/
+rollback-handoff. Bez merge/deploy/Meta/Google/DM/kosztów. PR3Draft, flagiOFF.
+Następne zadanie: retencja i skala/paginacja natywnego modułu. ≥5podstawowych+≥1DM.
+
+---
+
 # Potwierdzony punkt wznowienia natywnego Focus
 
 Kod0207afb5bffaa11f4549f7f7a1d695b38bc38d36493: CI42305590784 SUCCESS/300PASS,
