@@ -1,3 +1,6 @@
+> PierwszeCI022a27c342:331backendPASS, E2EFAIL na wyścigu gotowości selektora.
+> Przyciski zapisu zablokowane do gotowości; koniecznyCI poprawionegoSHA.
+
 # Aktualizacja2026-11-07 — sesja022
 
 Paginacja/filtry, zbiorczy monitoring, pełne agregaty i partie przypomnień ukończone

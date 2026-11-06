@@ -99,3 +99,11 @@ Szacunek nadal≥5sesji podstawowych +≥1DM, bez mechanicznej redukcji za devel
 Następny bezpieczny etap: prywatna diagnostyka kolejki i podgląd retencji w panelu
 managera, bez uruchamiania wykonawcy. Operator nadal potrzebuje osobnych zgód przed
 wydaniem/migracją/retencją; ta sesja nie wykonuje żadnej z nich.
+
+## PierwszeCI i korektaUI
+
+a27c342/CI42313673947:331backendPASS, buildPASS, E2EFAIL przy tworzeniu zadania.
+Selektor klienta był jeszcze niegotowy; disabledselect pomijało poleFormData, ale
+przycisk pozwalał wysłać formularz. Dodano sygnał gotowości selektora i blokadę obu
+formularzy do czasu wybrania dozwolonego klienta. Bez pomijania kroku/zwiększania timeoutu.
+PełnyCI poprawionegoSHA wymagany przedPASS. PomiarySQL nie zmieniły się po korekcieUI.
