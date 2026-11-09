@@ -12,8 +12,12 @@ Nowa rzeczywista luka zamknięta kodem: osobny Dockerfile.rollback/rollback_read
 bez startupumigracji/bootstrapu/workera. DefaultOFF,ACKtrue,PG17/007/21wymagane,
 DBreadonly iallowlistaGET,istniejące sesje/RBAC. Beznowychloginów/UI/zapisów: to ograniczony
 tryb awaryjny wymagający decyzji właściciela,nie pełny rollback. Normalny Dockerfile bez zmian.
-14nowych testów; lokalnie11PASS/3PGdeselected. PełnyCI (w tym pełny build obrazu,bez run/push)
-nowego SHA konieczny. Nie dziedziczyć380PASS. Korekta tylko znanego zegara testowego z026.
+14nowych testów; lokalnie11PASS/3PGdeselected.
+Kod5e4188af1166623fb3f3598b7bd7bd38fd59cf84: oba pełneCI42713625735/42713880948
+SUCCESS,394PASS/0FAIL/0SKIP,frontend/Chromium/WebKit/audyty0podatności; pełnybuild
+obrazu awaryjnego PASS,bez run/push. OsobnyDraftPR #9 do gałęzi PR #3.
+Końcowy guardWebSocket i dopisek dokumentacyjny mają własnySHA/CI,sprawdzany przed końcem.
+Nie traktowaćefemerycznegoImageIDjakozachowanegoartefaktuRender. Korekta tylko znanego zegara testowego z026.
 
 Plan027 rozróżnia publicmaintenance i prywatnewritery/retencję. Plikpauzy +envfalse daje
 ręczne resume; envtrue nie można zdjąć samymunlink. Wszelkie operacje planu niewykonane.

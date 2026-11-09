@@ -50,6 +50,13 @@ def test_allowlist_blocks_writes_integrations_and_root_has_no_private_cache():
                         ('GET','/api/export.xlsx'),('GET','/api/discovery/places'),('GET','/docs')]:
         response=asyncio.run(request(method,path));assert response[0]['status']==503
     assert not calls
+    async def websocket():
+        messages=[]
+        async def send(message):messages.append(message)
+        await wrapper({'type':'websocket','path':'/api/salons'},None,send)
+        return messages
+    assert asyncio.run(websocket())==[{'type':'websocket.close','code':1008}]
+    assert not calls
     response=asyncio.run(request('GET','/api/salons'))
     assert calls==['/api/salons'] and dict(response[0]['headers'])[b'cache-control']==b'no-store'
     response=asyncio.run(request('GET','/'))

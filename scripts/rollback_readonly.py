@@ -46,6 +46,8 @@ class ReadOnlyAPI:
         self.app = app
 
     async def __call__(self, scope, receive, send):
+        if scope['type'] == 'websocket':
+            return await send({'type': 'websocket.close', 'code': 1008})
         if scope['type'] != 'http':
             return await self.app(scope, receive, send)
         headers = [(b'cache-control', b'no-store'), (b'x-focus-mode', b'rollback-readonly'),

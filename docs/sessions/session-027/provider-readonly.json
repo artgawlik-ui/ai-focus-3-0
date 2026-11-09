@@ -18,7 +18,9 @@
     "auto_deploy": "no",
     "plan": "0.5c-512mb",
     "instances": 1,
-    "environment_values_read": false
+    "environment_values_read": false,
+    "docker_override_present": false,
+    "maintenance_enabled": false
   },
   "deploys": [
     {

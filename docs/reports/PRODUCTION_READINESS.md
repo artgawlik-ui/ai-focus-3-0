@@ -2,7 +2,8 @@
 
 Odczyt9listopada2026 (UTC w metadanych). Bazae37ce5d: oba pełne CI42686949414/42686938187
 SUCCESS,380PASS. Nowa gałąź `fix/session-027-readonly-rollback` ma oddzielny Draft PR/CI;
-nie przenosi wyniku380 na nowy kod. [Raport027](../sessions/session-027/REPORT.md),
+nie przenosi wyniku380 na nowy kod. Kod0275e4188a ma własne obaCI SUCCESS/394PASS;
+końcowy SHA (guardWebSocket/dokumentacja) sprawdzany osobno wPR #9. [Raport027](../sessions/session-027/REPORT.md),
 [świeże metadane](../sessions/session-027/provider-readonly.json),
 [szczegółowy plan i STOP](../sessions/session-027/ROLLOUT.md).
 
@@ -15,7 +16,7 @@ nie przenosi wyniku380 na nowy kod. [Raport027](../sessions/session-027/REPORT.m
 | PITR funkcja / punkt / RPO≤60 | BLOCKED dla skutecznego RPO | dokumentacja płatnegoPG potwierdza funkcję,nie bieżący status recovery; GET nie ma latest point/WAL lag | Render→baza→Recovery: odczytać najnowszy skutecznie odzyskiwalny timestamp/lag i wiek≤3600s; jeśli UI nie pokazuje, uzyskać dowód od Render Support; nie uruchamiaćRestore |
 | Aktualna niezależna kopia | BLOCKED | historyczny export1XI starszy niż7dni; brak bieżącego obiektu/manifestu | zatwierdzony magazyn poza aplikacją: potwierdzić aktualny obiekt,czas,hash,region,lifecycle/retencję i dostęp; nowa kopia/usługa/restore wymagają osobnej zgody |
 | Odzyskiwalność klucza | BLOCKED | brak dowodu niezależnej wersji klucza i dostępności recovery operatora | zatwierdzony menedżer sekretów: potwierdzić wersję,kontrolę dostępu i odzyskanie; nie przesyłać wartości klucza do rozmowy/repo |
-|007 awaryjny odczyt — kod | BLOCKED do pełnego CI027 | nowy opt-in startup/recipe;11lokalnychPASS,3PGjeszcze niezaliczone | CI ma potwierdzić007,rzeczywiste sesje/RBAC,DBreadonly i21fingerprintów; to świadoma degradacja bez nowych loginów/zapisów |
+|007 awaryjny odczyt — kod | PASS dla5e4188a | oba pełneCI42713625735/42713880948SUCCESS,394PASS; rzeczywiste sesje/RBAC,SQLSTATE25006 i21fingerprintów bez zmian; pełny build obrazu PASS | ograniczony odczyt,bez nowego loginu/UI; końcowy guardWebSocket wymaga własnegoCI; obraz efemeryczny nie jest zachowany wRender |
 | Artefakt rollbacku Render | BLOCKED | live/deactivated deploy nie ujawnia eligibility ani snapshotu env; staryd15265b nie startuje007 | Render→usługa→Deploys: potwierdzić konkretny dostępny digest/obraz,start/env; nie klikaćRollback. Dla nowego profilu potrzebna późniejsza zgoda na budowę/zachowanie artefaktu i akceptacja odczytu zamiast pełnej pracy |
 | Handoff i retencja | BLOCKED wykonania | stare procesy nie respektują pauzy; nowe lokalne statusy nie potwierdzają ich wyjścia | zaakceptować plan027 i okno maintenance,udowodnić zakończenie wszystkich starych writerów,uzgodnić kolejkę/retencję oraz dopiero potem osobno zezwolić na resume |
 | Gotowość funkcji do testów | PASS syntetyczne wejścia | normalne login/CRM/lejek/wizyty/nativezadania/raporty/PWA w380testach wejścia | produkcyjne logowanie zmienia sesję i wymaga właściciela; obecne flagi/native007/konta niezweryfikowane; żadnego testowego klienta na produkcji |
