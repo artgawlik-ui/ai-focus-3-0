@@ -75,3 +75,7 @@ mieć dzisiejsze wartości. Zmiana obecnej konfiguracji nie dowodzi ustawień ro
 W obu ścieżkach brak automatycznego fallbacku, restore, przełączenia DB i zmian danych.
 
 Źródło odczytane2026-11-09: https://render.com/docs/rollbacks.md .
+
+Uzupełnienie025: nowy bootstrap nie odtwarza kont technicznych i pomija provisioning
+przy istniejących użytkownikach. Nie jest to poprawka starego obrazu d15265b ani dowód
+wyłączenia konta produkcyjnego. Migracja/start/env targetu wciąż wymagają przeglądu.

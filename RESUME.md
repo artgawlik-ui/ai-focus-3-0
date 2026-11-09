@@ -1,3 +1,26 @@
+# Sesja024 PASS kodu/testów;025 zabezpieczenie bootstrapu oczekujeCI
+
+180d776: oba pełne workflow42653906423/42653874111 SUCCESS,364 PASS/130.19s,
+build/Chromium/WebKit/audyty PASS,0 znanych podatności. Bramka024 spełniona przed025.
+PRODUCTION_READINESS ma macierz dowodów/zgód; schemaA004/17 i plikiSQL niezmienione.
+
+025: usunięto odtwarzanie technicznych kont z VERIFICATION_PASSWORD. Istniejące konta,
+hashe i sesje nie są zmieniane; brak wymogu utrzymywania inicjalnego hasła po utworzeniu
+użytkowników. Pusta baza: jeden manager, Argon2id/aplikacyjna polityka hasła, PGlock5s
+z ponownym count/READ COMMITTED. Błędy bez danych prywatnych.16 nowych testów, regresja56
+PASS/56.69s; końcowe16 PASS/6.55s. Pełny CI nowego HEAD wymagany (oczekiwane380).
+Nie deklarować025PASS na podstawie samego backendu. Dane wyłącznie syntetyczne.
+
+ProdukcjaBLOCKED: brak kanałuSQL(przyznanaA, aleTCP/VPN nieudostępnione), prywatne konta,
+RPO60, magazyn/klucz, artefakt/env rollbacku, handoff i zgoda. Bieżąca produkcja pozostaje
+3.0.3/d15265b według odczytu024, bez deployu. Nowy kod nie naprawia starego obrazu.
+Po CI uzupełnić dowody025 i opisDraftPR3. Dalsze bramki wymagają rzeczywistych dowodów
+operatora; nie zastępować ich kolejną symulacją. ≥5 podstawowych+≥1DM bez redukcji.
+Zero produkcji/sieci/sekretów/kont/migracji/cleanup/export/restore/PITR/merge/deploy/
+kosztów/Google/Meta/DM. Focus1/2 i prywatneZIP-y bez zmian.
+
+---
+
 # Dodatkowe dowody024 — CI nadal wymagany
 
 Kod8f3810e: lokalnie63 PASS, build, Chromium/WebKit i oba audyty PASS/0 podatności.

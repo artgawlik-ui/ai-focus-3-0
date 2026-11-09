@@ -1,9 +1,9 @@
-# Ai Focus3.0.4 — gotowość produkcyjna, sesja024
+# Ai Focus3.0.4 — gotowość produkcyjna, sesje024–025
 
 **Decyzja produkcyjna: BLOCKED.** Zielony kod i testy syntetyczne nie potwierdzają
 aktualnej integralności klientów, skutecznego RPO ani możliwości rollbacku w Render.
-Wejście80f4652: pełne CI42647145719/42647135285 SUCCESS,359 PASS. Kandydat024 wymaga
-własnego pełnego CI dokładnego SHA. PR #3 Draft, bez zgody na merge/deploy.
+Wejście80f4652: pełne CI42647145719/42647135285 SUCCESS,359 PASS. Kandydat024180d776 ma pełny CI42653906423 SUCCESS/364 PASS.
+Dalszy kod025 wymaga własnego pełnego CI. PR #3 Draft, bez zgody na merge/deploy.
 
 Dowody bieżące: [metadane024](../sessions/session-024/provider-readonly.json),
 [plan SQL](../sessions/session-024/SQL_EXECUTION_PLAN.md),
@@ -20,7 +20,14 @@ Dowody bieżące: [metadane024](../sessions/session-024/provider-readonly.json),
 | Szkice i opt-out przy przejęciu | PASS lokalny |1 szkic dozwolony, zablokowany job failed,0 szkiców zablokowanego klienta; liczba kontaktów bez zmian | dowód bieżącej kolejki produkcyjnej | testy tylko syntetyczne | pakiet A po udostępnieniu kanału | A już jest; kanał/ID wymagane |
 | Odczyt starego API na007 | PASS ograniczony | d15265b: health200, prywatne API401, autoryzowany syntetyczny odczyt3 salonów; count/SHA21 tabel bez zmian | rzeczywisty obraz i env starego deployu | bieżące zależności testowe; bez starego workera/start.sh | nie traktować tego jako zwykłego rollbacku | test nie; wykonanie tak |
 | Zwykły startup d15265b na007 | BLOCKED | rzeczywisty stary Alembic odrzuca007;21 fingerprintów bez zmian | zatwierdzona zgodna ścieżka startu | downtime lub niekontrolowany stary worker | wybrać zgodny artefakt lub kontrolowany API-only rebuild, bez downgrade | tak, decyzja o ryzyku i wydaniu |
-| Pełny końcowy CI024 | BLOCKED do wyniku | lokalna regresja63 PASS,5 nowych przypadków; lokalne oba silniki/build/audyty PASS | dokładne końcowe CI: backend/build/Chromium/WebKit/audyty | nie dziedziczyć359 z wejścia | wykonać push i zaczekać na pełny SUCCESS | nie |
+| Pełny końcowy CI024 | PASS |180d776, workflow42653906423 SUCCESS,364 PASS/130.19s; build/Chromium/WebKit/audyty PASS,0 podatności | brak dla024; kolejne zmiany potrzebują własnego CI | dowód dotyczy kodu/testów, nie produkcji | zachować wymaganie pełnego CI nowego HEAD | nie |
+
+## Uzupełnienie bezpieczeństwa startu —025
+
+| Bramka | Status | Konkretny dowód | Brakujący element | Ryzyko / granica | Następna bezpieczna czynność | Zgoda właściciela |
+|---|---|---|---|---|---|---|
+| Brak odtworzenia technicznego managera w nowym kodzie | PASS lokalny |16 przypadków bootstrapu; legacy sekret ignorowany, konta/hash/sesje bez zmian; dwa starty PG tworzą1 ownera | pełny końcowy CI025 | nie wyłącza aktualnego konta; stary d15265b nadal ma stare zachowanie | pełny CI nowego SHA; zachować A dla rzeczywistych kont | kod/testy zatwierdzone; realne konta/config wymagają osobnej zgody |
+| Pełny końcowy CI025 | BLOCKED do wyniku |regresja56 PASS, końcowe jednostkowe16 PASS |380 testów, build, Chromium/WebKit i audyty dokładnego SHA | nie dziedziczyć wyniku024 | push, monitorować pełny CI, potem odnotować dowód | nie, rutynowe |
 
 ## Rzeczywiste warunki produkcji
 
