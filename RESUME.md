@@ -1,3 +1,41 @@
+# Sesja027 — kod PASS; gotowość produkcyjna BLOCKED
+
+Gałąź `fix/session-027-readonly-rollback`, Draft PR #9 do `fix/3.0.4-meta-validation`.
+Baza e37ce5d1ce807b47af18e3354c3232296b8b26c6/PR3Draft niezmieniona. PR #6 i #8 bez zmian.
+Kod **ad7f573b82c669a004d7a665b9f5344665ea8331** ma oba pełne CI42715071258/42715080811
+SUCCESS:394PASS/0FAIL/0SKIP,14nowych,build,Chromium/WebKit,audyty0znanych podatności.
+Pełny obraz awaryjny zbudowany wCI bezrun/push. Nie zachowany wRender; kontenerowy boot
+niezweryfikowany. Końcowy dopisek dokumentacyjny nie zmienia kodu; jego Checks/aktualny
+SHA są wPR #9 i sprawdzane przed zamknięciem sesji. Przy wznowieniu wystarczy odczyt Checks.
+
+Przeczytaj docs/sessions/session-027/REPORT.md iROLLOUT.md oraz PRODUCTION_READINESS.md.
+Nie powtarzać024–025 ani testów027 bez zmiany kodu lub konkretnego błędu.
+Nowy opt-in Dockerfile.rollback/rollback_readonly.py: PG17/007/21tabel,DBreadonly,
+GET/HEADcoreAPI,WebSocket odmowa,istniejące sesje/RBAC,bezworkerów/bootstrapu/migracji.
+Brakzgodytrue blokuje start. To ograniczony awaryjny odczyt,niepełny rollback biznesowy;
+nie ma nowych loginów/UI/zapisów/nativekalendarza. Normalny Dockerfile/start bez zmian.
+
+Świeży RenderGET027: d15265b live,autoDeploy=no,1Starter,PG17available,allowlista pusta,
+maintenanceOFF i brakDockerOverride. BraklatestPITR/WALlag,backup-key/artefaktu-envdowodów.
+Rev5current/enforced,TCP=[],VPNfalse,0SSH/0SELECT; prywatne konta niepotwierdzone.
+SQLpakietA005004/17 nietknięty (SHA795af23ad5acb4d0af451f683e10c9cdfcdcdd10d64bd0f58d6d5b29782815fb).
+Nie używać alternatywnego MCP SQL ani rozszerzać A na007/preflight nowego profilu.
+
+**Następny krok operatora:** faktycznie udostępnić wcześniej zatwierdzony wewnętrzny
+kanał/host/autoryzację i prywatnie potwierdzić konta. Potem agent wykona tylko4SELECT
+w jednym READ ONLY REPEATABLE READ. Dalej dowód latestpoint≤60min,niezależny obiekt/klucz,
+przechowywany zgodny artefakt i akceptacja degradacji. Brak zgody na deploy to granica
+wykonania; nie wymagamy deployu jako warunku gotowości planu, lecz brakujące dowody
+recovery/integralności/rollbacku rzeczywiście nadal blokują wydanie.
+
+Plan027 ma STOP: publicmaintenance nie zatrzymuje workerów/prywatnego API,plikpauzy
+nie znosi envtrue,start.sh sam uruchamia Alembic/bootstrap,dowód końcaWSZYSTKICH starych
+przedresume. Żadnej operacji planu nie wykonano. Bez merge/deploy/produkcyjnegoDDL/DML/
+export/restore/PITR/sekretów/sieci/nowychkosztów/Meta/Google. Automatyzacja CodexaOFF.
+PrywatneZIP-y i Focus1.0/2.0 zachowane. Poza zamkniętym zakresem brak dalszej pracy wtle.
+
+---
+
 # Wznowienie po limitach — potwierdzony końcowy CI 024–025
 
 Data weryfikacji: 9 listopada 2026 (Europe/Warsaw). Lokalny i zdalny HEAD przed

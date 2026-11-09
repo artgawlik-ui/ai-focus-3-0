@@ -1,0 +1,12 @@
+# Explicit emergency image only. The normal Dockerfile/startup is unchanged.
+FROM python:3.12-slim-trixie
+ENV PYTHONUNBUFFERED=1 PYTHONDONTWRITEBYTECODE=1
+WORKDIR /app
+RUN useradd -m -u 10001 focus
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
+COPY backend ./backend
+COPY scripts/rollback_readonly.py scripts/release_selects.py ./scripts/
+USER focus
+EXPOSE 8000
+CMD ["python", "-m", "scripts.rollback_readonly"]

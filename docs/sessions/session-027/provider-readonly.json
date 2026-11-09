@@ -1,0 +1,62 @@
+{
+  "observed_at_utc": "2026-11-09T22:32:03.430Z",
+  "scope": "Render control-plane GET only; no Shell/SQL/export/restore/configuration changes",
+  "postgres": {
+    "id": "dpg-dbh1b0gm7kps73f0p2m0-a",
+    "status": "available",
+    "version": "17",
+    "plan": "0.1c-256mb",
+    "region": "frankfurt",
+    "disk_size_gb": 1,
+    "public_allowlist_empty": true,
+    "recovery_fields_exposed": [],
+    "rpo_60_proven": false
+  },
+  "service": {
+    "id": "srv-dbh1rk6tlv9c73dloq20",
+    "branch": "main",
+    "auto_deploy": "no",
+    "plan": "0.5c-512mb",
+    "instances": 1,
+    "environment_values_read": false,
+    "docker_override_present": false,
+    "maintenance_enabled": false
+  },
+  "deploys": [
+    {
+      "id": "dep-dbjhl6jbc2fs73crj65g",
+      "status": "live",
+      "commit": "d15265b26524d594bdbcb4bc6b63fcbc398a1424"
+    },
+    {
+      "id": "dep-dbj59qff3r2c73f077u0",
+      "status": "deactivated",
+      "commit": "cd22a44415732a1e25b558bfec38cf498115b90f"
+    },
+    {
+      "id": "dep-dbj54fm7bikc73eep290",
+      "status": "deactivated",
+      "commit": "98ac75e382d77f95827ab3daa4877da40caa4213"
+    }
+  ],
+  "channel": {
+    "revision": "5",
+    "tcp_domains": [],
+    "tcp_ip_ranges": [],
+    "vpn_configured": false,
+    "ssh_attempts": 0,
+    "production_selects": 0,
+    "approved_private_account_ids_confirmed": false,
+    "alternative_mcp_sql_used": false
+  },
+  "rollback": {
+    "production_artifact_eligibility_confirmed": false,
+    "production_profile_started": false
+  },
+  "operations": {
+    "production_mutations": 0,
+    "exports": 0,
+    "restore_or_pitr": 0,
+    "new_resources": 0
+  }
+}
