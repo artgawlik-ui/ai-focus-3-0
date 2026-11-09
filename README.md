@@ -1,5 +1,7 @@
 # Ai Focus 3.0
 
+Ręczne zlecanie prac bez API OpenAI: [Fokus → Issue → istniejąca sesja Codexa](docs/workflows/MANUAL_CODEX.md). Samo Issue nie uruchamia wykonawcy; automatyzacja pozostaje OFF.
+
 Aktualny raport integracji Meta: [docs/meta/REPORT.md](docs/meta/REPORT.md). CRM działa przez HTTPS na wydaniu cd22a44 (3.0.2); integracje zewnętrzne i automatyczne kopie offsite wymagają dalszych prac.
 
 Osobny CRM sprzedaży NAK Hair / muk Haircare. React 19 + TypeScript, FastAPI, SQLAlchemy, PostgreSQL 17, Alembic. Polskie UI, responsywna PWA, indywidualne konta menedżera i handlowców. Bez automatycznej wysyłki wiadomości.
