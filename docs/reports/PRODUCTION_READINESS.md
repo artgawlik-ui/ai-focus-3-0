@@ -1,3 +1,33 @@
+# Sesja027 — aktualna decyzja: BLOCKED
+
+Odczyt9listopada2026 (UTC w metadanych). Bazae37ce5d: oba pełne CI42686949414/42686938187
+SUCCESS,380PASS. Nowa gałąź `fix/session-027-readonly-rollback` ma oddzielny Draft PR/CI;
+nie przenosi wyniku380 na nowy kod. [Raport027](../sessions/session-027/REPORT.md),
+[świeże metadane](../sessions/session-027/provider-readonly.json),
+[szczegółowy plan i STOP](../sessions/session-027/ROLLOUT.md).
+
+| Bramka027 | Status | Dowód / brakujący element | Dokładna czynność operatora / zgoda |
+|---|---|---|---|
+| Wejściowy kod PR3 | PASS | e37ce5d,oba pełneCI SUCCESS; PR3Draft | brak powtórnej symulacji; nowy kod wymaga własnego CI |
+| Bieżący deploy i PG jako zasoby | PASS metadanych | RenderGET:d15265b live,autoDeploy=no,1instancja;PG17available | nie jest dowodem integralności ani backupu |
+| Zatwierdzony transport SQL | BLOCKED | current/enforced rev5,TCP=[],VPN=false;0SSH | W ustawieniach środowiska Codexa udostępnić wcześniej zatwierdzony TCP ssh.frankfurt.render.com:22 i oficjalną autoryzację; bez nowych kluczy/ról/allowlisty DB; oddzielnie zweryfikować host |
+|004/17 i prywatne konta/sesje | BLOCKED | brak potwierdzonych ID i wyników; pakiet4SELECT005 nietknięty | prywatnie zatwierdzić istniejące owner/technical ID; agent wykona tylko4SELECT w jednym READ ONLY REPEATABLE READ; STOP przy innym schemacie; A już jest |
+| PITR funkcja / punkt / RPO≤60 | BLOCKED dla skutecznego RPO | dokumentacja płatnegoPG potwierdza funkcję,nie bieżący status recovery; GET nie ma latest point/WAL lag | Render→baza→Recovery: odczytać najnowszy skutecznie odzyskiwalny timestamp/lag i wiek≤3600s; jeśli UI nie pokazuje, uzyskać dowód od Render Support; nie uruchamiaćRestore |
+| Aktualna niezależna kopia | BLOCKED | historyczny export1XI starszy niż7dni; brak bieżącego obiektu/manifestu | zatwierdzony magazyn poza aplikacją: potwierdzić aktualny obiekt,czas,hash,region,lifecycle/retencję i dostęp; nowa kopia/usługa/restore wymagają osobnej zgody |
+| Odzyskiwalność klucza | BLOCKED | brak dowodu niezależnej wersji klucza i dostępności recovery operatora | zatwierdzony menedżer sekretów: potwierdzić wersję,kontrolę dostępu i odzyskanie; nie przesyłać wartości klucza do rozmowy/repo |
+|007 awaryjny odczyt — kod | BLOCKED do pełnego CI027 | nowy opt-in startup/recipe;11lokalnychPASS,3PGjeszcze niezaliczone | CI ma potwierdzić007,rzeczywiste sesje/RBAC,DBreadonly i21fingerprintów; to świadoma degradacja bez nowych loginów/zapisów |
+| Artefakt rollbacku Render | BLOCKED | live/deactivated deploy nie ujawnia eligibility ani snapshotu env; staryd15265b nie startuje007 | Render→usługa→Deploys: potwierdzić konkretny dostępny digest/obraz,start/env; nie klikaćRollback. Dla nowego profilu potrzebna późniejsza zgoda na budowę/zachowanie artefaktu i akceptacja odczytu zamiast pełnej pracy |
+| Handoff i retencja | BLOCKED wykonania | stare procesy nie respektują pauzy; nowe lokalne statusy nie potwierdzają ich wyjścia | zaakceptować plan027 i okno maintenance,udowodnić zakończenie wszystkich starych writerów,uzgodnić kolejkę/retencję oraz dopiero potem osobno zezwolić na resume |
+| Gotowość funkcji do testów | PASS syntetyczne wejścia | normalne login/CRM/lejek/wizyty/nativezadania/raporty/PWA w380testach wejścia | produkcyjne logowanie zmienia sesję i wymaga właściciela; obecne flagi/native007/konta niezweryfikowane; żadnego testowego klienta na produkcji |
+| Zgoda wydania | BLOCKED | brak zgody na merge/deploy/migrację/aktywację | dopiero po zamknięciu powyższych dowodów zatwierdzić konkretny SHA,schemat,start,okno i rollback; nie traktować tego raportu jako zgody |
+
+RPO pozostaje wymaganiem60min; nie zastąpiono go dzienną kopią ani statusem AVAILABLE.
+Nowy tryb awaryjny nie zmienia domyślnej aplikacji, nie leczy starego obrazu i nie
+włącza007 na produkcji. PR #6/#8 i automatyzacja Codexa bez zmian/OFF.
+Zgoda A nie rozszerza się na zapytania preflight nowego profilu007 ani na jego uruchomienie.
+
+---
+
 # Ai Focus3.0.4 — gotowość produkcyjna, sesje024–025
 
 **Decyzja produkcyjna: BLOCKED.** Zielony kod i testy syntetyczne nie potwierdzają

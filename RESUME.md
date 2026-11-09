@@ -1,3 +1,29 @@
+# Sesja027 — produkcja BLOCKED, nowy opt-in wariant awaryjny w osobnej gałęzi
+
+Baza: e37ce5d1ce807b47af18e3354c3232296b8b26c6 z PR3Draft,oba CI42686949414/42686938187SUCCESS.
+Gałąź027: `fix/session-027-readonly-rollback`. Przeczytaj raport027,ROLLOUT.md i aktualną
+PRODUCTION_READINESS. Nie powtarzać024–025. Nie zmieniać PR #6/#8; automatyzacjaOFF.
+
+Świeży RenderGET: live d15265b,autoDeploy=no,PG17available,allowlista pusta. BraklatestPITR/
+WALlag/artefaktu-env rollbacku. Rev5 current/enforced,TCP=[],VPNfalse,0SSH/0SELECT.
+Prywatne konta niepotwierdzone; tylko A004/17. Brak podstaw do nowego RPO60/backup-keyPASS.
+
+Nowa rzeczywista luka zamknięta kodem: osobny Dockerfile.rollback/rollback_readonly.py
+bez startupumigracji/bootstrapu/workera. DefaultOFF,ACKtrue,PG17/007/21wymagane,
+DBreadonly iallowlistaGET,istniejące sesje/RBAC. Beznowychloginów/UI/zapisów: to ograniczony
+tryb awaryjny wymagający decyzji właściciela,nie pełny rollback. Normalny Dockerfile bez zmian.
+14nowych testów; lokalnie11PASS/3PGdeselected. PełnyCI (w tym pełny build obrazu,bez run/push)
+nowego SHA konieczny. Nie dziedziczyć380PASS. Korekta tylko znanego zegara testowego z026.
+
+Plan027 rozróżnia publicmaintenance i prywatnewritery/retencję. Plikpauzy +envfalse daje
+ręczne resume; envtrue nie można zdjąć samymunlink. Wszelkie operacje planu niewykonane.
+Następny krok operatora: faktycznie udostępnić zatwierdzony kanał i prywatne tożsamości,
+a następnie4SELECT005 w jednymsnapshot. Agent nie użyje alternatywnego MCPSQL.
+Brak deploy/merge/produkcjiDDL/DML/backup/restore/PITR/sekretów/sieci/kosztów/Meta/Google.
+PoCI uzupełnić dowody027 i nowyDraftPR; brak zgody wydania. Starsze wpisy niżej historyczne.
+
+---
+
 # Wznowienie po limitach — potwierdzony końcowy CI 024–025
 
 Data weryfikacji: 9 listopada 2026 (Europe/Warsaw). Lokalny i zdalny HEAD przed

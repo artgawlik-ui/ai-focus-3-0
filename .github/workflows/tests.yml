@@ -41,6 +41,10 @@ jobs:
       - run: python -m tests.ci_e2e
       - run: npm audit --prefix frontend
       - run: pip-audit -r requirements.txt --format=json --output=test-results/pip-audit-ci.json
+      - name: Build opt-in readonly rollback image (no run or deploy)
+        run: |
+          docker build --file Dockerfile.rollback --tag focus3-rollback-validation .
+          docker image inspect --format '{{.Id}}' focus3-rollback-validation
       - uses: actions/upload-artifact@v4
         if: always()
         with:
