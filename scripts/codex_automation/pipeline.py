@@ -179,9 +179,26 @@ def admit():
     output(snapshot)
 
 
+def approved_snapshot():
+    # Authorization metadata comes only from trusted admission job outputs.
+    # Never accept it from the agent's workspace or downloadable artifacts.
+    try:
+        snapshot = {'number': int(os.environ['APPROVED_NUMBER']),
+                    'base': os.environ['APPROVED_BASE'],
+                    'branch': os.environ['APPROVED_BRANCH'],
+                    'digest': os.environ['APPROVED_DIGEST']}
+    except (KeyError, ValueError):
+        raise Blocked('TRUSTED_APPROVAL_MISSING') from None
+    if (snapshot['number'] <= 0 or not SHA.fullmatch(snapshot['base']) or
+        snapshot['branch'] != f'codex/issue-{snapshot["number"]}' or
+        not re.fullmatch(r'[a-f0-9]{64}', snapshot['digest'])):
+        raise Blocked('INVALID_SNAPSHOT')
+    return snapshot
+
+
 def publish():
+    snapshot = approved_snapshot()
     api = API()
-    snapshot = json.loads(Path('task/snapshot.json').read_text())
     number = snapshot['number']
     branch = f'codex/issue-{number}'
     base = snapshot['base']

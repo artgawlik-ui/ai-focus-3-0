@@ -24,6 +24,7 @@ jobs:
       base: ${{ steps.admit.outputs.base }}
       branch: ${{ steps.admit.outputs.branch }}
       number: ${{ steps.admit.outputs.number }}
+      digest: ${{ steps.admit.outputs.digest }}
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
         with:
@@ -103,15 +104,15 @@ jobs:
           persist-credentials: false
       - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
         with:
-          name: approved-task-${{ github.run_id }}
-          path: task
-      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
-        with:
           name: untrusted-proposal-${{ github.run_id }}
           path: proposal
       - id: publish
         env:
           GH_TOKEN: ${{ github.token }}
+          APPROVED_NUMBER: ${{ needs.admission.outputs.number }}
+          APPROVED_BASE: ${{ needs.admission.outputs.base }}
+          APPROVED_BRANCH: ${{ needs.admission.outputs.branch }}
+          APPROVED_DIGEST: ${{ needs.admission.outputs.digest }}
         run: python scripts/codex_automation/pipeline.py publish
   validation:
     needs: publish

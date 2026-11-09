@@ -294,8 +294,8 @@ class PublicationTests(unittest.TestCase):
         p.git('reset', '--hard', '-q', 'HEAD')
         Path('proposal').mkdir(); Path('proposal/changes.patch').write_bytes(change)
         Path('task').mkdir()
-        Path('task/snapshot.json').write_text(json.dumps({'number': 26, 'base': base,
-            'branch': branch, 'digest': p.digest(issue())}))
+        Path('task/snapshot.json').write_text(json.dumps({'number': 999, 'base': 'f'*40,
+            'branch': 'codex/issue-999', 'digest': 'f'*64}))
         requests = []
         class PublisherAPI:
             token = 'synthetic'
@@ -312,7 +312,9 @@ class PublicationTests(unittest.TestCase):
                 raise AssertionError('Unexpected operation')
         output = Path('synthetic-output')
         with patch.object(p, 'API', PublisherAPI), patch.dict(os.environ,
-             {'GITHUB_OUTPUT': str(output), 'GITHUB_RUN_ID': '123'}):
+             {'GITHUB_OUTPUT': str(output), 'GITHUB_RUN_ID': '123',
+              'APPROVED_NUMBER': '26', 'APPROVED_BASE': base,
+              'APPROVED_BRANCH': branch, 'APPROVED_DIGEST': p.digest(issue())}):
             p.publish()
         self.assertEqual(Path('docs/approved-note.md').read_text(), 'Approved synthetic documentation.\n')
         self.assertTrue(any(data and data.get('draft') is True and data.get('base') == 'main'
@@ -321,6 +323,18 @@ class PublicationTests(unittest.TestCase):
         self.assertNotEqual(base, head)
         self.assertIn(head, p.git('ls-remote', 'origin', 'refs/heads/' + branch).decode())
         self.assertIn('sha=' + head, output.read_text())
+
+    def test_missing_trusted_outputs_blocks_publication_before_api(self):
+        with patch.dict(os.environ, {}, clear=True), patch.object(p, 'API') as api:
+            with self.assertRaisesRegex(p.Blocked, 'TRUSTED_APPROVAL_MISSING'):
+                p.publish()
+            api.assert_not_called()
+
+    def test_mismatched_trusted_branch_is_rejected(self):
+        with patch.dict(os.environ, {'APPROVED_NUMBER': '26', 'APPROVED_BASE': BASE,
+             'APPROVED_BRANCH': 'codex/issue-999', 'APPROVED_DIGEST': p.digest(issue())}):
+            with self.assertRaisesRegex(p.Blocked, 'INVALID_SNAPSHOT'):
+                p.approved_snapshot()
 
     def test_changed_approval_is_rechecked_before_patch_or_push(self):
         Path('task').mkdir(); Path('task/snapshot.json').write_text(json.dumps({
@@ -331,7 +345,9 @@ class PublicationTests(unittest.TestCase):
                     return {'object': {'sha': BASE}}
                 changed = issue(); changed['body'] += ' edited after reservation'
                 return changed
-        with patch.object(p, 'API', StaleAPI), patch.object(p, 'git') as git:
+        with patch.object(p, 'API', StaleAPI), patch.object(p, 'git') as git, patch.dict(os.environ,
+             {'APPROVED_NUMBER': '26', 'APPROVED_BASE': BASE,
+              'APPROVED_BRANCH': 'codex/issue-26', 'APPROVED_DIGEST': p.digest(issue())}):
             with self.assertRaisesRegex(p.Blocked, 'APPROVAL_CONTENT_CHANGED'):
                 p.publish()
             git.assert_not_called()

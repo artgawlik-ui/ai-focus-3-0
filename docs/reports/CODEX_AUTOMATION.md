@@ -73,8 +73,10 @@ Pozostałe akcje także są przypięte pełnymi SHA.
    sekretów, w `:workspace`, `drop-sudo`, na jednorazowym runnerze Ubuntu.
    OPENAI_API_KEY trafia tylko do oficjalnej akcji. Brak klucza/modelu kończy job.
 6. Propozycja Codexa jest niezaufanym patchem. Publikowanie następuje na świeżym
-   runnerze z oryginalnym kontrolerem i snapshotem admission, bez wykonywania
-   kodu kandydata. Ponownie sprawdzana jest zgoda oraz stan zarezerwowanej gałęzi.
+   runnerze z oryginalnym kontrolerem i metadanymi zatwierdzenia przekazanymi
+   wyłącznie przez wyjścia zaufanego joba admission, bez wykonywania kodu kandydata.
+   Publikacja nie pobiera snapshotu z artefaktu; próba podmiany artefaktu nie zmienia
+   numeru Issue, SHA, gałęzi ani hasha zgody. Ponownie sprawdzana jest zgoda oraz stan zarezerwowanej gałęzi.
 7. Dozwolone: `backend/`, `frontend/src/`, `tests/`, `docs/`, ograniczone rozszerzenia.
    Limit 30 plików / 200 000 bajtów. Zablokowane: `.github`, instrukcje AGENTS,
    ukryte pliki, zależności, skrypty operacyjne, migracje, Render, symlinki,
@@ -126,7 +128,7 @@ nie dostępność środowiska wykonawczego przyszłego Codexa.
 
 ## Testy i dowody
 
-- `python -m unittest discover -s tests/automation -v`: **30 PASS, 0 FAIL, 0 SKIP**.
+- `python -m unittest discover -s tests/automation -v`: **32 PASS, 0 FAIL, 0 SKIP**.
   Fixture API i syntetyczne zadania; brak prawdziwych wywołań Codex/Meta/Google/Render.
 - 20 równoległych prób rezerwacji z fixture atomowego API: 1 zwycięzca, 19 odrzuceń.
   To test kontrolera, nie test współbieżności prawdziwego API GitHub.
@@ -143,7 +145,7 @@ nie dostępność środowiska wykonawczego przyszłego Codexa.
   nie odbiór i realizację przez Codexa.
 - **Prawdziwy E2E Issue → Codex → zmiana → Draft PR → CI: BLOCKED / niewykonany.**
 
-## Potwierdzony CI opublikowanego kodu
+## Potwierdzony CI pierwszej wersji kodu (przed utwardzeniem granicy artefaktów)
 
 Kod: **`cc514f344eb2dedfe605d7b64b9f3cc7d0a6b657`**, [osobny Draft PR #6](https://github.com/artgawlik-ui/ai-focus-3-0/pull/6).
 Pełny CI push [42701994238](https://github.com/artgawlik-ui/ai-focus-3-0/actions/runs/42701994238)
@@ -155,9 +157,11 @@ pip-audit: No known vulnerabilities found. To gałąź z main, nie zestaw 380 te
 niepołączonego wydania z PR #3.
 Workflow polityki: push [42701994538](https://github.com/artgawlik-ui/ai-focus-3-0/actions/runs/42701994538)
 i PR [42702077857](https://github.com/artgawlik-ui/ai-focus-3-0/actions/runs/42702077857): **SUCCESS**.
+Po tym CI utwardzono publikację: brak zaufania do snapshotów z artefaktów. Dwa nowe
+testy (32 łącznie) oraz test lokalnego git z celowo podmienionym snapshotem PASS.
+Poprawiona wersja wymaga własnego pełnego CI; nie przypisujemy jej wyniku cc514f3.
 Nie wystartował workflow wykonawcy Codex. PR #3 ponownie potwierdzony Draft, merged=false,
-HEAD e37ce5d niezmieniony. Kolejny commit zawiera tylko ten zapis dowodów i RESUME;
-jego własne Checks należy również potwierdzić przed zamknięciem sesji.
+HEAD e37ce5d niezmieniony. Końcowy SHA i jego własne Checks należy potwierdzić przed zamknięciem sesji.
 
 ## Koszty — szacunek do późniejszej decyzji
 
@@ -215,7 +219,7 @@ a alert budżetowy nie musi blokować rozliczeń. Niczego nie aktywowano ani nie
 
 | Element | Status | Brakujący dowód / następny krok |
 |---|---|---|
-| Kontroler i walidacja | PASS | 30 nowych testów + actionlint; hostowany CI cc514f3 SUCCESS, 110 PASS |
+| Kontroler i walidacja | PASS | 32 lokalne testy + actionlint; poprzednik cc514f3: hostowany CI SUCCESS, 110 PASS |
 | Zapis nieszkodliwego zadania | PASS | Issue #5 istnieje; bez zgody uruchomienia |
 | Instalacja workflow na main | BLOCKED | osobny przegląd i zgoda na merge; teraz wyłącznie branch/Draft PR |
 | Ustawienia Actions/runners/secrets | BLOCKED | operator potwierdza w panelu; integracja zwraca 403 |
@@ -231,3 +235,12 @@ lub commit bez PR — operator uzgadnia stan. Repozytorium publiczne nie nadaje 
 przekazywania prywatnych poleceń/danych CRM. Nie przyznano dostępu do Render/SQL/SSH.
 RESUME tej osobnej gałęzi dotyczy026; przy późniejszym łączeniu z wydaniem trzeba
 zachować również aktualny punkt wznowienia PR #3, bez zastępowania jego historii.
+
+## Lista zmienionych plików sesji026
+
+- `.github/workflows/codex-issues.yml` — przyjmowanie, oficjalny wykonawca, publikacja, CI, raport.
+- `.github/workflows/codex-policy-tests.yml` — testy bez sekretów.
+- `scripts/codex_automation/pipeline.py` — zaufany kontroler.
+- `tests/automation/test_policy.py` — 32 testy polityki i lokalnego git.
+- `docs/reports/CODEX_AUTOMATION.md` — dowody i instrukcja administratora/Fokus.
+- `RESUME.md` — niezależny punkt wznowienia automatyzacji.

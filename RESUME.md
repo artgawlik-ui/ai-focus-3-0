@@ -13,14 +13,14 @@ Wejściowy PR #3 Draft, e37ce5d1ce807b47af18e3354c3232296b8b26c6, oba CI42686949
   walidacja patcha, Draft PR, pełny job CI i raport commit/Issue.
 - `.github/workflows/codex-policy-tests.yml`: bezpłatna walidacja polityki bez sekretów.
 - `scripts/codex_automation/pipeline.py`: zaufany kontroler.
-- `tests/automation/test_policy.py`: 30 testów; API fixture, lokalny git i 20 równoległych rezerwacji.
+- `tests/automation/test_policy.py`: 32 testy; API fixture, lokalny git i 20 równoległych rezerwacji.
 - Raport i instrukcja: `docs/reports/CODEX_AUTOMATION.md`.
 - Prawdziwe nieszkodliwe Issue #5: https://github.com/artgawlik-ui/ai-focus-3-0/issues/5,
   BLOCKED, bez komendy zatwierdzającej lub wywołania modelu.
 
 ## Dowody
 
-`python -m unittest discover -s tests/automation -v`: 30PASS/0FAIL/0SKIP.
+`python -m unittest discover -s tests/automation -v`: 32PASS/0FAIL/0SKIP.
 `actionlint1.7.12 -shellcheck= ...`: PASS, release checksum zweryfikowany.
 Compileall, parser YAML i diff-check PASS. Końcowe SHA/Checks sprawdzić w GitHub dla tej
 oddzielnej gałęzi. Nie utożsamiać CI aplikacji/testów polityki z E2E wykonawcy Codex.
@@ -35,6 +35,14 @@ Policy CI42701994538/42702077857 SUCCESS (30 nowych metod testowych).
 Żaden workflow wykonawcy nie był uruchomiony. PR #3 Draft/merged=false/HEADe37ce5d bez zmian.
 To CI gałęzi opartej na main, nie ponowny test 380 przypadków niepołączonego wydania3.0.4.
 Końcowy commit dokumentacyjny ma własne SHA i Checks — sprawdzić przy wznowieniu.
+
+## Końcowe utwardzenie publikacji
+
+Po cc514f3 publikacja korzysta wyłącznie z zaufanych job outputs admission,
+nie z pobranego snapshotu. Test z celowo podmienionym artefaktem oraz dwa nowe
+przypadki walidacji metadanych PASS; 32 testy łącznie. To rzeczywista poprawka
+izolacji, nie zmiana produkcji. Koniecznie potwierdzić własny CI tej wersji;
+110PASS poprzednika nie jest dowodem końcowego SHA.
 
 ## Ograniczenia i decyzje właściciela
 
