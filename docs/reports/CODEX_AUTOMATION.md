@@ -262,3 +262,22 @@ zachować również aktualny punkt wznowienia PR #3, bez zastępowania jego hist
 - `tests/automation/test_policy.py` — 32 testy polityki i lokalnego git.
 - `docs/reports/CODEX_AUTOMATION.md` — dowody i instrukcja administratora/Fokus.
 - `RESUME.md` — niezależny punkt wznowienia automatyzacji.
+- `tests/test_meta_303.py` — deterministyczny zegar istniejącego testu ostrzeżeń, bez zmian runtime.
+
+## Niejednakowy wynik końcowych CI i poprawka deterministyczności
+
+Dokumentacyjny7a7f2f7: PR42703924171 SUCCESS, ale push42703915281 FAILURE.
+Log job129455552253:111passed/1failed — `test_owner_diagnostics_and_approved_retention`,
+pusty caplog zamiast ostrzeżenia. Nie uznano całego SHA za zielone.
+Test resetował `_last_alert=0`, podczas gdy kod ma cooldown60s liczony monotonicznie.
+Na świeżym runnerze z uptime<60s pierwsze ostrzeżenie nie jest jeszcze emitowane.
+Kontrolowana reprodukcja lokalna prawdziwej funkcji maintenance (DB fixture):
+10s→0 alertów;120s→1;179.9s→1;180s→2. Bez produkcji lub połączeń Meta.
+Próba lokalnego całego testu SQLite zawisła w TestClient i została zakończona;
+nie zaliczono jej jako PASS. Pełne PostgreSQL/build/przeglądarki/audyty potwierdza CI.
+
+W `tests/test_meta_303.py` wstrzyknięto zegar tylko modułu inbox:120/179.9/180s.
+Zachowano retencję, RBAC i brak treści w logach; dodano asercje cooldownu i ponownego
+ostrzeżenia na granicy60s. Bez usunięcia testów, skipów, zmiany timeoutów lub kodu
+produkcyjnego Meta.32 testy automatyzacji i actionlint ponownie PASS.
+Nowa wersja wymaga własnego pełnego CI obu zdarzeń.

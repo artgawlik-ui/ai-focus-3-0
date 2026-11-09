@@ -65,3 +65,13 @@ Jeżeli zielone — czekać na decyzję właściciela o późniejszej instalacji
 Nie wykonywać powtórnych symulacyjnych sesji ani zmieniać PR #3. Jedno polecenie wznowienia:
 „Wznów sesję026 na feat/session-026-codex-automation; przeczytaj RESUME.md oraz
 CODEX_AUTOMATION.md, sprawdź końcowe CI; bez aktywacji, merge, deployu i zmian PR #3”.
+
+## Końcowy CI: wykryta i usunięta zależność testu od uptime
+
+7a7f2f7: PR42703924171SUCCESS, push42703915281FAIL(111PASS/1FAIL),
+`test_owner_diagnostics_and_approved_retention`: przy uptime<60s nie ma alertu
+po ustawieniu_last_alert=0. Reprodukcja funkcji na DBfixture potwierdziła zegar.
+Nie uznawać tego SHA za pełny PASS. Poprawiono wyłącznie test: kontrolowane120/179.9/180s,
+sprawdzenie cooldownu i ponownego ostrzeżenia. Brak zmian runtime/timeoutów/skipów.
+32 testy automatyzacji i actionlint PASS; po push sprawdzić CI nowego SHA, oba zdarzenia.
+Lokalny pełny test SQLite zatrzymano po zawieszeniu TestClient; nie jest dowodem PASS.
