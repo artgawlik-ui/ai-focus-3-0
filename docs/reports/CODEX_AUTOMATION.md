@@ -163,6 +163,21 @@ Poprawiona wersja wymaga własnego pełnego CI; nie przypisujemy jej wyniku cc51
 Nie wystartował workflow wykonawcy Codex. PR #3 ponownie potwierdzony Draft, merged=false,
 HEAD e37ce5d niezmieniony. Końcowy SHA i jego własne Checks należy potwierdzić przed zamknięciem sesji.
 
+## Końcowy kod po utwardzeniu — potwierdzony CI
+
+**`35a83b6e7cd837497190406d724bc056de51c6d2`**:
+- pełny push [42703140324](https://github.com/artgawlik-ui/ai-focus-3-0/actions/runs/42703140324) SUCCESS;
+- pełny PR [42703150599](https://github.com/artgawlik-ui/ai-focus-3-0/actions/runs/42703150599) SUCCESS;
+- polityka push [42703140392](https://github.com/artgawlik-ui/ai-focus-3-0/actions/runs/42703140392)
+  i PR [42703150536](https://github.com/artgawlik-ui/ai-focus-3-0/actions/runs/42703150536) SUCCESS.
+
+Log push/job129452864260: **112 passed, 2 warnings, 35 subtests passed, 25.34 s**.
+32 nowe metody testowe automatyzacji. Build PASS, Chromium desktop PASS, WebKit iPhone PASS,
+npm audit: 0 vulnerabilities; pip-audit: No known vulnerabilities found.
+To weryfikacja kodu i regresji na syntetycznych danych; **E2E prawdziwego Codexa nadal BLOCKED**.
+Kolejny commit zapisuje wyłącznie dowody w raporcie/RESUME i checklistę bezpiecznej instalacji.
+Nie zmienia implementacji. Jego SHA i Checks są dostępne w osobnym Draft PR #6.
+
 ## Koszty — szacunek do późniejszej decyzji
 
 Teraz: **0 wywołań płatnego modelu**, brak nowych usług Render i zmiany kosztu hostingu.
@@ -182,6 +197,8 @@ a alert budżetowy nie musi blokować rozliczeń. Niczego nie aktywowano ani nie
 
 1. Właściciel przegląda **osobny** Draft PR automatyzacji. Po zatwierdzeniu instalacji
    dopiero świadomy merge tego PR umieszcza workflow na main. PR #3 nie jest częścią tej operacji.
+   Przed merge potwierdzić, że aktualizacja main nie uruchomi zewnętrznego autodeploy
+   Render. Jeżeli uruchomi — STOP i osobna decyzja właściciela; nie zmieniać teraz ustawień Render.
 2. GitHub → Settings → Actions → General: potwierdzić dostęp do standardowych runnerów,
    allowlist akcji przypiętych SHA i możliwość tworzenia PR przez GITHUB_TOKEN.
    Nie włączać auto-merge ani deploy. Dopuszczenie automatycznego tworzenia PR nie
@@ -195,7 +212,8 @@ a alert budżetowy nie musi blokować rozliczeń. Niczego nie aktywowano ani nie
    na dokładnie `true` w ramach osobnej, świadomej aktywacji.
 5. Dopiero wtedy zatwierdzić Issue #5 zgodnie z procedurą poniżej i przejść required
    environment review. Monitorować prawdziwy run, Draft PR, `codex/validation` i rachunek.
-6. PASS E2E dopiero po dowodzie rzeczywistego Codex run + SHA zmiany + Draft PR + pełne CI.
+6. Sprawdzić, że prawdziwy Codex dodał oczekiwany plik dokumentacji Issue #5 i spełnił
+   jego kryteria. PASS E2E dopiero po dowodzie rzeczywistego Codex run + SHA zmiany + Draft PR + pełne CI.
    Brak którejkolwiek części = BLOCKED. Nie stosować symulowanego fallbacku.
 
 ## Instrukcja dla Fokus
@@ -219,7 +237,7 @@ a alert budżetowy nie musi blokować rozliczeń. Niczego nie aktywowano ani nie
 
 | Element | Status | Brakujący dowód / następny krok |
 |---|---|---|
-| Kontroler i walidacja | PASS | 32 lokalne testy + actionlint; poprzednik cc514f3: hostowany CI SUCCESS, 110 PASS |
+| Kontroler i walidacja | PASS | 32 nowe testy + actionlint; kod35a83b6: pełny CI SUCCESS, 112 PASS |
 | Zapis nieszkodliwego zadania | PASS | Issue #5 istnieje; bez zgody uruchomienia |
 | Instalacja workflow na main | BLOCKED | osobny przegląd i zgoda na merge; teraz wyłącznie branch/Draft PR |
 | Ustawienia Actions/runners/secrets | BLOCKED | operator potwierdza w panelu; integracja zwraca 403 |

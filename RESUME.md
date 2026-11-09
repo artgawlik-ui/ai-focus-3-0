@@ -41,8 +41,14 @@ Końcowy commit dokumentacyjny ma własne SHA i Checks — sprawdzić przy wznow
 Po cc514f3 publikacja korzysta wyłącznie z zaufanych job outputs admission,
 nie z pobranego snapshotu. Test z celowo podmienionym artefaktem oraz dwa nowe
 przypadki walidacji metadanych PASS; 32 testy łącznie. To rzeczywista poprawka
-izolacji, nie zmiana produkcji. Koniecznie potwierdzić własny CI tej wersji;
-110PASS poprzednika nie jest dowodem końcowego SHA.
+izolacji, nie zmiana produkcji. Jej własny CI jest potwierdzony:
+**35a83b6e7cd837497190406d724bc056de51c6d2**,
+pełne42703140324(push)/42703150599(PR) SUCCESS:112PASS/2warnings/35subtests,
+build/Chromium/WebKit PASS, oba audyty0podatności;
+polityka42703140392/42703150536 SUCCESS,32nowe testy.
+Końcowy commit dokumentacyjny nie zmienia kodu; przy wznowieniu sprawdzić jego Checks.
+E2E prawdziwego wykonawcy nadal BLOCKED. Przed późniejszym merge automatyzacji
+operator musi również potwierdzić brak zewnętrznego autodeploy Render; teraz bez zmian konfiguracji.
 
 ## Ograniczenia i decyzje właściciela
 
