@@ -3,7 +3,9 @@
 **Decyzja produkcyjna: BLOCKED.** Zielony kod i testy syntetyczne nie potwierdzają
 aktualnej integralności klientów, skutecznego RPO ani możliwości rollbacku w Render.
 Wejście80f4652: pełne CI42647145719/42647135285 SUCCESS,359 PASS. Kandydat024180d776 ma pełny CI42653906423 SUCCESS/364 PASS.
-Dalszy kod025 wymaga własnego pełnego CI. PR #3 Draft, bez zgody na merge/deploy.
+Kod025 f5971cf ma pełny CI42657210080 SUCCESS/380 PASS;
+backend/build/Chromium/WebKit/audyty PASS,0 znanych podatności. Końcowe dopiski dokumentacyjne
+mają własny SHA i wymagają weryfikacji Checks PR #3. Nie jest to zgoda na wydanie. PR #3 Draft, bez zgody na merge/deploy.
 
 Dowody bieżące: [metadane024](../sessions/session-024/provider-readonly.json),
 [plan SQL](../sessions/session-024/SQL_EXECUTION_PLAN.md),
@@ -26,8 +28,8 @@ Dowody bieżące: [metadane024](../sessions/session-024/provider-readonly.json),
 
 | Bramka | Status | Konkretny dowód | Brakujący element | Ryzyko / granica | Następna bezpieczna czynność | Zgoda właściciela |
 |---|---|---|---|---|---|---|
-| Brak odtworzenia technicznego managera w nowym kodzie | PASS lokalny |16 przypadków bootstrapu; legacy sekret ignorowany, konta/hash/sesje bez zmian; dwa starty PG tworzą1 ownera | pełny końcowy CI025 | nie wyłącza aktualnego konta; stary d15265b nadal ma stare zachowanie | pełny CI nowego SHA; zachować A dla rzeczywistych kont | kod/testy zatwierdzone; realne konta/config wymagają osobnej zgody |
-| Pełny końcowy CI025 | BLOCKED do wyniku |regresja56 PASS, końcowe jednostkowe16 PASS |380 testów, build, Chromium/WebKit i audyty dokładnego SHA | nie dziedziczyć wyniku024 | push, monitorować pełny CI, potem odnotować dowód | nie, rutynowe |
+| Brak odtworzenia technicznego managera w nowym kodzie | PASS kodu/testów |16 przypadków bootstrapu; legacy sekret ignorowany, konta/hash/sesje bez zmian; dwa starty PG tworzą1 ownera | brak dla kodu025; rzeczywiste konta nadal niezweryfikowane | nie wyłącza aktualnego konta; stary d15265b nadal ma stare zachowanie | CI42657210080 PASS; zachować A dla rzeczywistych kont | kod/testy zatwierdzone; realne konta/config wymagają osobnej zgody |
+| Pełny końcowy CI025 | PASS |f5971cf, workflow42657210080 SUCCESS,380 PASS/166.46s; build/Chromium/WebKit/audyty PASS,0 podatności | brak dla testowanego kodu; końcowy dopisek ma własne CI | nie dowodzi gotowości produkcji | potwierdzić Checks dokładnego końcowego HEAD | nie |
 
 ## Rzeczywiste warunki produkcji
 

@@ -80,3 +80,16 @@ a potem prywatne potwierdzenie kont. Zgoda A udzielona; nie prosimy o nią ponow
 
 Pliki: scripts/bootstrap.py, tests/test_bootstrap_safety.py, dokumenty025,
 aktualizacja dowodów024/PRODUCTION_READINESS/RESUME/raportu porannego.
+
+## Zamknięcie025 — PASS kodu/testów; produkcja BLOCKED
+
+Dokładny kod f5971cf75d5d045824a6f76ca773bc6d47c1967d, workflow42657210080 SUCCESS:
+https://github.com/artgawlik-ui/ai-focus-3-0/actions/runs/42657210080 .
+Job129298788063: **380 PASS/0FAIL/0SKIP,166.46s**; build, Chromium, WebKit oraz oba audyty
+PASS, **0 znanych podatności**.16 nowych025,5 nowych024 — razem21 od wejściowych359.
+
+Kryteria025 spełniono na syntetycznych danych. Brak deklaracji stanu rzeczywistych kont
+ani gotowości całej produkcji. Końcowy dopisek dokumentacyjny bez zmiany kodu będzie
+miał własny SHA/CI; dowód dokładnego końcowego HEAD w Checks i opisie Draft PR #3.
+Po nim nie należy powtarzać implementacji024–025. Pozostałe krytyczne bramki potrzebują
+rzeczywistego dostępu/dowodów operatora; nie tworzymy następnej sesji samych symulacji.

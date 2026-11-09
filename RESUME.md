@@ -1,3 +1,37 @@
+# Punkt wznowienia po024–025: kod/testyPASS, produkcjaBLOCKED
+
+2026-11-09. Kod025 f5971cf75d5d045824a6f76ca773bc6d47c1967d:
+https://github.com/artgawlik-ui/ai-focus-3-0/actions/runs/42657210080 SUCCESS.
+380 PASS/0FAIL/0SKIP,166.46s; build, Chromium/WebKit i oba audytyPASS,0 znanych podatności.
+024180d776: oba workflow42653906423/42653874111 SUCCESS/364 PASS.21 nowych testówłącznie:
+5 pakowania/handoff/rollback,16 bezpiecznego bootstrapu. Bez nowych pominięć/timeoutów.
+
+Naprawiono COPY native-alembic.ini. Realne syntetyczne procesy: SIGTERM/kill w transakcji,
+0/4 przypomnienia, brak duplikatów, opt-out, restart i stare API zachowują21 tabel.
+Zwykły stary start d15265b odrzuca007 — rollback nadal potrzebuje zgodnego planu/artefaktu.
+Usunięto auto-tworzenie technicznych kont. Istniejące konta/hash/sesje bez zmian;
+nowy owner tylko w pustej bazie, Argon2id, PasswordIn, PGlock5s i READ COMMITTED,
+kontrolowany wyścig dwóch startów. Błędy bez danych prywatnych. Niczego nie wykonano
+na rzeczywistych kontach. Brak nowych flag/deps/migracji/procesów.
+
+Pełna macierz: docs/reports/PRODUCTION_READINESS.md. OdczytRender024 potwierdził
+d15265b live/autoDeploy=no/PG17 available; brak latestPITR/lag i artefaktu/env eligibility.
+0SSH/SQL: TCP/VPN nieudostępnione. A udzielona, pliki4SELECT004/17 i ich SHA niezmienione.
+Nie rozszerzać A na006/007. Prywatne tożsamości kont nadal wymagają potwierdzenia.
+
+Następny etap zależy od operatora: faktyczny zatwierdzony wewnętrzny kanał READ ONLY,
+potem tylko pakiet005; dowód RPO≤60min/trwałości kopii-klucza/rollbacku/handoff i zgoda.
+Nie zastępować brakujących dowodów produkcyjnych dodatkowymi symulacjami. Nie ponawiać
+SSH bez nowego dostępnego kanału; sam historyczny grant nie jest transportem.
+
+Raporty024/025 i raport poranny zapisane. Ostatni dopisek dokumentacyjny ma własny
+HEAD: sprawdzić jego CI w Checks i opisiePR3 przed wznowieniem. Nie powtarzać skończonych
+napraw. PR3Draft; brak merge/deploy/produkcji/eksportu/restore/PITR/cleanup/zmian sieci,
+sekretów/kosztów/Google/Meta/DM. Focus1/2 i prywatneZIP-y zachowane.
+Szacunek ≥5 podstawowych+≥1DM bez redukcji. Brak dalszej pracy w tle po zakończeniu.
+
+---
+
 # Sesja024 PASS kodu/testów;025 zabezpieczenie bootstrapu oczekujeCI
 
 180d776: oba pełne workflow42653906423/42653874111 SUCCESS,364 PASS/130.19s,
