@@ -1,3 +1,34 @@
+# Sesje 022 i 023 — PASS dla kodu; wydanie produkcyjne BLOCKED
+
+2026-11-09. Naprawa 022: a11c8aa5dbee197183a719761bb9a06aaba48b50,
+workflow PR 42639643983 i push 42639630411 SUCCESS, 335 testów + build + oba silniki
++ audyty PASS, 0 znanych podatności. WebKit: limit 32767 px odtworzony i naprawiony
+bez pomijania scenariuszy i zwiększania timeoutów. Dowody: docs/sessions/session-022.
+
+Funkcja 023: 007f4e419f08f72b2047d8a6bfceb071fd2529f5,
+https://github.com/artgawlik-ui/ai-focus-3-0/actions/runs/42642947958 — SUCCESS.
+359 testów PASS / 0 FAIL / 0 SKIP, 101.47 s; build, Chromium/WebKit i audyty PASS,
+0 znanych podatności. 24 nowe testy 023; łącznie 55 nowych od wejścia 304.
+Panel menedżera: liczniki kolejki, sygnał workera i wyłącznie podgląd retencji.
+FOCUS_DIAGNOSTICS_ENABLED domyślnie OFF. Bez DML, wykonawcy retencji i aktywacji flag.
+023 nie ma migracji. Heartbeat nie potwierdza sukcesu natywnego cyklu ani innych replik.
+Testy wyłącznie syntetyczne; WebKit emuluje iPhone, nie jest testem fizycznego telefonu.
+
+Raporty i lokalne dowody: docs/sessions/session-023/REPORT.md,
+OPERATIONS_PREVIEW.md, ACCEPTANCE.md i local-browser-results.json. Po zapisie końcowego
+commita dokumentacji sprawdzić jego CI w Checks PR #3 (nie dziedziczyć wyniku kodu).
+Następna sesja nie powinna ponawiać naprawy screenshotów ani implementować panelu od nowa.
+
+Wydanie BLOCKED: aktualny SQL004/17 i konta, RPO≤60 min, trwałość magazynu i klucza,
+rollback Render oraz zatwierdzony handoff workerów. Zgoda A nie rozszerzona na006/007.
+Najważniejsza następna czynność: potwierdzić zatwierdzony wewnętrzny kanał READ ONLY,
+aby wykonać tylko 4 SELECT-y sesji005; bez ponawiania SSH przy nieaktywnym grancie.
+Bez produkcji, merge/deploy, migracji007, eksportów/restore/PITR, Google/Meta/DM i kosztów.
+PR #3 Draft, Focus1/2 nietknięte, prywatne ZIP-y zachowane. Nadal ≥5 sesji podstawowych
++ ≥1 DM, bez redukcji szacunku za sam development. Brak pracy w tle po zakończeniu.
+
+---
+
 # Sesja 023 — implementacja zakończona lokalnie, CI wymagany
 
 Panel menedżera: diagnostyka kolejki, sygnał procesu, zaległe przypomnienia i podgląd

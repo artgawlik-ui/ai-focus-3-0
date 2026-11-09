@@ -57,3 +57,35 @@ ani pracy cyklu. Koszt agregacji rośnie z danymi; panel nie odpytuje automatycz
 Szacunek nadal ≥5 sesji podstawowych + ≥1 DM. Nie zmniejszamy go za sam development.
 Następny krok: zweryfikować końcowe CI dokładnego SHA, zapisać wynik w raporcie i
 RESUME. Potem kontrole wydania wymagają wskazanych wcześniej dowodów i osobnych zgód.
+
+## Zamknięcie kryteriów — PASS kodu, produkcja BLOCKED
+
+Kod 007f4e419f08f72b2047d8a6bfceb071fd2529f5, workflow PR 42642947958 SUCCESS:
+https://github.com/artgawlik-ui/ai-focus-3-0/actions/runs/42642947958
+Job129248525865: 359 PASS / 0 FAIL / 0 SKIP, 101.47 s. Build, Chromium, WebKit,
+manifest/offline, panel menedżera i retencji, pełny poprzedni przepływ PASS.
+Oba audyty PASS, 0 znanych podatności. Konfiguracja CI nie została zmieniona:
+historyczny operatorski test_salon_cleanup.py pozostaje poza zakresem workflow;
+nie dodano nowych pominięć. Dwa znane ostrzeżenia deprecacji narzędzi nie są podatnościami.
+
+Wszystkie 8 kryteriów ACCEPTANCE spełniono w dozwolonym, syntetycznym środowisku.
+Nie jest to potwierdzenie realnej integracji, pracy produkcyjnej ani recovery.
+Kod i panel działają w testach; produkcyjna aktywacja podglądu wymaga osobnej decyzji.
+
+CI: Chromium wyszukiwanie/strona 381.03/112.42 ms; WebKit 368.05/161.90 ms.
+Strony po20,45 rekordów w scenariuszu. To pojedyncze pomiary CI, nie benchmark SLA.
+Dokument WebKit powyżej32767px pokryty83 ujęciami; dashboard55. Brak nowych pomiarów
+300–10000 w023: zapytania biznesowe022 nie zmieniły się, ich dowody nadal obowiązują.
+Nowy endpoint diagnostyczny nie ma zadeklarowanego SLA dla takich rozmiarów.
+
+### Zmienione pliki 023
+
+- backend/native_diagnostics.py, backend/native_planning.py, backend/main.py
+- frontend/src/NativeOperationsPanel.tsx, frontend/src/main.tsx
+- tests/test_native_diagnostics.py, tests/ci_e2e.py, tests/production_browser_check.py
+- docs/sessions/session-023/ACCEPTANCE.md, OPERATIONS_PREVIEW.md, REPORT.md,
+  local-browser-results.json
+- RESUME.md, docs/reports/MORNING_PROGRESS_REPORT.md
+
+Finalny dopisek dokumentacyjny ma własne CI: wynik dokładnego HEAD sprawdzić w PR #3.
+Nie wykonano żadnych operacji produkcyjnych. Następny krok i blokady pozostają powyżej.
