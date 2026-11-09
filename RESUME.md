@@ -25,6 +25,17 @@ Wejściowy PR #3 Draft, e37ce5d1ce807b47af18e3354c3232296b8b26c6, oba CI42686949
 Compileall, parser YAML i diff-check PASS. Końcowe SHA/Checks sprawdzić w GitHub dla tej
 oddzielnej gałęzi. Nie utożsamiać CI aplikacji/testów polityki z E2E wykonawcy Codex.
 
+## Potwierdzony zapis GitHub
+
+Kod cc514f344eb2dedfe605d7b64b9f3cc7d0a6b657, osobny Draft PR #6:
+https://github.com/artgawlik-ui/ai-focus-3-0/pull/6.
+Pełne CI42701994238(push)/42702077788(PR) SUCCESS:110 PASS,35 subtests,2warnings;
+build,Chromium/WebKit PASS, oba audyty0 znanych podatności.
+Policy CI42701994538/42702077857 SUCCESS (30 nowych metod testowych).
+Żaden workflow wykonawcy nie był uruchomiony. PR #3 Draft/merged=false/HEADe37ce5d bez zmian.
+To CI gałęzi opartej na main, nie ponowny test 380 przypadków niepołączonego wydania3.0.4.
+Końcowy commit dokumentacyjny ma własne SHA i Checks — sprawdzić przy wznowieniu.
+
 ## Ograniczenia i decyzje właściciela
 
 Nie wymagać teraz klucza API. Nie obchodzić403 przy ustawieniach Actions/runners/secrets.

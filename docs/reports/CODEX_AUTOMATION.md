@@ -143,6 +143,22 @@ nie dostępność środowiska wykonawczego przyszłego Codexa.
   nie odbiór i realizację przez Codexa.
 - **Prawdziwy E2E Issue → Codex → zmiana → Draft PR → CI: BLOCKED / niewykonany.**
 
+## Potwierdzony CI opublikowanego kodu
+
+Kod: **`cc514f344eb2dedfe605d7b64b9f3cc7d0a6b657`**, [osobny Draft PR #6](https://github.com/artgawlik-ui/ai-focus-3-0/pull/6).
+Pełny CI push [42701994238](https://github.com/artgawlik-ui/ai-focus-3-0/actions/runs/42701994238)
+i PR [42702077788](https://github.com/artgawlik-ui/ai-focus-3-0/actions/runs/42702077788): **SUCCESS**.
+Log push/job129448812191: **110 passed, 2 warnings, 35 subtests passed, 24.31 s**.
+110 obejmuje 30 nowych testów automatyzacji; subtestów nie doliczamy jako osobnych metod.
+Build PASS, `chromium-desktop: PASS`, `webkit-iphone: PASS`, npm audit: 0 vulnerabilities,
+pip-audit: No known vulnerabilities found. To gałąź z main, nie zestaw 380 testów
+niepołączonego wydania z PR #3.
+Workflow polityki: push [42701994538](https://github.com/artgawlik-ui/ai-focus-3-0/actions/runs/42701994538)
+i PR [42702077857](https://github.com/artgawlik-ui/ai-focus-3-0/actions/runs/42702077857): **SUCCESS**.
+Nie wystartował workflow wykonawcy Codex. PR #3 ponownie potwierdzony Draft, merged=false,
+HEAD e37ce5d niezmieniony. Kolejny commit zawiera tylko ten zapis dowodów i RESUME;
+jego własne Checks należy również potwierdzić przed zamknięciem sesji.
+
 ## Koszty — szacunek do późniejszej decyzji
 
 Teraz: **0 wywołań płatnego modelu**, brak nowych usług Render i zmiany kosztu hostingu.
@@ -199,7 +215,7 @@ a alert budżetowy nie musi blokować rozliczeń. Niczego nie aktywowano ani nie
 
 | Element | Status | Brakujący dowód / następny krok |
 |---|---|---|
-| Kontroler i walidacja lokalna | PASS | 30 testów + actionlint; nie zastępuje hostowanego CI |
+| Kontroler i walidacja | PASS | 30 nowych testów + actionlint; hostowany CI cc514f3 SUCCESS, 110 PASS |
 | Zapis nieszkodliwego zadania | PASS | Issue #5 istnieje; bez zgody uruchomienia |
 | Instalacja workflow na main | BLOCKED | osobny przegląd i zgoda na merge; teraz wyłącznie branch/Draft PR |
 | Ustawienia Actions/runners/secrets | BLOCKED | operator potwierdza w panelu; integracja zwraca 403 |
