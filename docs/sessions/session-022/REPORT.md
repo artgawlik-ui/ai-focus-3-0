@@ -130,3 +130,22 @@ Lokalne odtworzenie odblokowało dalszy krokWebKit: nowe zadanie o priorytecie l
 nie było na pierwszej stronie po45zadaniach normal pozostawionych przezChromium.
 Test teraz wyszukuje nowy tytuł i potwierdza pusty wynik przed utworzeniem, a potem
 sprawdza zapis/ukończenie/kontakt. Nie zmieniono kolejności ani limitów listy aplikacji.
+
+# Sesja 022 — PASS (kod i testy), 2026-11-09
+
+Commit a11c8aa5dbee197183a719761bb9a06aaba48b50:
+https://github.com/artgawlik-ui/ai-focus-3-0/actions/runs/42639643983 — SUCCESS.
+335 testów PASS / 0 FAIL / 0 SKIP, 126.34 s; build, Chromium, WebKit i oba audyty PASS.
+0 znanych podatności. Dodatkowe 4 testy naprawy CI (łącznie 31 nowych od wejścia 304).
+WebKit w CI: stary limit bitmapy odtworzony; długi dokument pokryty 83 ujęciami,
+dashboard 55 ujęciami. Paginacja: 45 rekordów, strony po 20, bez nakładania.
+Wyszukiwanie / kolejna strona: Chromium 430.70 / 175.96 ms; WebKit 409.27 / 259.22 ms.
+To emulacja iPhone, nie nowy test na fizycznym urządzeniu. Lokalne dowody:
+ci-repair-local.json (102 testy regresji, oba silniki, build i audyty).
+Równoległy pełny workflow push 42639630411 również zakończył się SUCCESS.
+Oba dowody dotyczą dokładnego SHA, nie samego backendu.
+
+Można rozpocząć sesję 023: diagnostyka kolejki i podgląd retencji menedżera.
+Produkcja nadal BLOCKED: SQL004/17, RPO≤60 min, magazyn/klucz, rollback i handoff.
+PR3 Draft. Bez merge/deploy, migracji produkcyjnych 007, Google/Meta/DM i kosztów.
+≥5 sesji podstawowych + ≥1 DM, bez redukcji za sam development.
