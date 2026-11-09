@@ -20,7 +20,7 @@ Dowody bieżące: [metadane024](../sessions/session-024/provider-readonly.json),
 | Szkice i opt-out przy przejęciu | PASS lokalny |1 szkic dozwolony, zablokowany job failed,0 szkiców zablokowanego klienta; liczba kontaktów bez zmian | dowód bieżącej kolejki produkcyjnej | testy tylko syntetyczne | pakiet A po udostępnieniu kanału | A już jest; kanał/ID wymagane |
 | Odczyt starego API na007 | PASS ograniczony | d15265b: health200, prywatne API401, autoryzowany syntetyczny odczyt3 salonów; count/SHA21 tabel bez zmian | rzeczywisty obraz i env starego deployu | bieżące zależności testowe; bez starego workera/start.sh | nie traktować tego jako zwykłego rollbacku | test nie; wykonanie tak |
 | Zwykły startup d15265b na007 | BLOCKED | rzeczywisty stary Alembic odrzuca007;21 fingerprintów bez zmian | zatwierdzona zgodna ścieżka startu | downtime lub niekontrolowany stary worker | wybrać zgodny artefakt lub kontrolowany API-only rebuild, bez downgrade | tak, decyzja o ryzyku i wydaniu |
-| Pełny końcowy CI024 | BLOCKED do wyniku | lokalna regresja63 PASS,5 nowych przypadków | dokładne końcowe CI: backend/build/Chromium/WebKit/audyty | nie dziedziczyć359 z wejścia | wykonać push i zaczekać na pełny SUCCESS | nie |
+| Pełny końcowy CI024 | BLOCKED do wyniku | lokalna regresja63 PASS,5 nowych przypadków; lokalne oba silniki/build/audyty PASS | dokładne końcowe CI: backend/build/Chromium/WebKit/audyty | nie dziedziczyć359 z wejścia | wykonać push i zaczekać na pełny SUCCESS | nie |
 
 ## Rzeczywiste warunki produkcji
 
@@ -54,4 +54,6 @@ https://render.com/docs/postgresql-backups.md — PITR płatnych baz, okno3/7dni
 wyłączenie ostatnich10min, nowa instancja recovery, logical exports7dni;
 https://render.com/docs/rollbacks.md — retencja artefaktów i snapshot konfiguracji;
 https://render.com/docs/private-network.md — wewnętrzna sieć Render, nie publiczne obejście.
+Render CLI2.33 sprawdzono wyłącznie przez lokalny help: brak komendy recovery/latest point.
+Nie logowano się i nie uruchomiono żadnej operacji CLI do produkcji.
 Historyczne dowody snapshotu/recovery: session005 i session006, bez ponownego restore.

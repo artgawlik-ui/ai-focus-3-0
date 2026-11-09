@@ -1,3 +1,15 @@
+# Dodatkowe dowody024 — CI nadal wymagany
+
+Kod8f3810e: lokalnie63 PASS, build, Chromium/WebKit i oba audyty PASS/0 podatności.
+local-validation.json zawiera aktualne pomiary i ograniczenia. Oba workflow GitHub
+mają zielony backend/build, ale czekają na instalator przeglądarek. Aktywny log404;
+nie zgadywano przyczyny, nie pominięto testów i nie zwiększano timeoutów. Brak pełnego
+SUCCESS oznacza brak PASS całej024 i brak przejścia do025. Render CLI2.33(help) nie
+udostępnia recovery/latest point; nie logowano się. Po zapisie sprawdzić CI nowego HEAD.
+ProdukcjaBLOCKED i wszystkie ograniczenia, PR3Draft, A004/17, ≥5+≥1DM bez zmian.
+
+---
+
 # Sesja024 — przygotowanie wydania, nie produkcyjny rollout
 
 Wejście80f4652 i CI42647145719/42647135285 SUCCESS/359 PASS, PR3Draft potwierdzone.

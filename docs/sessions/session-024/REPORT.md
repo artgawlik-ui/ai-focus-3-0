@@ -92,3 +92,19 @@ zatwierdzonego wewnętrznego kanału READ ONLY. Plan wznowienia i punkty STOP w 
 
 Pliki: Dockerfile; tests/test_release_native_rehearsal.py; tests/test_runtime_packaging.py;
 docs/reports/PRODUCTION_READINESS.md; dokumenty/evidence session-024; RESUME.md i raport poranny.
+
+## Dodatkowa walidacja podczas oczekiwania na CI
+
+Dla kodu8f3810e wykonano lokalnie `npm run build --prefix frontend` — PASS;
+`python -m tests.ci_e2e` — Chromium i WebKit PASS, wraz z offline, CRM, wizytami,
+paginacją i fixture błędnej daty pod aktywnym service workerem. Oba audyty lokalne
+PASS,0 znanych podatności. Szczegóły bez danych klientów: local-validation.json.
+Powód dodatkowego sprawdzenia: oba workflow zablokowane na instalacji przeglądarek,
+po zielonym backendzie/buildzie. Aktywny log job129279165990 zwrócił404, więc nie ma
+podstaw do wskazania źródła opóźnienia lub zmiany timeoutów. CI nie jest zastąpione
+lokalnym wynikiem i024 nadal nie jest oznaczone jako PASS całości.
+
+Odczyt wyłącznie lokalnego help Render CLI2.33 potwierdził brak komendy recovery lub
+latest recoverable point. Postgres ma get/list i operacje mutujące, których nie użyto;
+ea dotyczy object storage. Nie rozpoczęto logowania ani żadnej sesji CLI do produkcji.
+Dostępne narzędzia nie dostarczają brakujących dowodów RPO; potrzebny panel/provider.
