@@ -1,0 +1,58 @@
+{
+  "issue": 2,
+  "activation_status": "BLOCKED",
+  "base_commit": "d15265b26524d594bdbcb4bc6b63fcbc398a1424",
+  "code_commit": "417ba16ff76e37bdada5ab0197bf9cf6a1da4758",
+  "baseline": {
+    "tests": 80,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0
+  },
+  "candidate": {
+    "tests": 90,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0
+  },
+  "frontend_build": "PASS",
+  "browsers": [
+    {
+      "browser": "chromium-desktop",
+      "login": true,
+      "logout": true,
+      "private_data_not_in_service_worker_cache": true,
+      "crm_read": true,
+      "crm_write_on_isolated_copy": true,
+      "no_horizontal_scroll": true,
+      "pwa_manifest_icons": true,
+      "apple_standalone_meta": true,
+      "service_worker_offline_fallback": true,
+      "javascript_errors": []
+    },
+    {
+      "browser": "webkit-iphone",
+      "login": true,
+      "logout": true,
+      "private_data_not_in_service_worker_cache": true,
+      "crm_read": true,
+      "crm_write_on_isolated_copy": true,
+      "no_horizontal_scroll": true,
+      "pwa_manifest_icons": true,
+      "apple_standalone_meta": true,
+      "service_worker_offline_fallback": true,
+      "javascript_errors": []
+    }
+  ],
+  "known_vulnerabilities": {
+    "npm": 0,
+    "pip": 0
+  },
+  "production_changes": false,
+  "real_graph_instagram_api_calls": 0,
+  "production_sql_integrity_verified": false,
+  "actual_pitr_window_verified": false,
+  "fresh_production_backup_verified": false,
+  "historical_encrypted_backup_restore_verified": true,
+  "test_scope": "synthetic functional tests; separate historical backup integrity restore on isolated local copy; production public GET only"
+}

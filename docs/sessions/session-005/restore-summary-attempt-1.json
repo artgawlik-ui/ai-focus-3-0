@@ -1,0 +1,17 @@
+{
+  "status": "BLOCKED",
+  "production_mutations": 0,
+  "new_exports_created": 0,
+  "real_meta_requests": 0,
+  "export_created_at_utc": "2026-11-01T18:25:00Z",
+  "export_id": "dpg-dbh1b0gm7kps73f0p2m0-a/2026-11-01T18:25Z",
+  "age_seconds_at_check": 15894,
+  "archive_bytes": 8996,
+  "archive_sha256": "c7fcd97d374cd3d3696b9ea35a1a99dc83a944e460c890131ad5966d97232a8c",
+  "restore_status": "RESTORE_AND_EXPORT_POINT_INTEGRITY_PASS",
+  "container_removed": true,
+  "plaintext_removed_by_validator": true,
+  "table_count": 17,
+  "error_category": "KeyError",
+  "download_plaintext_removed": true
+}

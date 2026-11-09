@@ -48,3 +48,28 @@ def test_reassignment_revokes_old_rep_job_and_visit_access():
     assert c.patch('/api/appointments/'+visit.json()['id'],json={'status':'confirmed'}).status_code==404
     assert run_once()
     assert manager.get('/api/agent/jobs').json()[0]['status']=='failed'
+
+
+import pytest
+
+@pytest.mark.parametrize('enabled',['true','false'])
+def test_agent_flag_is_not_queue_kill_switch_and_never_sends(monkeypatch,enabled):
+    import httpx,json
+    import backend.meta_flags as flags
+    monkeypatch.setenv('AGENT_V2_ENABLED',enabled)
+    monkeypatch.setenv('AI_PAID_PROCESSING_APPROVED','false')
+    for name in ('META_ENABLED','META_OAUTH_ENABLED','META_INGEST_ENABLED','META_CRM_HISTORY_ENABLED','META_DM_TRANSPORT_ENABLED'):
+        monkeypatch.setenv(name,'false')
+    def forbidden(*a,**kw):raise AssertionError('Outbound transport must remain unreachable')
+    monkeypatch.setattr(httpx,'post',forbidden)
+    monkeypatch.setattr(flags,'send_dm',forbidden)
+    c=client();salon=add(c,name='Synthetic agent flag audit',priority='B',potential=3000,specialization='Koloryzacja')
+    assert not run_once()  # Brak zadania nie inicjuje pozyskiwania ani komunikacji.
+    assert c.post('/api/agent/jobs',json={'salon_id':salon['id']}).status_code==202
+    assert run_once()
+    job=c.get('/api/agent/jobs').json()[0];result=json.loads(job['result'])
+    assert job['status']=='completed' and not result['sent'] and not result['appointment_created']
+    assert any(row['kind']=='agent_draft' for row in c.get('/api/salons/'+salon['id']+'/activities').json())
+    assert c.get('/api/salons/'+salon['id']).json()['priority']=='B'
+    assert c.get('/api/appointments').json()==[]
+    assert ('score' in result)==(enabled=='true')

@@ -1,0 +1,29 @@
+{
+  "captured_at": "2026-11-01T13:15:07.984579+00:00",
+  "postgres_id": "dpg-dbh1b0gm7kps73f0p2m0-a",
+  "read_only_api": true,
+  "export_api_status": 200,
+  "recovery_api_status": 200,
+  "pitr": {
+    "recoveryStatus": "AVAILABLE",
+    "startsAt": "2026-10-29T06:32:47Z"
+  },
+  "exports": [
+    {
+      "id": "dpg-dbh1b0gm7kps73f0p2m0-a/2026-11-01T12:41Z",
+      "created_at": "2026-11-01T12:41:00Z",
+      "download_available": true
+    }
+  ],
+  "download": {
+    "export_id": "dpg-dbh1b0gm7kps73f0p2m0-a/2026-11-01T12:41Z",
+    "export_created_at": "2026-11-01T12:41:00Z",
+    "bytes": 8993,
+    "sha256": "093ab561995be1f5af8383610b7b725113950a592a466ed14b5a348ad4a4f42d",
+    "length_matches_header": true,
+    "tls_verified": true,
+    "url_not_recorded": true,
+    "downloaded_at": "2026-11-01T13:15:11.966996+00:00"
+  },
+  "status": "DOWNLOADED_NOT_YET_VERIFIED"
+}

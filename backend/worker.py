@@ -1,12 +1,27 @@
 """Separate durable DB queue consumer. Never sends messages or changes a salon priority."""
 import json, logging, os, time
 from datetime import datetime, timedelta, timezone
-import httpx
 from sqlalchemy import select, update
 from backend.db import Session, Job, Salon, Activity, User, now
 from backend.main import uid
 log=logging.getLogger('worker')
 _last_meta_monitor=0.0
+
+def authorized_salon(db, job, final=False):
+    # Refresh identity-map entries after a slow provider call; lock through final commit.
+    if final:
+        from backend.contact_guard import lock_contact
+        lock_contact(db, job.salon_id)
+    options = {'populate_existing': True, 'with_for_update': True} if final else {}
+    requester = db.get(User, job.user_id, **options)
+    salon = db.get(Salon, job.salon_id, **options)
+    if not requester or not requester.active or not salon or (requester.role != 'manager' and salon.owner_id != requester.id):
+        raise ValueError('Access revoked')
+    from backend.meta_models import MetaConversation
+    opted_out = db.scalar(select(MetaConversation.id).where(MetaConversation.salon_id == salon.id, MetaConversation.opted_out == 1).limit(1))
+    if salon.status == 'do_not_contact' or opted_out:
+        raise ValueError('Kontakt zablokowany')
+    return salon
 
 def run_once():
     with Session() as db:
@@ -16,14 +31,12 @@ def run_once():
         db.commit()
         job=db.scalar(select(Job).where(Job.status=='queued').order_by(Job.created_at).with_for_update(skip_locked=True).limit(1))
         if not job: return False
-        result=db.execute(update(Job).where(Job.id==job.id,Job.status=='queued').values(status='running',updated_at=now()))
+        claim_stamp=now()
+        result=db.execute(update(Job).where(Job.id==job.id,Job.status=='queued').values(status='running',updated_at=claim_stamp))
         if result.rowcount!=1: db.rollback(); return False
         db.commit()
         try:
-            salon=db.get(Salon,job.salon_id)
-            requester=db.get(User,job.user_id)
-            if not requester or not requester.active or (requester.role!='manager' and salon.owner_id!=requester.id):raise ValueError('Access revoked')
-            if salon.status=='do_not_contact': raise ValueError('Kontakt zablokowany')
+            salon=authorized_salon(db,job)
             history=list(db.scalars(select(Activity).where(Activity.salon_id==salon.id).order_by(Activity.created_at.desc()).limit(15)))
             from backend.meta import agent_replies
             history.extend(agent_replies(db,salon.id))
@@ -35,20 +48,25 @@ def run_once():
                 analysis['priority_suggestion']=salon.priority
                 analysis['warning']='Tryb podstawowy; punktacja rozszerzona wyłączona. '+analysis['warning']
                 analysis.pop('score',None); analysis.pop('criteria',None)
-            # A configured key alone never activates paid processing.
-            if os.getenv('AI_PAID_PROCESSING_APPROVED','false').lower()=='true' and os.getenv('OPENAI_API_KEY'):
-                response=httpx.post('https://api.openai.com/v1/chat/completions',headers={'Authorization':'Bearer '+os.environ['OPENAI_API_KEY']},json={'model':os.getenv('OPENAI_MODEL','gpt-4.1-mini'),'store':False,'max_completion_tokens':300,'messages':[{'role':'system','content':'Zwróć wyłącznie neutralne pytania po polsku. Nie twórz faktów, decyzji ani wiadomości do wysłania.'},{'role':'user','content':json.dumps(minimal_model_context(analysis),ensure_ascii=False)}]},timeout=60)
-                response.raise_for_status()
-                questions=response.json()['choices'][0]['message']['content']
-                if not isinstance(questions,str) or len(questions)>5000:raise ValueError('Invalid provider result')
-                analysis['model_questions_unverified']=questions
-                analysis['engine']='rules+openai_questions'
+            from backend.agent_provider import add_optional_questions
+            add_optional_questions(analysis,minimal_model_context(analysis))
+            # Fence a previous executor after recovery/reclaim. Lock and result commit are atomic.
+            owned=db.scalar(select(Job).where(Job.id==job.id,Job.status=='running',Job.updated_at==claim_stamp).with_for_update().execution_options(populate_existing=True))
+            if not owned:
+                db.rollback()
+                return True
+            salon=authorized_salon(db,job,final=True)
             job.status='completed'; job.result=json.dumps(analysis,ensure_ascii=False); job.updated_at=now()
             db.add(Activity(id=uid(),salon_id=salon.id,user_id=job.user_id,kind='agent_draft',body='Przygotowano analizę i szkic. Nie wysłano wiadomości.'))
             db.commit()
             log.info('agent completed job_id=%s user_id=%s rules=%s sent=false',job.id,job.user_id,analysis.get('rules_version','legacy'))
         except Exception:
-            db.rollback(); job=db.get(Job,job.id); job.status='failed'; job.result=json.dumps({'error':'Analiza nie powiodła się. Sprawdź konfigurację dostawcy i ponów zadanie.'}); job.updated_at=now(); db.commit(); log.warning('Job failed id=%s',job.id)
+            job_id=job.id
+            db.rollback()
+            owned=db.scalar(select(Job).where(Job.id==job_id,Job.status=='running',Job.updated_at==claim_stamp).with_for_update().execution_options(populate_existing=True))
+            if owned:
+                owned.status='failed'; owned.result=json.dumps({'error':'Analiza nie powiodła się. Sprawdź konfigurację dostawcy i ponów zadanie.'}); owned.updated_at=now(); db.commit()
+                log.warning('Job failed; details suppressed')
         return True
 
 def maintain_meta_once():
@@ -87,22 +105,62 @@ def process_meta_once():
         log.warning('Meta cycle deferred; CRM queue continues')
         return False
 
-if __name__=='__main__':
+_last_native_tick=-60
+def process_native_once():
+    global _last_native_tick
+    from backend.native_planning import enabled,tick
+    if not enabled() or time.monotonic()-_last_native_tick<60:return False
+    try:
+        result=tick();_last_native_tick=time.monotonic();return result
+    except Exception:
+        log.warning('Native planner deferred; no contact or delivery assumed')
+        return False
+
+def process_google_once():
+    from backend.google_transport import writable
+    if not writable():return False
+    try:
+        from backend.google_calendar import process_once
+        return process_once()
+    except Exception:
+        log.warning('Google Calendar cycle deferred; no success assumed')
+        return False
+
+def main():
     import signal
-    running=True
-    def stop(*_):
-        global running
-        running=False
-    signal.signal(signal.SIGTERM,stop); signal.signal(signal.SIGINT,stop)
+    import threading
+    from backend.worker_control import paused, publish
+    stop_event=threading.Event()
+    def stop(*_):stop_event.set()
+    previous={sig:signal.signal(sig,stop) for sig in (signal.SIGTERM,signal.SIGINT)}
     last_cleanup=-3600
-    while running:
-        try:
-            if time.monotonic()-last_cleanup>3600:
-                maintain_meta_once()
-                last_cleanup=time.monotonic()
-            process_meta_once()
-            run_once()
-            time.sleep(2)
-        except Exception:
-            log.warning('Queue unavailable; retrying after database readiness check')
-            time.sleep(5)
+    try:
+        while not stop_event.is_set():
+            if paused():
+                publish('paused')
+                stop_event.wait(2)
+                continue
+            try:
+                publish('running')
+                if time.monotonic()-last_cleanup>3600:
+                    maintain_meta_once()
+                    last_cleanup=time.monotonic()
+                if stop_event.is_set() or paused():continue
+                process_meta_once()
+                if stop_event.is_set() or paused():continue
+                process_google_once()
+                if stop_event.is_set() or paused():continue
+                process_native_once()
+                if stop_event.is_set() or paused():continue
+                run_once()
+                publish('idle')
+                stop_event.wait(2)
+            except Exception:
+                publish('degraded')
+                log.warning('Queue unavailable; retrying after database readiness check')
+                stop_event.wait(5)
+    finally:
+        publish('stopped')
+        for sig,handler in previous.items():signal.signal(sig,handler)
+
+if __name__=='__main__':main()

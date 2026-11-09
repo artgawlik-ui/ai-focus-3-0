@@ -1,0 +1,70 @@
+{
+  "mutations": 0,
+  "secrets_persisted": false,
+  "flags": {
+    "META_ENABLED": {
+      "presence": "ustawione",
+      "format": "poprawny",
+      "effective": "OFF",
+      "inherits_legacy": false
+    },
+    "META_OAUTH_ENABLED": {
+      "presence": "puste",
+      "format": "poprawny",
+      "effective": "OFF",
+      "inherits_legacy": true
+    },
+    "META_WEBHOOK_VERIFY_ENABLED": {
+      "presence": "puste",
+      "format": "poprawny",
+      "effective": "OFF",
+      "inherits_legacy": true
+    },
+    "META_INGEST_ENABLED": {
+      "presence": "puste",
+      "format": "poprawny",
+      "effective": "OFF",
+      "inherits_legacy": true
+    },
+    "META_CRM_HISTORY_ENABLED": {
+      "presence": "puste",
+      "format": "poprawny",
+      "effective": "OFF",
+      "inherits_legacy": true
+    },
+    "META_DIAGNOSTICS_ENABLED": {
+      "presence": "puste",
+      "format": "poprawny",
+      "effective": "OFF",
+      "inherits_legacy": true
+    },
+    "META_DM_TRANSPORT_ENABLED": {
+      "presence": "puste",
+      "format": "poprawny",
+      "effective": "OFF",
+      "inherits_legacy": false
+    },
+    "AGENT_V2_ENABLED": {
+      "presence": "ustawione",
+      "format": "poprawny",
+      "effective": "ON",
+      "inherits_legacy": false
+    },
+    "AI_PAID_PROCESSING_APPROVED": {
+      "presence": "ustawione",
+      "format": "poprawny",
+      "effective": "OFF",
+      "inherits_legacy": false
+    },
+    "OFFSITE_BACKUP_ENABLED": {
+      "presence": "ustawione",
+      "format": "poprawny",
+      "effective": "OFF",
+      "inherits_legacy": false
+    }
+  },
+  "workspace_env_group_count": 0,
+  "env_group_inheritance_verified": true,
+  "meta_all_off": true,
+  "status": "PASS_CONFIG_READ"
+}

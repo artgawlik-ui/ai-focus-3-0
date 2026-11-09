@@ -1,0 +1,403 @@
+{
+  "status": "RESTORE_AND_EXPORT_POINT_INTEGRITY_PASS",
+  "production_writes": 0,
+  "app_started": false,
+  "paid_resources_created": 0,
+  "archive": {
+    "archive_bytes": 5576,
+    "archive_sha256": "0b937925512c62cab0b719fc4b73403561cb2504b78ce62e14ed711f87ff802b",
+    "gzip_crc_verified": true,
+    "members": 19,
+    "unpacked_file_bytes": 32508,
+    "data_files": 17
+  },
+  "toc": {
+    "database_version": "17.11 (Debian 17.11-1.pgdg13+2)",
+    "pg_dump_version": "17.11 (Debian 17.11-1.pgdg13+2)",
+    "archive_created_at": "2026-11-01 15:03:50 UTC",
+    "format": "DIRECTORY",
+    "database_name_matches_expected": true,
+    "header_entries": 86,
+    "entries": 82
+  },
+  "synthetic_source": true,
+  "source_tables": 17,
+  "isolation": {
+    "network_mode": "none",
+    "log_driver": "none",
+    "read_only_rootfs": true,
+    "host_mounts": 0,
+    "memory_bytes": 536870912,
+    "image_id": "sha256:81edcaa5ff2923f7be9c1f43d3e5076f29c6c9c216c86964b5fd038959404429",
+    "proxy_variables_empty": true,
+    "all_meta_flags_false": true
+  },
+  "restore_seconds": 0.15,
+  "tables": {
+    "activities": {
+      "export_copy": {
+        "count": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "restored_copy": {
+        "count": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "copy_matches": true,
+      "restored_json": {
+        "count": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      }
+    },
+    "alembic_version": {
+      "export_copy": {
+        "count": 1,
+        "sha256": "69b073c7ca6356375b120e57750ab9d4e1cc2a231a9661af39925aa51eceb739"
+      },
+      "restored_copy": {
+        "count": 1,
+        "sha256": "69b073c7ca6356375b120e57750ab9d4e1cc2a231a9661af39925aa51eceb739"
+      },
+      "copy_matches": true,
+      "restored_json": {
+        "count": 1,
+        "sha256": "03cb6786645e764292d1da0aa4fa03ef85bbea1f3df9e021227a9fa62a3f9001"
+      }
+    },
+    "appointments": {
+      "export_copy": {
+        "count": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "restored_copy": {
+        "count": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "copy_matches": true,
+      "restored_json": {
+        "count": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      }
+    },
+    "integration_links": {
+      "export_copy": {
+        "count": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "restored_copy": {
+        "count": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "copy_matches": true,
+      "restored_json": {
+        "count": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      }
+    },
+    "jobs": {
+      "export_copy": {
+        "count": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "restored_copy": {
+        "count": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "copy_matches": true,
+      "restored_json": {
+        "count": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      }
+    },
+    "login_attempts": {
+      "export_copy": {
+        "count": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "restored_copy": {
+        "count": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "copy_matches": true,
+      "restored_json": {
+        "count": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      }
+    },
+    "meta_conversations": {
+      "export_copy": {
+        "count": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "restored_copy": {
+        "count": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "copy_matches": true,
+      "restored_json": {
+        "count": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      }
+    },
+    "meta_credentials": {
+      "export_copy": {
+        "count": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "restored_copy": {
+        "count": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "copy_matches": true,
+      "restored_json": {
+        "count": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      }
+    },
+    "meta_messages": {
+      "export_copy": {
+        "count": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "restored_copy": {
+        "count": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "copy_matches": true,
+      "restored_json": {
+        "count": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      }
+    },
+    "meta_oauth_states": {
+      "export_copy": {
+        "count": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "restored_copy": {
+        "count": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "copy_matches": true,
+      "restored_json": {
+        "count": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      }
+    },
+    "meta_privacy_requests": {
+      "export_copy": {
+        "count": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "restored_copy": {
+        "count": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "copy_matches": true,
+      "restored_json": {
+        "count": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      }
+    },
+    "meta_refresh_states": {
+      "export_copy": {
+        "count": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "restored_copy": {
+        "count": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "copy_matches": true,
+      "restored_json": {
+        "count": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      }
+    },
+    "meta_webhook_inbox": {
+      "export_copy": {
+        "count": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "restored_copy": {
+        "count": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "copy_matches": true,
+      "restored_json": {
+        "count": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      }
+    },
+    "salons": {
+      "export_copy": {
+        "count": 1,
+        "sha256": "8816434b2d8adbc4e38d54f5b556d6d054e9272725d30d07beaa7f7f9e3aa419"
+      },
+      "restored_copy": {
+        "count": 1,
+        "sha256": "8816434b2d8adbc4e38d54f5b556d6d054e9272725d30d07beaa7f7f9e3aa419"
+      },
+      "copy_matches": true,
+      "restored_json": {
+        "count": 1,
+        "sha256": "881a9ba7dc8bde1d3cab64e3b6c5e2d71002083b1a01f752ac607a41324837da"
+      }
+    },
+    "sessions": {
+      "export_copy": {
+        "count": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "restored_copy": {
+        "count": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "copy_matches": true,
+      "restored_json": {
+        "count": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      }
+    },
+    "trainings": {
+      "export_copy": {
+        "count": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "restored_copy": {
+        "count": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "copy_matches": true,
+      "restored_json": {
+        "count": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      }
+    },
+    "users": {
+      "export_copy": {
+        "count": 1,
+        "sha256": "fae00a8ab49eac6844f51c69bdff8ce32ab4226187ec0c27750dde6ccb7293a8"
+      },
+      "restored_copy": {
+        "count": 1,
+        "sha256": "fae00a8ab49eac6844f51c69bdff8ce32ab4226187ec0c27750dde6ccb7293a8"
+      },
+      "copy_matches": true,
+      "restored_json": {
+        "count": 1,
+        "sha256": "32424062c8af3198d8c7a56d75fee4d105d34e4c1eca8afa8e621f492650e3f7"
+      }
+    }
+  },
+  "revision": "004",
+  "schema": {
+    "columns": {
+      "count": 127,
+      "sha256": "6139163a32d3e1a1b839430a7bb619c19594acdc383c9d5e8acce9c2fda8a431"
+    },
+    "indexes": {
+      "count": 34,
+      "sha256": "c6f552911d8779c6c3cc52f8e36619838aa55e2f7b177a7372c6ea886bd40693"
+    },
+    "constraints": {
+      "count": 40,
+      "sha256": "6f7a13455ba16d3766e047c5f871c1a2cd4f35ea009c089619b6a54df583616f"
+    },
+    "expected_tables": [
+      "activities",
+      "alembic_version",
+      "appointments",
+      "integration_links",
+      "jobs",
+      "login_attempts",
+      "meta_conversations",
+      "meta_credentials",
+      "meta_messages",
+      "meta_oauth_states",
+      "meta_privacy_requests",
+      "meta_refresh_states",
+      "meta_webhook_inbox",
+      "salons",
+      "sessions",
+      "trainings",
+      "users"
+    ],
+    "table_count": 17
+  },
+  "orm_compatibility": {
+    "columns": {
+      "matches": true,
+      "actual": {
+        "count": 127,
+        "sha256": "15eca8aeb484d4abeb84c92e7c03233997c2bc511bb873abf2e70fc5451e27c8"
+      },
+      "expected": {
+        "count": 127,
+        "sha256": "15eca8aeb484d4abeb84c92e7c03233997c2bc511bb873abf2e70fc5451e27c8"
+      }
+    },
+    "constraints": {
+      "matches": true,
+      "actual": {
+        "count": 40,
+        "sha256": "27175f94899f5e89755579a897aef212b1fa5ef82e5cda47da49f6285ad8417f"
+      },
+      "expected": {
+        "count": 40,
+        "sha256": "27175f94899f5e89755579a897aef212b1fa5ef82e5cda47da49f6285ad8417f"
+      }
+    },
+    "indexes": {
+      "matches": true,
+      "actual": {
+        "count": 8,
+        "sha256": "31c049ba676210716ba33c687c445c95a8b8ad066b3c93d966ecfedc2bd11c57"
+      },
+      "expected": {
+        "count": 8,
+        "sha256": "31c049ba676210716ba33c687c445c95a8b8ad066b3c93d966ecfedc2bd11c57"
+      }
+    }
+  },
+  "toc_schema_comparison": {
+    "source": {
+      "TABLE": 17,
+      "TABLE DATA": 17,
+      "CONSTRAINT": 26,
+      "INDEX": 8,
+      "FK CONSTRAINT": 14
+    },
+    "restored": {
+      "TABLE": 17,
+      "FK CONSTRAINT": 14,
+      "CONSTRAINT": 26,
+      "INDEX": 8,
+      "TABLE DATA": 17
+    },
+    "matches": true
+  },
+  "snapshot_time_evaluation_utc": "2026-11-01T15:03:50+00:00",
+  "statuses": {
+    "inbox": [],
+    "credentials": {
+      "total": 0,
+      "active": 0,
+      "missing_ciphertext": 0
+    },
+    "refresh": [],
+    "technical": {
+      "total": 0,
+      "active": 0
+    },
+    "technical_sessions_at_export": 0,
+    "runtime": {
+      "listen_addresses": "",
+      "max_worker_processes": "0",
+      "preload": ""
+    }
+  },
+  "isolated_container_removed": true,
+  "temporary_plaintext_removed": true,
+  "total_validation_seconds": 7.902
+}
