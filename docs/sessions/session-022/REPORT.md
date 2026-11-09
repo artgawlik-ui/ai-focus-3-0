@@ -107,3 +107,26 @@ Selektor klienta był jeszcze niegotowy; disabledselect pomijało poleFormData, 
 przycisk pozwalał wysłać formularz. Dodano sygnał gotowości selektora i blokadę obu
 formularzy do czasu wybrania dozwolonego klienta. Bez pomijania kroku/zwiększania timeoutu.
 PełnyCI poprawionegoSHA wymagany przedPASS. PomiarySQL nie zmieniły się po korekcieUI.
+
+## Korekta końcowego CI — 2026-11-09
+
+Wejście aa548627a022f259c4d4d22b94e05260b887320d, workflow42314285868,
+job128223006037:331backendPASS, buildPASS, ChromiumPASS. WebKit zatrzymał się
+w Page.screenshot(full_page=True): „Cannot take screenshot larger than32767 pixels
+on any dimension”. Audyty nie ruszyły (skipped po błędzieE2E), więc sesja nie jestPASS.
+Chromium zostawił45syntetycznych zadań; dashboard iPhone/DPR3 przekroczył limit bitmapy.
+
+Naprawa: pełna sekwencja viewportów z nakładaniem i manifestem kompletności zamiast
+jednej wielkiej bitmapy, zachowanie scrolla, fail-closed przy luce lub ucięciu.
+Żaden krok funkcjonalny, WebKit ani audyt nie został pominięty; bez zwiększania timeoutów.
+Syntetyczny długi dokument sprawdza oba silniki i zapisuje odtworzenie starego limitu
+wWebKit. Dodano4testy geometrii/pokrycia i awarii. Panel sygnalizuje ładowanie aria-busy;
+E2E czeka standardową asercją lokatora (bez unsafe-eval i osłabianiaCSP).
+BuildTS/VitePASS;4nowe testyPASS; regresja102PASS/58.61s. LokalnyWebKit odtworzył
+limit32767 na dokumencie syntetycznym, nowa sekwencja objęła cały dokument.
+Wynik pełnegoCI naprawionegoSHA wymagany przedPASS.
+
+Lokalne odtworzenie odblokowało dalszy krokWebKit: nowe zadanie o priorytecie low
+nie było na pierwszej stronie po45zadaniach normal pozostawionych przezChromium.
+Test teraz wyszukuje nowy tytuł i potwierdza pusty wynik przed utworzeniem, a potem
+sprawdza zapis/ukończenie/kontakt. Nie zmieniono kolejności ani limitów listy aplikacji.

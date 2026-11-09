@@ -2,8 +2,9 @@
 import json, os, time
 from pathlib import Path
 from urllib.parse import urlsplit,parse_qs,urlencode
-from playwright.sync_api import sync_playwright
+from playwright.sync_api import sync_playwright,expect
 from scripts.local_test_policy import local_origin
+from tests.browser_capture import capture_page,screenshot_probe
 origin=local_origin()
 isolated=origin.startswith('http://127.0.0.1:')
 credentials=json.loads(Path(os.environ['FOCUS_TEST_CREDENTIAL_FILE']).read_text())
@@ -14,6 +15,7 @@ with sync_playwright() as p:
     for label,engine,options,executable in cases:
         browser=engine.launch(executable_path=executable if Path(executable).exists() else None,headless=True,args=['--no-sandbox'] if label.startswith('chromium') else [])
         context=browser.new_context(**options)
+        capture_regression=screenshot_probe(context,label,'test-results')
         page=context.new_page();errors=[];native_metrics={}
         page.on('pageerror',lambda err:errors.append(str(err)))
         page.goto(origin);page.get_by_label('Adres e-mail').fill(credentials['email']);page.get_by_label('Hasło',exact=True).fill(credentials['password']);page.get_by_role('button',name='Wejdź do swojej przestrzeni').click()
@@ -21,7 +23,10 @@ with sync_playwright() as p:
         page.get_by_role('heading',name='Przegląd sprzedaży').wait_for()
         page.get_by_text('Salony w bazie',exact=True).wait_for()
         assert page.evaluate('document.documentElement.scrollWidth<=innerWidth')
-        page.screenshot(path='test-results/'+label+'-production-dashboard.png',full_page=True)
+        if isolated:
+            page.get_by_label('Centrum pracy Focus',exact=True).get_by_role('heading',name='Zadania i wynik kontaktu',exact=True).wait_for()
+            expect(page.locator('[aria-busy=true]')).to_have_count(0)
+        dashboard_capture=capture_page(page,'test-results/'+label+'-production-dashboard.png')
         if label=='webkit-iphone':page.get_by_label('Otwórz menu').click()
         page.get_by_role('button',name='Baza salonów',exact=True).click()
         page.get_by_label('Szukaj salonu').fill('[TEST TECHNICZNY]')
@@ -132,6 +137,10 @@ with sync_playwright() as p:
             section.get_by_role('heading',name='Zadania i wynik kontaktu',exact=True).wait_for()
             assert page.request.get(origin+'/api/focus-calendar/contacts').status==200
             assert page.request.get(origin+'/api/focus-calendar/tasks').json()
+            # The second engine inherits 45 higher-priority tasks. Search the new
+            # task explicitly rather than assuming it belongs to the first page.
+            section.get_by_label('Szukaj w planie',exact=True).fill('Syntetyczne zadanie '+label)
+            section.get_by_label('Strony zadań',exact=True).get_by_text('0 / 0',exact=True).wait_for()
             section.get_by_label('Tytuł zadania',exact=True).fill('Syntetyczne zadanie '+label)
             section.get_by_label('Termin zadania — Warszawa',exact=True).fill('2027-03-20T10:00')
             section.get_by_role('button',name='Dodaj zadanie',exact=True).click()
@@ -175,6 +184,6 @@ with sync_playwright() as p:
         page.get_by_role('heading',name='Zaloguj się do Ai Focus').wait_for()
         assert page.request.get(origin+'/api/salons').status==401
         assert not errors,errors
-        results.append({'browser':label,'login':True,'logout':True,'private_data_not_in_service_worker_cache':True,'crm_read':True,'crm_write_on_isolated_copy':isolated,'no_horizontal_scroll':True,'pwa_manifest_icons':True,'apple_standalone_meta':True,'service_worker_offline_fallback':True,'javascript_errors':errors,'native_pagination':native_metrics})
-        context.close();browser.close();print(label+': PASS '+json.dumps({'native_pagination':native_metrics}))
+        results.append({'browser':label,'login':True,'logout':True,'private_data_not_in_service_worker_cache':True,'crm_read':True,'crm_write_on_isolated_copy':isolated,'no_horizontal_scroll':True,'pwa_manifest_icons':True,'apple_standalone_meta':True,'service_worker_offline_fallback':True,'javascript_errors':errors,'native_pagination':native_metrics,'capture_regression':capture_regression,'dashboard_capture_tiles':len(dashboard_capture['tiles'])})
+        context.close();browser.close();print(label+': PASS '+json.dumps({'native_pagination':native_metrics,'capture_regression':capture_regression,'dashboard_capture_tiles':len(dashboard_capture['tiles'])}))
 Path('test-results/production-browser-check.json').write_text(json.dumps(results,indent=2))

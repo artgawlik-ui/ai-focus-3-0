@@ -1,3 +1,14 @@
+# Sesja022 — naprawa końcowegoCI, 2026-11-09
+
+Workflow42314285868/aa54862FAIL: backend331 i build/ChromiumPASS, WebKit przerwany
+limitem bitmapy32767px w pełnym screenshot. Audyty skipped, sesja022 jeszczeINPROGRESS.
+Naprawa zachowuje cały dokument jako sekwencję viewportów, bez pomijania testów i bez
+wydłużania timeoutów.4nowe testy; wymagany pełnyCI nowegoSHA przedPASS i przed023.
+ProdukcjaBLOCKED: SQL004/17,RPO60,magazyn-klucz,rollback/handoff. Bez produkcji/007/
+merge/deploy/Google/Meta/DM/kosztów;PR3Draft. ≥5podstawowych+≥1DM.
+
+---
+
 # Wznowienie po sesji022
 
 Wejścieffeabe0/CI42307197721 SUCCESS/304 potwierdzone, PR3Draft. Nowe: paginacja
