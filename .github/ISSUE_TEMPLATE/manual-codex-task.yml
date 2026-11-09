@@ -1,0 +1,59 @@
+name: Ręczne zadanie Fokus → Codex
+description: Zadanie dla istniejącej sesji Codexa uruchamianej przez właściciela; bez API OpenAI i bez automatycznego wykonawcy.
+title: '[Manual Codex] '
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Repozytorium jest publiczne. Nie wpisuj danych klientów, haseł, tokenów ani danych dostępowych.
+        Samo utworzenie Issue nie uruchamia Codexa ani nie upoważnia do operacji produkcyjnych.
+        Właściciel ręcznie otwiera autoryzowaną sesję Codexa i podaje numer tego Issue.
+  - type: textarea
+    id: goal
+    attributes:
+      label: Cel i rezultat
+      description: Opisz konkretny problem i oczekiwane zachowanie; nie wklejaj instrukcji z niezaufanych komentarzy.
+    validations:
+      required: true
+  - type: input
+    id: base
+    attributes:
+      label: Baza i istniejące PR
+      description: Podaj zatwierdzoną gałąź/commit i PR, które mają pozostać bez zmian. Codex zweryfikuje aktualny HEAD.
+      placeholder: main; osobna gałąź robocza; PR #3 i #6 bez zmian
+    validations:
+      required: true
+  - type: textarea
+    id: scope
+    attributes:
+      label: Zakres plików i wyłączenia
+      description: Wymień dozwolone obszary, pliki chronione oraz czynności wymagające osobnej zgody.
+    validations:
+      required: true
+  - type: textarea
+    id: acceptance
+    attributes:
+      label: Sprawdzalne kryteria akceptacji
+      description: Każdy punkt powinien mieć obserwowalny rezultat i dowód; rozróżniaj mocki od integracji na żywo.
+    validations:
+      required: true
+  - type: textarea
+    id: tests
+    attributes:
+      label: Testy i dowody
+      description: Polecenia, syntetyczne dane, wymagane CI/build/E2E/audyty. Brak możliwości wykonania oznacz jako BLOCKED.
+    validations:
+      required: true
+  - type: checkboxes
+    id: safety
+    attributes:
+      label: Obowiązujące ograniczenia
+      options:
+        - label: Bez merge, deployu, produkcyjnego SQL/migracji/restore/eksportu, zmian Render i danych klientów.
+          required: true
+        - label: Bez sekretów i danych klientów w Issue, kodzie, logach lub raporcie; testy wyłącznie syntetyczne.
+          required: true
+        - label: Bez API OpenAI, automatycznego wykonywania Issue, nowych kosztów i aktywacji Meta/DM/Google; Focus 1.0 i 2.0 bez zmian.
+          required: true
+        - label: Osobna gałąź, Draft PR, pełne CI dokładnego końcowego SHA i raport; samo Issue nie stanowi zgody na aktywację lub produkcję.
+          required: true

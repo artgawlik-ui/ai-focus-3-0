@@ -165,9 +165,21 @@ def test_owner_diagnostics_and_approved_retention(monkeypatch,caplog):
     persist(event('pending-alert'))
     with Session() as db:
         row=db.scalar(select(MetaWebhookInbox));row.created_at=(at-timedelta(seconds=301)).isoformat();db.commit()
+        # Host uptime can be <60s on fresh CI runners. Control the module clock,
+        # rather than assuming the machine has already passed the alert cooldown.
+        from types import SimpleNamespace
+        clock=[120.0]
+        monkeypatch.setattr('backend.meta_inbox.time',SimpleNamespace(monotonic=lambda:clock[0]))
         monkeypatch.setattr('backend.meta_inbox._last_alert',0)
         maintenance(db,at)
         assert 'requires owner review' in caplog.text
+        assert 'pending-alert' not in caplog.text
+        caplog.clear();clock[0]=179.9
+        maintenance(db,at)
+        assert 'requires owner review' not in caplog.text
+        clock[0]=180.0
+        maintenance(db,at)
+        assert caplog.text.count('requires owner review')==1
         assert 'pending-alert' not in caplog.text
 
 
