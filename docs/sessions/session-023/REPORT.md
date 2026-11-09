@@ -89,3 +89,13 @@ Nowy endpoint diagnostyczny nie ma zadeklarowanego SLA dla takich rozmiarów.
 
 Finalny dopisek dokumentacyjny ma własne CI: wynik dokładnego HEAD sprawdzić w PR #3.
 Nie wykonano żadnych operacji produkcyjnych. Następny krok i blokady pozostają powyżej.
+
+## Końcowa korekta prezentacji nieprawidłowego czasu
+
+Wykryto nieścisłość UI: queued>0 z brakiem wiarygodnej daty nie może być opisane jako
+„brak oczekujących”. Panel pokazuje „brak wiarygodnej daty”; licznik queued pozostaje
+widoczny. E2E dodaje kontrolowaną odpowiedź diagnostyczną z takim stanem, sprawdza
+napis, a następnie usuwa mock. Zwykłe odczyty syntetycznej bazy oraz wszystkie dalsze
+scenariusze są zachowane. Nie zmieniono timeoutów, flag ani zachowania kolejki.
+Pełny końcowy CI nowego HEAD wymagany przed zamknięciem.359 testów backendu pozostaje
+w zestawie; dodatkowa asercja dotyczy obu silników E2E.

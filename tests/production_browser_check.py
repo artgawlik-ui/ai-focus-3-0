@@ -127,6 +127,13 @@ with sync_playwright() as p:
             operations=page.get_by_label('Diagnostyka kolejki Focus',exact=True)
             operations.get_by_role('button',name='Odczytaj stan kolejki',exact=True).click()
             operations.get_by_text('Świeży sygnał procesu nie potwierdza wykonania przypomnień.',exact=False).wait_for()
+            # A queued job with an invalid timestamp is not an empty queue.
+            snapshot=page.request.get(origin+'/api/focus-calendar/diagnostics').json()
+            snapshot['agent_jobs'].update(queued=1,oldest_queued_age_seconds=None)
+            page.route('**/api/focus-calendar/diagnostics',lambda route:route.fulfill(json=snapshot))
+            operations.get_by_role('button',name='Odczytaj stan kolejki',exact=True).click()
+            operations.get_by_text('Wiek najstarszego oczekującego zadania agenta: brak wiarygodnej daty.',exact=True).wait_for()
+            page.unroute('**/api/focus-calendar/diagnostics')
             operations.get_by_role('button',name='Pokaż podgląd retencji',exact=True).click()
             operations.get_by_text('Kasowanie nie jest dostępne.',exact=False).wait_for()
             assert page.evaluate('document.documentElement.scrollWidth<=innerWidth')

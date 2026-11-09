@@ -1,3 +1,13 @@
+# Końcowa korekta 023 — weryfikacja dokładnego HEAD
+
+126f428: pełny workflow PR42643885494 SUCCESS/359 PASS, oba silniki/build/audyty PASS.
+Późniejsza korekta UI rozróżnia queued>0 z nieznaną datą od pustej kolejki; dodano
+asercję obu silników na kontrolowanej odpowiedzi. Końcowy CI tego nowego HEAD
+sprawdzić przed PASS; raport023 opisuje zakres. Bez zmian produkcyjnych, PR3 Draft.
+Wszystkie bramki produkcyjne i szacunek ≥5+≥1 DM bez zmian.
+
+---
+
 # Sesje 022 i 023 — PASS dla kodu; wydanie produkcyjne BLOCKED
 
 2026-11-09. Naprawa 022: a11c8aa5dbee197183a719761bb9a06aaba48b50,
