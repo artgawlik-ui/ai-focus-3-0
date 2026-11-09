@@ -1,3 +1,31 @@
+# Ostatni zweryfikowany kod: sesje 022 i 023 PASS
+
+2026-11-09: eb59668bdb7e94552a10f7197c284d81c5658c79 — oba pełne workflow
+PR42645957182 i push42645944159 SUCCESS.359 testów PASS (137.91 s), build,
+Chromium/WebKit (w tym błędna data kolejki pod aktywnym service workerem), oba audyty
+PASS,0 znanych podatności.24 nowe testy023,4 nowe testy naprawy022 (55 od wejścia304).
+Testy syntetyczne, WebKit to emulacja iPhone; brak nowego testu fizycznego urządzenia.
+
+022: naprawiony limit bitmapy32767px, pełne pokrycie w sekwencji ujęć.023: panel
+menedżera z licznikami kolejki, sygnałem lokalnego workera i podglądem retencji.
+Flaga FOCUS_DIAGNOSTICS_ENABLED domyślnie OFF. Brak wykonawcy retencji, DML i aktywacji.
+Nieznana data nie jest pustą kolejką; heartbeat nie jest dowodem sukcesu cyklu.
+Fixture w lokalnym proxy nie omija auth ani service workera. Raport023 opisuje także
+nieudany f2b59d4/CI42645393621 i jego rzeczywistą przyczynę.
+
+Sprawdź aktualny HEAD i Checks PR #3; ostatni dopisek dokumentacyjny ma własny SHA/CI.
+Nie powtarzaj zakończonej implementacji 022–023. Kolejny etap: dowody wydania,
+w pierwszej kolejności zatwierdzony wewnętrzny kanał READ ONLY do4SELECT sesji005.
+Nie ponawiaj SSH bez nowego aktywnego grantu. Zgoda A nadal004/17, bez rozszerzenia.
+
+Wydanie produkcyjne BLOCKED: aktualny SQL/konta, RPO≤60 min, trwałe kopie/klucz,
+rollback Render i zatwierdzony handoff. Szacunek bez zmian: ≥5 podstawowych +≥1 DM.
+Bez produkcji, merge/deploy, migracji007, eksportów/restore/PITR, Google/Meta/DM,
+zmian konfiguracji i kosztów. PR3Draft, Focus1/2 nietknięte, prywatneZIP-y zachowane.
+Brak pracy w tle po zakończeniu wykonania. Szczegóły: docs/sessions/session-022 i023.
+
+---
+
 # Końcowa korekta 023 — weryfikacja dokładnego HEAD
 
 126f428: pełny workflow PR42643885494 SUCCESS/359 PASS, oba silniki/build/audyty PASS.

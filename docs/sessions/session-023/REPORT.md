@@ -82,7 +82,8 @@ Nowy endpoint diagnostyczny nie ma zadeklarowanego SLA dla takich rozmiarów.
 
 - backend/native_diagnostics.py, backend/native_planning.py, backend/main.py
 - frontend/src/NativeOperationsPanel.tsx, frontend/src/main.tsx
-- tests/test_native_diagnostics.py, tests/ci_e2e.py, tests/production_browser_check.py
+- tests/test_native_diagnostics.py, tests/ci_e2e.py, tests/production_browser_check.py,
+  tests/offline_proxy.py
 - docs/sessions/session-023/ACCEPTANCE.md, OPERATIONS_PREVIEW.md, REPORT.md,
   local-browser-results.json
 - RESUME.md, docs/reports/MORNING_PROGRESS_REPORT.md
@@ -107,3 +108,22 @@ więc nowa asercja nie przeszła. Fixture przeniesiono do istniejącego lokalneg
 w prawidłowej odpowiedzi200 diagnostyki. Nie omija auth i nie wyłącza service workera.
 Try/finally usuwa znacznik; proxy kończy pracę i katalog jest usuwany po teście.
 Scenariusz pozostaje obowiązkowy w obu silnikach, bez zwiększania timeoutów.
+
+## Ostateczny dowód po korekcie daty i narzędzia testowego
+
+Kod eb59668bdb7e94552a10f7197c284d81c5658c79: pełne workflow
+PR42645957182 i push42645944159 **SUCCESS**.
+https://github.com/artgawlik-ui/ai-focus-3-0/actions/runs/42645957182
+Job129259141033: **359 PASS / 0 FAIL / 0 SKIP, 137.91 s**. Build, Chromium i WebKit,
+w tym obowiązkowy przypadek nieznanej daty kolejki pod aktywnym service workerem,
+oba audyty PASS; **0 znanych podatności**. Poprzedni f2b59d4/CI42645393621 miał359
+backendPASS i timeout tej asercji WebKit; naprawiono warstwę fixture, nie usunięto testu.
+Lokalnie pełne oba silniki również PASS po zmianie proxy.
+
+Końcowe pomiary CI wyszukiwanie/strona: Chromium436.20/186.69 ms,
+WebKit411.10/254.20 ms,45rekordów, strony20. Nie są to SLA ani test fizycznego iPhone.
+
+Status funkcjonalny023 **PASS** w dozwolonym środowisku. Produkcja **BLOCKED** przez
+wcześniej wymienione bramki. Końcowy dopisek dokumentacyjny jest bez zmian kodu;
+jego dokładny HEAD i pełny wynik CI są publikowane w opisie Draft PR #3 i raporcie
+końcowym sesji. Nie uruchomiono żadnych operacji produkcyjnych ani integracji.
