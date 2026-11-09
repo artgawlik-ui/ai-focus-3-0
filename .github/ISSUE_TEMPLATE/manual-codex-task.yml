@@ -20,7 +20,7 @@ body:
     attributes:
       label: Baza i istniejące PR
       description: Podaj zatwierdzoną gałąź/commit i PR, które mają pozostać bez zmian. Codex zweryfikuje aktualny HEAD.
-      placeholder: main; osobna gałąź robocza; PR #3 i #6 bez zmian
+      placeholder: 'main; osobna gałąź robocza; PR #3 i #6 bez zmian'
     validations:
       required: true
   - type: textarea

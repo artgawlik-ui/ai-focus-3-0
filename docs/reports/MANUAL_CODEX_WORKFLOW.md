@@ -1,7 +1,10 @@
 # Issue #7 — ręczny workflow Fokus → GitHub → Codex
 
 Data: 9 listopada 2026, Europe/Warsaw.
-**Status przed publikacją i CI: IN PROGRESS.** Nie deklarujemy jeszcze PASS całego przepływu.
+**Test ręcznego przekazania Issue → istniejący Codex → zmiana → Draft PR → CI → raport: PASS**
+dla opublikowanego kodu7f88096. Nie jest to test automatycznego wykonawcy lub niezależnego
+przeglądu przez Fokus. Końcowy dopisek dokumentacyjny i poprawny zapis placeholdera YAML
+mają własny SHA/Checks, sprawdzane przed zamknięciem zadania i raportowane w Issue #7.
 
 ## Autoryzacja i izolacja
 
@@ -54,8 +57,8 @@ nie pojawia się jeszcze jako zainstalowany formularz domyślnej gałęzi bez zg
 | Issue istnieje i ma dozwolony zakres | rzeczywisty odczyt [#7](https://github.com/artgawlik-ui/ai-focus-3-0/issues/7), autor/admin potwierdzeni | PASS |
 | Właściciel uruchomił Codexa ręcznie | bieżąca dyspozycja właściciela w sesji Codexa: odczyt #7, dokumentacja/test/Draft PR | PASS w tej sesji |
 | Codex wykonał nieszkodliwą zmianę | instrukcja, formularz, prompt i plik przykładowy w osobnej gałęzi | PASS lokalny |
-| Zapis GitHub, Draft PR i CI dokładnego SHA | uzupełnić po rzeczywistym push i zakończonych workflow | IN PROGRESS |
-| Raport w GitHub do odczytu przez Fokus | uzupełnić po sprawdzeniu wyniku CI | IN PROGRESS |
+| Zapis GitHub, Draft PR i CI dokładnego SHA | [Draft PR #8](https://github.com/artgawlik-ui/ai-focus-3-0/pull/8), SHA7f880960b34bbcc0fee47693ea030bb9998b06c0, oba CI SUCCESS | PASS |
+| Raport w GitHub do odczytu przez Fokus | [komentarz Issue #7](https://github.com/artgawlik-ui/ai-focus-3-0/issues/7#issuecomment-6752742954), zapis rzeczywiście potwierdzony | PASS |
 | Osobna instancja Fokus samodzielnie utworzyła Issue i niezależnie oceniła wynik | nie obserwowano tych operacji; nie przypisujemy ich sobie | NIEZWERYFIKOWANE |
 
 To test ręcznego uruchomienia istniejącego Codexa. Nie użyto mocka wykonawcy ani nie
@@ -97,3 +100,26 @@ Walidacja lokalna: parser YAML PASS (6 pól, wymagane odpowiedzi i checkboxy),
 13 lokalnych odnośników w6plikach Markdown PASS; `git diff --check` PASS.
 `git diff -- .github/workflows` jest pusty: nie dodano ani nie zmieniono wykonawcy.
 0 nowych metod testów jednostkowych; pełny dotychczasowy zestaw uruchamia CI.
+
+## Dowody wykonania i wynik CI
+
+Commit implementacyjny **7f880960b34bbcc0fee47693ea030bb9998b06c0** jest w GitHub.
+[CI push42708132895](https://github.com/artgawlik-ui/ai-focus-3-0/actions/runs/42708132895)
+i [CI PR42708200556](https://github.com/artgawlik-ui/ai-focus-3-0/actions/runs/42708200556):
+**SUCCESS**. Job129470269285: `80 passed, 2 warnings in 28.09s`.
+Build PASS, `chromium-desktop: PASS`, `webkit-iphone: PASS`; npm audit0podatności,
+pip-audit `No known vulnerabilities found`. WebKit jest testem przeglądarkowym,
+nie testem na fizycznym iPhonie. To80 testów aktualnego main, nie112 z PR #6
+ani380 z niepołączonego wydania PR #3; żadnych testów nie usunięto.
+
+Końcowa walidacja formularza uwzględnia również pełny tekst placeholdera PR #3/#6:
+wartość ujęto w cudzysłowy, aby YAML nie traktował # jako początku komentarza.
+Parser/pola/checkboxy,13linków i diff-check PASS. Osiem zmienionych plików: formularz,
+README,RESUME,instrukcja,prompt,artefakt,ten raport oraz deterministyczny test.
+Bez zmian `.github/workflows`, runtime lub zależności.
+
+Prawdziwy test ręcznej sesji nie jest zablokowany przez brak API OpenAI. Osobna ocena
+przez Fokus pozostaje **NIEZWERYFIKOWANA**, a instalacja formularza na main **READY do
+osobnej decyzji**, niewykonana. Nie ma zgody na merge/deploy. Automatyzacja PR #6
+nadal nieaktywna; jej E2E jest osobno BLOCKED. Wynik dokładnego końcowego SHA jest
+opublikowany po zakończeniu jego CI w powyższym komentarzu i opisie Draft PR #8.
