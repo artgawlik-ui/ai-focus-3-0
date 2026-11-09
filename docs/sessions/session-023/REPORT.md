@@ -99,3 +99,11 @@ napis, a następnie usuwa mock. Zwykłe odczyty syntetycznej bazy oraz wszystkie
 scenariusze są zachowane. Nie zmieniono timeoutów, flag ani zachowania kolejki.
 Pełny końcowy CI nowego HEAD wymagany przed zamknięciem.359 testów backendu pozostaje
 w zestawie; dodatkowa asercja dotyczy obu silników E2E.
+
+Test błędnej daty wymaga wstrzyknięcia odpowiedzi poniżej service workera. Lokalnie
+Chromium przyjął page.route, ale WebKit pominął tę kontrolę i odczytał prawdziwy wynik,
+więc nowa asercja nie przeszła. Fixture przeniesiono do istniejącego lokalnego proxy
+(127.0.0.1, prywatny znacznik w katalogu testowym); zmienia wyłącznie pole wieku/licznik
+w prawidłowej odpowiedzi200 diagnostyki. Nie omija auth i nie wyłącza service workera.
+Try/finally usuwa znacznik; proxy kończy pracę i katalog jest usuwany po teście.
+Scenariusz pozostaje obowiązkowy w obu silnikach, bez zwiększania timeoutów.
