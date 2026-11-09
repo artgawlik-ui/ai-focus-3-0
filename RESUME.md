@@ -1,3 +1,51 @@
+# Wznowienie po limitach — potwierdzony końcowy CI 024–025
+
+Data weryfikacji: 9 listopada 2026 (Europe/Warsaw). Lokalny i zdalny HEAD przed
+aktualizacją dokumentacji: `0fb910585716f93d066119c293bc8d6d7baf8add`.
+Oba workflow tego dokładnego SHA zakończyły się **SUCCESS**:
+- PR: https://github.com/artgawlik-ui/ai-focus-3-0/actions/runs/42658580614
+- push: https://github.com/artgawlik-ui/ai-focus-3-0/actions/runs/42658570796
+
+Log job129303663719: **380 PASS / 0 FAIL / 0 SKIP, 150.92 s**; build, Chromium,
+WebKit i oba audyty PASS; **0 znanych podatności**. Historyczne wyłączenie operatorskiego
+cleanup w workflow nie zostało zmienione. Nie uruchamiano ponownie lokalnych testów ani
+sesji024–025 i nie dodano testów. PR #3 nadal Draft, bez merge. Prywatne ZIP-y zachowane.
+
+Ponowny odczyt środowiska: revision5/current/enforced, puste granty TCP, VPN=false.
+**0 prób SSH i 0 SELECT-ów produkcyjnych.** Pliki zatwierdzonego pakietu A niezmienione;
+SHA SQL: `795af23ad5acb4d0af451f683e10c9cdfcdcdd10d64bd0f58d6d5b29782815fb`.
+Nie wykonano świeżych odczytów stanu produkcyjnej bazy. Metadane Render z024 pozostają
+historycznym dowodem opisanym w PRODUCTION_READINESS, nie nowym potwierdzeniem.
+
+## Konkretna checklista operatora — produkcja nadal BLOCKED
+
+1. **SQL:** udostępnić faktycznie działający, już zatwierdzony wewnętrzny Shell/SSH
+   istniejącej usługi; potwierdzić host i autoryzację oraz prywatnie tożsamości kont.
+   Dopiero wtedy agent wykona dokładnie4SELECT-y005 w jednej READ ONLY REPEATABLE READ
+   transakcji. A już udzielona: tylko004/17 tabel, bez publicznej allowlisty i nowych ról.
+2. **PITR/RPO:** w Render → ai-focus-3-0-db → Recovery uzyskać latest recoverable timestamp
+   lub potwierdzenie skutecznego punktu/WAL lag od providera, z wiekiem≤60min. AVAILABLE
+   i ograniczenie ostatnich10min nie wystarczają. Test PITR/restore oraz ewentualny koszt
+   wymagają osobnej zgody; teraz niczego nie uruchamiać.
+3. **Kopia i klucz:** potwierdzić trwały magazyn, aktualny obiekt/manifest/hash/retencję
+   oraz niezależne przechowywanie wersji klucza i możliwość odzyskania go przez operatora.
+   Nie przekazywać wartości klucza ani sekretów w rozmowie. Nowa kopia/test restore
+   lub zmiana konfiguracji wymagają odrębnej autoryzacji.
+4. **Rollback:** Render → ai-focus-3-0 → Deploys: potwierdzić zachowany artefakt i start/env
+   konkretnego celu bez klikania Rollback. D15265b nie obsługuje rewizji007; zgodny wariant
+   powrotu musi być zatwierdzony. Bez downgrade/stamp, rebuild lub deployu w tej sesji.
+5. **Handoff:** zatwierdzić plan nowego workera w pauzie, dowód wyjścia wszystkich starych
+   procesów i kontrolę kolejki przed wznowieniem. D15265b ignoruje WORKER_PAUSED; sam health
+   nie dowodzi zakończenia. Stop/wznowienie/deploy dopiero po osobnej zgodzie wydania.
+
+Nie rozpoczynać kolejnej sesji symulacyjnej w zastępstwie tych dowodów. Nie zmieniono
+produkcji, sieci, sekretów ani uprawnień; brak eksportu/restore/PITR/kasowania/aktywacji
+Meta/DM i rozwoju Google. Focus1.0/2.0 bez zmian. Szacunek sesji bez redukcji: ≥5+≥1DM.
+Aktualizacja dotyczy wyłącznie dokumentacji; kolejne automatyczne Checks jej SHA nie są
+ponownym wykonaniem sesji024–025 przez agenta. Przy wznowieniu odczytać bieżący HEAD/Checks.
+
+---
+
 # Punkt wznowienia po024–025: kod/testyPASS, produkcjaBLOCKED
 
 2026-11-09. Kod025 f5971cf75d5d045824a6f76ca773bc6d47c1967d:
