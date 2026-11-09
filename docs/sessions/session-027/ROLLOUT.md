@@ -62,8 +62,9 @@ Nic poniżej nie zostało wykonane na Render, koncie lub rzeczywistych danych.
 ## Wariant rollbacku007 — ograniczony tryb awaryjny
 
 Źródło: gałąź027 z runtime odziedziczonym po zielonym e37ce5d. Budowa później wyłącznie
-z zatwierdzonego SHA i `Dockerfile.rollback`, z zachowaniem digestu/artefaktu. Nie budowano
-ani nie publikowano pełnego obrazu, nie uruchomiono nowej usługi i nie zmieniono Render.
+z zatwierdzonego SHA i `Dockerfile.rollback`, z zachowaniem digestu/artefaktu. CI zbudował pełny obraz testowy, lecz go nie uruchamiał ani nie publikował;
+nie zachowano go jako artefaktu rollbacku Render. Nie uruchomiono nowej usługi
+Render i nie zmieniono konfiguracji produkcyjnej. Budowa testowa nie zamyka tej bramki.
 
 Obraz nie pakuje migracji, bootstrapu, supervisora ani offsite skryptu. Startuje wyłącznie
 `scripts.rollback_readonly`. Brak dokładnie `FOCUS_READONLY_ROLLBACK_APPROVED=true`
