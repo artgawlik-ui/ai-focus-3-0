@@ -237,7 +237,7 @@ a alert budżetowy nie musi blokować rozliczeń. Niczego nie aktywowano ani nie
 
 | Element | Status | Brakujący dowód / następny krok |
 |---|---|---|
-| Kontroler i walidacja | PASS | 32 nowe testy + actionlint; kod35a83b6: pełny CI SUCCESS, 112 PASS |
+| Kontroler i walidacja | PASS | 32 nowe testy + actionlint; kod27d3ba3: pełne CI push i PR SUCCESS, 112 PASS |
 | Zapis nieszkodliwego zadania | PASS | Issue #5 istnieje; bez zgody uruchomienia |
 | Instalacja workflow na main | BLOCKED | osobny przegląd i zgoda na merge; teraz wyłącznie branch/Draft PR |
 | Ustawienia Actions/runners/secrets | BLOCKED | operator potwierdza w panelu; integracja zwraca 403 |
@@ -281,3 +281,18 @@ Zachowano retencję, RBAC i brak treści w logach; dodano asercje cooldownu i po
 ostrzeżenia na granicy60s. Bez usunięcia testów, skipów, zmiany timeoutów lub kodu
 produkcyjnego Meta.32 testy automatyzacji i actionlint ponownie PASS.
 Nowa wersja wymaga własnego pełnego CI obu zdarzeń.
+
+## Końcowy dowód po poprawce zegara
+
+Kod **27d3ba34c2d0fc272f6588efd01205a36b0657a9**:
+- [push42705053999](https://github.com/artgawlik-ui/ai-focus-3-0/actions/runs/42705053999) SUCCESS;
+- [PR42705066191](https://github.com/artgawlik-ui/ai-focus-3-0/actions/runs/42705066191) SUCCESS;
+- policy42705054034/42705066205 SUCCESS,32 testy automatyzacji.
+
+Pełne112PASS (w tym32nowe),35subtests,2warnings; build,Chromium/WebKit i audyty PASS.
+Oba zdarzenia sprawdzono oddzielnie — nie pominięto nieudanego push7a7f2f7.
+Nie zmieniono produkcyjnej logiki Meta; test zegara jest teraz deterministyczny
+i dodatkowo weryfikuje60-sekundowy cooldown. Kod i regresja **PASS**;
+instalacja/aktywacja i rzeczywisty E2E Codexa nadal **BLOCKED**.
+Ostatni dopisek dokumentacyjny zachowuje tę samą implementację; jego własne Checks
+są widoczne w Draft PR #6 i weryfikowane przed zakończeniem bieżącej sesji.

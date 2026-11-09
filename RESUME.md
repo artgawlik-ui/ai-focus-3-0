@@ -75,3 +75,14 @@ Nie uznawać tego SHA za pełny PASS. Poprawiono wyłącznie test: kontrolowane1
 sprawdzenie cooldownu i ponownego ostrzeżenia. Brak zmian runtime/timeoutów/skipów.
 32 testy automatyzacji i actionlint PASS; po push sprawdzić CI nowego SHA, oba zdarzenia.
 Lokalny pełny test SQLite zatrzymano po zawieszeniu TestClient; nie jest dowodem PASS.
+
+## Stan zamknięcia026
+
+**Kod27d3ba34c2d0fc272f6588efd01205a36b0657a9: pełne CI push42705053999
+i PR42705066191 SUCCESS.** Policy42705054034/42705066205SUCCESS.112PASS,
+32nowe testy,35subtests,2warnings; build/Chromium/WebKit/audyty PASS.
+Naprawiono zależność istniejącego testu od uptime; nie zmieniono runtime Meta.
+Nie powtarzać tej diagnostyki. Po ostatnim dopisku dokumentacyjnym wystarczy
+odczytać Checks jego SHA. Raport zawiera historię nieudanego push i dowód poprawki.
+Aktywacja/E2E **BLOCKED**; następny krok to przegląd osobnego Draft PR #6,
+bez klucza API teraz, bez merge lub konfiguracji bez zgody. PR #3 bez zmian.
