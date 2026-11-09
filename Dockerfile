@@ -14,7 +14,7 @@ RUN pip install --no-cache-dir -r requirements.txt
 COPY backend ./backend
 COPY migrations ./migrations
 COPY scripts ./scripts
-COPY alembic.ini ./
+COPY alembic.ini native-alembic.ini ./
 COPY --from=frontend /build/frontend/dist ./frontend/dist
 USER focus
 EXPOSE 8000

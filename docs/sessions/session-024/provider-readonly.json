@@ -1,0 +1,76 @@
+{
+  "observed_at_utc": "2026-11-09T16:01:18.328Z",
+  "scope": "Render control-plane GET only; no production SQL or app/Shell calls",
+  "postgres": {
+    "id": "dpg-dbh1b0gm7kps73f0p2m0-a",
+    "status": "available",
+    "version": "17",
+    "plan": "0.1c-256mb",
+    "disk_size_gb": 1,
+    "region": "frankfurt",
+    "ha_enabled": false,
+    "public_allowlist_empty": true,
+    "recovery_fields_exposed": [],
+    "latest_recoverable_at": null,
+    "rpo_60_proven": false
+  },
+  "service": {
+    "id": "srv-dbh1rk6tlv9c73dloq20",
+    "branch": "main",
+    "auto_deploy": "no",
+    "plan": "0.5c-512mb",
+    "runtime": "docker",
+    "instances": 1,
+    "health_check_path": "/api/health",
+    "docker_override_present": false,
+    "environment_values_read": false
+  },
+  "deploys": [
+    {
+      "id": "dep-dbjhl6jbc2fs73crj65g",
+      "status": "live",
+      "commit": "d15265b26524d594bdbcb4bc6b63fcbc398a1424",
+      "created_at": "2026-11-01T10:55:22.870968Z",
+      "finished_at": "2026-11-01T10:56:20.939148Z"
+    },
+    {
+      "id": "dep-dbj59qff3r2c73f077u0",
+      "status": "deactivated",
+      "commit": "cd22a44415732a1e25b558bfec38cf498115b90f",
+      "created_at": "2026-10-31T20:51:53.359553Z",
+      "finished_at": "2026-10-31T20:52:37.691068Z"
+    },
+    {
+      "id": "dep-dbj54fm7bikc73eep290",
+      "status": "deactivated",
+      "commit": "98ac75e382d77f95827ab3daa4877da40caa4213",
+      "created_at": "2026-10-31T20:40:31.058131Z",
+      "finished_at": "2026-10-31T20:41:35.540105Z"
+    }
+  ],
+  "rollback": {
+    "artifact_eligibility_exposed": false,
+    "environment_snapshot_exposed": false,
+    "triggered": false
+  },
+  "channel": {
+    "spec_revision": "5",
+    "observed_revision": "5",
+    "observations_current": true,
+    "policy_state": "enforced",
+    "tcp_domains": [],
+    "tcp_ip_ranges": [],
+    "vpn_configured": false,
+    "ssh_attempts": 0,
+    "production_selects": 0,
+    "alternative_mcp_sql_used": false,
+    "approved_account_identities_confirmed": false
+  },
+  "operations": {
+    "production_mutations": 0,
+    "new_production_exports": 0,
+    "production_restore_or_pitr": 0,
+    "new_render_resources": 0,
+    "new_cloud_spend": 0
+  }
+}

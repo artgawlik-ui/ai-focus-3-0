@@ -1,3 +1,25 @@
+# Sesja024 — przygotowanie wydania, nie produkcyjny rollout
+
+Wejście80f4652 i CI42647145719/42647135285 SUCCESS/359 PASS, PR3Draft potwierdzone.
+Nowe: naprawa COPY native-alembic.ini oraz5 testów rzeczywistego pakowania/handoff/rollback
+na syntetycznym007. Lokalna regresja63 PASS/67.11s. Pełne CI tego nowego HEAD wymagane
+przed PASS024 (oczekiwane364 testy, build, Chromium/WebKit, audyty). Nie dziedziczyć359.
+PRODUCTION_READINESS.md ma pełną macierz bramek.0SSH/SQL produkcji, grantyTCP puste,
+VPNfalse. RenderGET: stary d15265b live, autoDeploy=no, istniejący PG17 available;
+latestPITR/lag i eligibility artefaktu/env nie są dostępne. A nadal004/17 i niezmienione.
+
+Stary API-only odczyt zachowuje21 tabel; zwykły Alembic/start d15265b odrzuca007.
+Nie stosować downgrade/stamp004 ani zwykłego rollbacku przy założeniu zgodnej pauzy.
+Nowy skrypt startowy wykonuje migrację/bootstrap PRZED worker pause; plan wymaga STOP.
+Po pełnym zielonym024 kolejny bezpieczny cel025: brak automatycznego odtwarzania
+technicznego managera przez bootstrap z pozostałego VERIFICATION_PASSWORD. Tylko kod/testy.
+
+ProdukcjaBLOCKED(SQL/konta,RPO60,magazyn/klucz,rollback/handoff,zgoda). Bez merge/deploy,
+produkcyjnych migracji/eksportu/restore/PITR/cleanup, sieci/sekretów/kosztów/Google/Meta/DM.
+Focus1/2 nietknięte, prywatne ZIP-y zachować. ≥5 podstawowych+≥1DM, bez redukcji.
+
+---
+
 # Ostatni zweryfikowany kod: sesje 022 i 023 PASS
 
 2026-11-09: eb59668bdb7e94552a10f7197c284d81c5658c79 — oba pełne workflow
