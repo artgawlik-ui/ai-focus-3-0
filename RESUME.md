@@ -1,30 +1,38 @@
-# Sesja027 — produkcja BLOCKED, nowy opt-in wariant awaryjny w osobnej gałęzi
+# Sesja027 — kod PASS; gotowość produkcyjna BLOCKED
 
-Baza: e37ce5d1ce807b47af18e3354c3232296b8b26c6 z PR3Draft,oba CI42686949414/42686938187SUCCESS.
-Gałąź027: `fix/session-027-readonly-rollback`. Przeczytaj raport027,ROLLOUT.md i aktualną
-PRODUCTION_READINESS. Nie powtarzać024–025. Nie zmieniać PR #6/#8; automatyzacjaOFF.
+Gałąź `fix/session-027-readonly-rollback`, Draft PR #9 do `fix/3.0.4-meta-validation`.
+Baza e37ce5d1ce807b47af18e3354c3232296b8b26c6/PR3Draft niezmieniona. PR #6 i #8 bez zmian.
+Kod **ad7f573b82c669a004d7a665b9f5344665ea8331** ma oba pełne CI42715071258/42715080811
+SUCCESS:394PASS/0FAIL/0SKIP,14nowych,build,Chromium/WebKit,audyty0znanych podatności.
+Pełny obraz awaryjny zbudowany wCI bezrun/push. Nie zachowany wRender; kontenerowy boot
+niezweryfikowany. Końcowy dopisek dokumentacyjny nie zmienia kodu; jego Checks/aktualny
+SHA są wPR #9 i sprawdzane przed zamknięciem sesji. Przy wznowieniu wystarczy odczyt Checks.
 
-Świeży RenderGET: live d15265b,autoDeploy=no,PG17available,allowlista pusta. BraklatestPITR/
-WALlag/artefaktu-env rollbacku. Rev5 current/enforced,TCP=[],VPNfalse,0SSH/0SELECT.
-Prywatne konta niepotwierdzone; tylko A004/17. Brak podstaw do nowego RPO60/backup-keyPASS.
+Przeczytaj docs/sessions/session-027/REPORT.md iROLLOUT.md oraz PRODUCTION_READINESS.md.
+Nie powtarzać024–025 ani testów027 bez zmiany kodu lub konkretnego błędu.
+Nowy opt-in Dockerfile.rollback/rollback_readonly.py: PG17/007/21tabel,DBreadonly,
+GET/HEADcoreAPI,WebSocket odmowa,istniejące sesje/RBAC,bezworkerów/bootstrapu/migracji.
+Brakzgodytrue blokuje start. To ograniczony awaryjny odczyt,niepełny rollback biznesowy;
+nie ma nowych loginów/UI/zapisów/nativekalendarza. Normalny Dockerfile/start bez zmian.
 
-Nowa rzeczywista luka zamknięta kodem: osobny Dockerfile.rollback/rollback_readonly.py
-bez startupumigracji/bootstrapu/workera. DefaultOFF,ACKtrue,PG17/007/21wymagane,
-DBreadonly iallowlistaGET,istniejące sesje/RBAC. Beznowychloginów/UI/zapisów: to ograniczony
-tryb awaryjny wymagający decyzji właściciela,nie pełny rollback. Normalny Dockerfile bez zmian.
-14nowych testów; lokalnie11PASS/3PGdeselected.
-Kod5e4188af1166623fb3f3598b7bd7bd38fd59cf84: oba pełneCI42713625735/42713880948
-SUCCESS,394PASS/0FAIL/0SKIP,frontend/Chromium/WebKit/audyty0podatności; pełnybuild
-obrazu awaryjnego PASS,bez run/push. OsobnyDraftPR #9 do gałęzi PR #3.
-Końcowy guardWebSocket i dopisek dokumentacyjny mają własnySHA/CI,sprawdzany przed końcem.
-Nie traktowaćefemerycznegoImageIDjakozachowanegoartefaktuRender. Korekta tylko znanego zegara testowego z026.
+Świeży RenderGET027: d15265b live,autoDeploy=no,1Starter,PG17available,allowlista pusta,
+maintenanceOFF i brakDockerOverride. BraklatestPITR/WALlag,backup-key/artefaktu-envdowodów.
+Rev5current/enforced,TCP=[],VPNfalse,0SSH/0SELECT; prywatne konta niepotwierdzone.
+SQLpakietA005004/17 nietknięty (SHA795af23ad5acb4d0af451f683e10c9cdfcdcdd10d64bd0f58d6d5b29782815fb).
+Nie używać alternatywnego MCP SQL ani rozszerzać A na007/preflight nowego profilu.
 
-Plan027 rozróżnia publicmaintenance i prywatnewritery/retencję. Plikpauzy +envfalse daje
-ręczne resume; envtrue nie można zdjąć samymunlink. Wszelkie operacje planu niewykonane.
-Następny krok operatora: faktycznie udostępnić zatwierdzony kanał i prywatne tożsamości,
-a następnie4SELECT005 w jednymsnapshot. Agent nie użyje alternatywnego MCPSQL.
-Brak deploy/merge/produkcjiDDL/DML/backup/restore/PITR/sekretów/sieci/kosztów/Meta/Google.
-PoCI uzupełnić dowody027 i nowyDraftPR; brak zgody wydania. Starsze wpisy niżej historyczne.
+**Następny krok operatora:** faktycznie udostępnić wcześniej zatwierdzony wewnętrzny
+kanał/host/autoryzację i prywatnie potwierdzić konta. Potem agent wykona tylko4SELECT
+w jednym READ ONLY REPEATABLE READ. Dalej dowód latestpoint≤60min,niezależny obiekt/klucz,
+przechowywany zgodny artefakt i akceptacja degradacji. Brak zgody na deploy to granica
+wykonania; nie wymagamy deployu jako warunku gotowości planu, lecz brakujące dowody
+recovery/integralności/rollbacku rzeczywiście nadal blokują wydanie.
+
+Plan027 ma STOP: publicmaintenance nie zatrzymuje workerów/prywatnego API,plikpauzy
+nie znosi envtrue,start.sh sam uruchamia Alembic/bootstrap,dowód końcaWSZYSTKICH starych
+przedresume. Żadnej operacji planu nie wykonano. Bez merge/deploy/produkcyjnegoDDL/DML/
+export/restore/PITR/sekretów/sieci/nowychkosztów/Meta/Google. Automatyzacja CodexaOFF.
+PrywatneZIP-y i Focus1.0/2.0 zachowane. Poza zamkniętym zakresem brak dalszej pracy wtle.
 
 ---
 

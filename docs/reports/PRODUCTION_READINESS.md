@@ -2,8 +2,8 @@
 
 Odczyt9listopada2026 (UTC w metadanych). Bazae37ce5d: oba pełne CI42686949414/42686938187
 SUCCESS,380PASS. Nowa gałąź `fix/session-027-readonly-rollback` ma oddzielny Draft PR/CI;
-nie przenosi wyniku380 na nowy kod. Kod0275e4188a ma własne obaCI SUCCESS/394PASS;
-końcowy SHA (guardWebSocket/dokumentacja) sprawdzany osobno wPR #9. [Raport027](../sessions/session-027/REPORT.md),
+nie przenosi wyniku380 na nowy kod. Kod027ad7f573 ma własne obaCI42715071258/42715080811 SUCCESS/394PASS;
+końcowy dopisek dokumentacyjny ma własneChecks wPR #9. [Raport027](../sessions/session-027/REPORT.md),
 [świeże metadane](../sessions/session-027/provider-readonly.json),
 [szczegółowy plan i STOP](../sessions/session-027/ROLLOUT.md).
 
@@ -16,11 +16,17 @@ końcowy SHA (guardWebSocket/dokumentacja) sprawdzany osobno wPR #9. [Raport027]
 | PITR funkcja / punkt / RPO≤60 | BLOCKED dla skutecznego RPO | dokumentacja płatnegoPG potwierdza funkcję,nie bieżący status recovery; GET nie ma latest point/WAL lag | Render→baza→Recovery: odczytać najnowszy skutecznie odzyskiwalny timestamp/lag i wiek≤3600s; jeśli UI nie pokazuje, uzyskać dowód od Render Support; nie uruchamiaćRestore |
 | Aktualna niezależna kopia | BLOCKED | historyczny export1XI starszy niż7dni; brak bieżącego obiektu/manifestu | zatwierdzony magazyn poza aplikacją: potwierdzić aktualny obiekt,czas,hash,region,lifecycle/retencję i dostęp; nowa kopia/usługa/restore wymagają osobnej zgody |
 | Odzyskiwalność klucza | BLOCKED | brak dowodu niezależnej wersji klucza i dostępności recovery operatora | zatwierdzony menedżer sekretów: potwierdzić wersję,kontrolę dostępu i odzyskanie; nie przesyłać wartości klucza do rozmowy/repo |
-|007 awaryjny odczyt — kod | PASS dla5e4188a | oba pełneCI42713625735/42713880948SUCCESS,394PASS; rzeczywiste sesje/RBAC,SQLSTATE25006 i21fingerprintów bez zmian; pełny build obrazu PASS | ograniczony odczyt,bez nowego loginu/UI; końcowy guardWebSocket wymaga własnegoCI; obraz efemeryczny nie jest zachowany wRender |
+|007 awaryjny odczyt — kod | PASS | ad7f573,oba pełneCI42715071258/42715080811SUCCESS,394PASS; rzeczywiste sesje/RBAC,SQLSTATE25006 i21fingerprintów bez zmian; WebSocket odmowa; pełny build obrazu PASS | ograniczony odczyt,bez nowego loginu/UI; obraz efemeryczny nie jest zachowany wRender; jego boot wkontenerze niezweryfikowany |
 | Artefakt rollbacku Render | BLOCKED | live/deactivated deploy nie ujawnia eligibility ani snapshotu env; staryd15265b nie startuje007 | Render→usługa→Deploys: potwierdzić konkretny dostępny digest/obraz,start/env; nie klikaćRollback. Dla nowego profilu potrzebna późniejsza zgoda na budowę/zachowanie artefaktu i akceptacja odczytu zamiast pełnej pracy |
-| Handoff i retencja | BLOCKED wykonania | stare procesy nie respektują pauzy; nowe lokalne statusy nie potwierdzają ich wyjścia | zaakceptować plan027 i okno maintenance,udowodnić zakończenie wszystkich starych writerów,uzgodnić kolejkę/retencję oraz dopiero potem osobno zezwolić na resume |
+| Plan handoff | PASS | plan027 rozróżnia publicmaintenance,prywatnych writerów,pauzę,migrację/bootstrap i resumé; testy024 zachowane w regresji | nie wykonywano operacji; przy wykonaniu obowiązują STOP i osobna zgoda |
+| Rzeczywisty handoff i retencja | BLOCKED wykonania | stare procesy nie respektują pauzy; nowe lokalne statusy nie potwierdzają ich wyjścia | zaakceptować plan027 i okno maintenance,udowodnić zakończenie wszystkich starych writerów,uzgodnić kolejkę/retencję oraz dopiero potem osobno zezwolić na resume |
 | Gotowość funkcji do testów | PASS syntetyczne wejścia | normalne login/CRM/lejek/wizyty/nativezadania/raporty/PWA w380testach wejścia | produkcyjne logowanie zmienia sesję i wymaga właściciela; obecne flagi/native007/konta niezweryfikowane; żadnego testowego klienta na produkcji |
 | Zgoda wydania | BLOCKED | brak zgody na merge/deploy/migrację/aktywację | dopiero po zamknięciu powyższych dowodów zatwierdzić konkretny SHA,schemat,start,okno i rollback; nie traktować tego raportu jako zgody |
+
+Brak zgody na deploy i brak faktycznego przełączenia są granicą tej sesji, nie błędem
+aplikacji. Decyzja gotowości **BLOCKED** wynika niezależnie z braków aktualnego SQL/kont,
+skutecznego RPO, kopii/klucza oraz potwierdzonego artefaktu i zaakceptowanego trybu rollbacku.
+Nie wymagamy wykonania zabronionego deployu tylko po to, by nazwać plan przygotowanym.
 
 RPO pozostaje wymaganiem60min; nie zastąpiono go dzienną kopią ani statusem AVAILABLE.
 Nowy tryb awaryjny nie zmienia domyślnej aplikacji, nie leczy starego obrazu i nie

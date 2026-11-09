@@ -1,7 +1,6 @@
 # Sesja027 — zamknięcie możliwych luk wydania
 
-**Produkcja: BLOCKED. Kod wariantu007 ma pełny CI5e4188a SUCCESS;
-końcowy dopisek/odmowa WebSocket wymagają własnego CI przed zamknięciem sesji.**
+**Produkcja: BLOCKED. Końcowy kodad7f573 ma oba pełne CI SUCCESS/394PASS.**
 Baza e37ce5d1ce807b47af18e3354c3232296b8b26c6, PR3Draft;
 CI42686949414/42686938187 SUCCESS (380 testów, build,Chromium/WebKit,audyty).
 Nie powtarzano dawnych symulacji024–025 jako nowych dowodów produkcji.
@@ -94,3 +93,23 @@ Po tym CI dodano odmowę WebSocket do guardu, aby tylko lifespan mógł korzysta
 z nie-HTTP ścieżki app; test polityki obejmuje też ten protokół. Reszta zachowania
 bez zmian. Końcowy SHA/CI znajduje się w opisie PR #9 i Checks; przed końcowym
 raportem weryfikujemy oba wymagane uruchomienia. Produkcja pozostaje BLOCKED.
+
+## Zamknięcie kodu027 — PASS, przygotowanie produkcji — BLOCKED
+
+**ad7f573b82c669a004d7a665b9f5344665ea8331**:
+[push42715071258](https://github.com/artgawlik-ui/ai-focus-3-0/actions/runs/42715071258)
+i [PR42715080811](https://github.com/artgawlik-ui/ai-focus-3-0/actions/runs/42715080811)
+SUCCESS.394PASS/0FAIL/0SKIP,14nowych; normalnyfrontend,Chromium/WebKit,oba audyty
+i pełny buildDockerfile.rollback PASS. GuardWebSocket także objęty testem.
+BazaOS nie jest przeskanowana, kontener awaryjny nie był uruchamiany; procesAPI/PG17
+był rzeczywisty. Nie przenosić tego wyniku na stan danych/kont lub artefakt Render.
+
+Następny commit zapisuje tylko dowody i doprecyzowuje rozdział gotowości planu od zgody
+na jego wykonanie. Jego własne Checks/SHA zostaną sprawdzone i podane w opisie DraftPR9
+przed zakończeniem. PR3 pozostaje bazą bez merge, PR6/#8 nietknięte. Nie wykonywano
+produkcyjnegoDDL/DML/eksportu/restore/PITR; regresja obejmuje wyłącznie syntetyczne bazy.
+
+Najważniejsza następna czynność: operator udostępnia już zatwierdzony wewnętrzny kanał
+w środowisku Codexa oraz prywatnie potwierdza konta. Wtedy agent, bez poleceń SQL
+wykonywanych ręcznie przez właściciela, wykona jedynie pakiet4SELECT005. Nie pytamy
+ponownie o zgodę A. PITR/klucz/artefakt mają odrębne, konkretne czynności wmacierzy.
