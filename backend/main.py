@@ -436,7 +436,7 @@ from backend.google_calendar import router as google_router
 app.include_router(google_router)
 
 from backend.native_planning import router as native_router
-from backend import native_retention
+from backend import native_retention, native_diagnostics
 app.include_router(native_router)
 
 DIST=Path(__file__).resolve().parent.parent/'frontend'/'dist'

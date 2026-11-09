@@ -90,7 +90,9 @@ def ensure_followups(db,user,day):
     return made
 
 @router.get('/status')
-def status(user=Depends(current)):return {'enabled':enabled(),'schema_enabled':schema_enabled(),'external_messages':False,'push':'not_configured'}
+def status(user=Depends(current)):
+    from backend.native_diagnostics import diagnostics_enabled
+    return {'enabled':enabled(),'schema_enabled':schema_enabled(),'diagnostics_enabled':diagnostics_enabled(),'external_messages':False,'push':'not_configured'}
 @router.get('/contacts')
 def contacts(response:Response,day:str='',representative_id:str='',limit:int=100,offset:int=0,user=Depends(current),db=Depends(database)):
     require()

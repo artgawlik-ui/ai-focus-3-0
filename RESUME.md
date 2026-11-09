@@ -1,3 +1,15 @@
+# Sesja 023 — implementacja zakończona lokalnie, CI wymagany
+
+Panel menedżera: diagnostyka kolejki, sygnał procesu, zaległe przypomnienia i podgląd
+retencji. FOCUS_DIAGNOSTICS_ENABLED domyślnie OFF; brak zapisu/usuwania/aktywacji.
+24 nowe testy PASS; regresja 109 PASS; lokalnie Chromium/WebKit i build PASS.
+Końcowy CI dokładnego SHA sprawdzić przed PASS. Szczegóły: docs/sessions/session-023.
+Sesja 022 ma pełne zielone CI a11c8aa (42639643983, 42639630411), 335 PASS i audyty 0.
+Produkcja BLOCKED: SQL004/17, RPO60, magazyn/klucz, rollback/handoff. PR3 Draft.
+Bez merge/deploy/produkcji/007/Google/Meta/DM/kosztów. ≥5 podstawowych + ≥1 DM.
+
+---
+
 # Sesja 022 — PASS (kod i testy), 2026-11-09
 
 Commit a11c8aa5dbee197183a719761bb9a06aaba48b50:
