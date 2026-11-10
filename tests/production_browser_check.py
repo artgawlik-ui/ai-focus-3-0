@@ -146,6 +146,11 @@ with sync_playwright() as p:
             page.get_by_role('button',name='Zapisz szkic · bez wysyłki').click()
             page.get_by_role('button',name='Zatwierdź szkic · bez wysyłki').first.click()
             page.get_by_text('Zatwierdzona · niewysłana',exact=False).first.wait_for()
+            page.get_by_role('button',name='Sprawdź warunki odpowiedzi · bez wysyłki',exact=True).first.click()
+            review=page.get_by_label('Podgląd bezpieczeństwa odpowiedzi',exact=True)
+            review.get_by_text('Kontrakt Meta niezweryfikowany',exact=True).wait_for()
+            review.get_by_text('Odpowiedź API zablokowana.',exact=False).wait_for()
+            assert page.get_by_role('button',name='Wyślij przez API',exact=True).count()==0
             assert page.evaluate('document.documentElement.scrollWidth<=innerWidth')
         if isolated:
             # Native planner replaces the retired Google UI; Google unit guards remain.
