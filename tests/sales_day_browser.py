@@ -31,7 +31,7 @@ def salon_dialog(page,name,mobile):
 
 with sync_playwright() as p:
     for label,engine,options,executable in [('chromium',p.chromium,{'viewport':{'width':1365,'height':950}},os.getenv('FOCUS_TEST_CHROMIUM_EXECUTABLE','/usr/bin/chromium')),('webkit',p.webkit,p.devices['iPhone 13'],os.getenv('FOCUS_TEST_WEBKIT_EXECUTABLE','/workspace/ai-focus-3-0/.tools/run-webkit.sh'))]:
-        browser=engine.launch(headless=True,executable_path=executable)
+        browser=engine.launch(headless=True,executable_path=executable if Path(executable).exists() else None,args=['--no-sandbox'] if label=='chromium' else [])
         # Fault-injection routing must bypass SW ownership of fetch in WebKit.
         # The unchanged production_browser_check separately tests the real SW/PWA/offline path.
         m=browser.new_context(**options,service_workers='block');rep=browser.new_context(**options,service_workers='block');mobile=label=='webkit'
