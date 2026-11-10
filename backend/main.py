@@ -446,6 +446,9 @@ app.include_router(native_router)
 from backend.sales_workflow import router as sales_router
 app.include_router(sales_router)
 
+from backend.meta_reply_preflight import router as meta_reply_router
+app.include_router(meta_reply_router)
+
 DIST=Path(__file__).resolve().parent.parent/'frontend'/'dist'
 if DIST.exists():
     app.mount('/assets',StaticFiles(directory=DIST/'assets'),name='assets')
