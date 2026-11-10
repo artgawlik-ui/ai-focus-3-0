@@ -51,6 +51,7 @@ def is_blocked(db,s):
 def contact_allowed(db,s):
     if is_blocked(db,s):raise HTTPException(409,'Kontakt zablokowany')
 def verified(s,rows):return any(a.kind=='sales_profile' and data(a).get('snapshot')==snapshot(s) for a in rows)
+def current_draft(draft):return draft.created_at>=(datetime.now(timezone.utc)-timedelta(days=7)).isoformat()
 def public(a):return {'id':a.id,'kind':a.kind,'at':a.created_at,'author_id':a.user_id,'source':data(a).get('source','operator_declaration'),'details':data(a)}
 
 @router.get('/{id}/instagram-contact')
@@ -80,7 +81,7 @@ def prepare(id:str,user=Depends(current),db=Depends(database)):
     recent=db.scalar(select(Activity.id).where(Activity.salon_id==s.id,Activity.kind.in_(('call','visit','follow_up','email_received','instagram_received','instagram_manual','instagram_reply_manual'))).limit(1))
     if recent:raise HTTPException(409,'Istnieje kontakt; przejrzyj historię zamiast ponawiać pierwszy DM')
     old=next((a for a in reversed(rows) if a.kind=='sales_draft'),None)
-    if old and data(old)['snapshot']==snapshot(s):return public(old)
+    if old and data(old)['snapshot']==snapshot(s) and current_draft(old):return public(old)
     from backend.qualification import analyze
     result=analyze(s,[])
     a=add(db,s,user,'sales_draft',{'snapshot':snapshot(s),'text':result['draft'],'priority':result['priority_suggestion'],'sources':result['sources'],'sent':False})
@@ -113,7 +114,7 @@ def record_event(id:str,p:EventIn,user=Depends(current),db=Depends(database)):
     if p.action=='manual_sent':
         from backend.meta import owner
         owner(user)
-        if not verified(s,rows) or data(draft)['snapshot']!=snapshot(s) or draft.created_at<(datetime.now(timezone.utc)-timedelta(days=7)).isoformat():raise HTTPException(409,'Szkic lub profil wymaga ponownej weryfikacji')
+        if not verified(s,rows) or data(draft)['snapshot']!=snapshot(s) or not current_draft(draft):raise HTTPException(409,'Szkic lub profil wymaga ponownej weryfikacji')
         # Cross-channel contact after drafting also blocks another first message.
         if db.scalar(select(Activity.id).where(Activity.salon_id==s.id,Activity.kind.in_(('call','visit','follow_up','email_received','instagram_received','instagram_manual','instagram_reply_manual'))).limit(1)):
             raise HTTPException(409,'Historia zawiera kontakt; nie ponawiaj pierwszej wiadomości')

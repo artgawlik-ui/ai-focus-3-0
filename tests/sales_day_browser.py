@@ -2,6 +2,7 @@
 No external navigation or API allowed. Manual actions are synthetic operator declarations.
 """
 import os,json,uuid,time,hashlib,hmac
+from datetime import datetime,timedelta,timezone
 from pathlib import Path
 from playwright.sync_api import sync_playwright,expect
 from scripts.local_test_policy import local_origin
@@ -21,6 +22,13 @@ def login(page,email,password):
 def request(context,csrf,path,method='GET',payload=None,code=200):
     r=context.request.fetch(origin+'/api'+path,method=method,data=payload,headers={'X-CSRF-Token':csrf})
     assert r.status==code,(path,r.status,r.text()[:200]);return r.json()
+def synthetic_db():
+    import psycopg
+    from sqlalchemy.engine import make_url
+    target=make_url(os.environ['DATABASE_URL'])
+    assert target.host in ('localhost','127.0.0.1') and target.database.startswith('focus3_ci_')
+    return psycopg.connect(os.environ['DATABASE_URL'])
+
 def nav(page,label,mobile):
     if mobile:page.get_by_label('Otwórz menu').click()
     page.get_by_role('button',name=label,exact=True).click()
@@ -71,6 +79,22 @@ with sync_playwright() as p:
         assert panel.get_by_role('button',name='Wysłano ręcznie',exact=True).count()==0
         state=request(rep,rcsrf,base+'/instagram-contact');draft=next(e for e in state['events'] if e['kind']=='sales_draft')
         assert not state['api_confirmed_sent']
+        # Renew an eight-day UNSENT draft through the actual UI; keep the old ledger.
+        expired_id=draft['id']
+        request(rep,rcsrf,base+'/instagram-events','POST',{'draft_id':expired_id,'request_id':str(uuid.uuid4()),'action':'not_sent','confirmed':True,'note':'Syntetyczny szkic nie został wysłany'})
+        with synthetic_db() as sql:
+            assert sql.execute('UPDATE activities SET created_at=%s WHERE id=%s AND kind=%s',((datetime.now(timezone.utc)-timedelta(days=8)).isoformat(),expired_id,'sales_draft')).rowcount==1
+        request(m,csrf,base+'/instagram-events','POST',{'draft_id':expired_id,'request_id':str(uuid.uuid4()),'action':'manual_sent','confirmed':True,'note':'Próba użycia przeterminowanego szkicu — fixture'},409)
+        with rp.expect_response(lambda response:response.url==origin+'/api'+base+'/prepare-instagram') as renewal:
+            panel.get_by_role('button',name='Przygotuj indywidualny szkic DM').click()
+        assert renewal.value.status==201
+        draft=renewal.value.json();assert draft['id']!=expired_id
+        expect(panel).to_have_attribute('aria-busy','false')
+        state=request(rep,rcsrf,base+'/instagram-contact')
+        assert any(e['id']==expired_id for e in state['events'])
+        assert sum(e['kind']=='sales_draft' for e in state['events'])==2
+        assert not any(e['kind']=='instagram_manual' for e in state['events'])
+        print(label+': eight-day unsent draft renewal PASS',flush=True)
         # Wrong profile rejected; no implicit update of verification.
         request(rep,rcsrf,base+'/verify-instagram','POST',{'profile':'wrong_profile','identity_confirmed':True,'evidence':'Synthetic wrong profile'},409)
         # Owner records only an explicit declaration, not API confirmation.
@@ -179,13 +203,9 @@ with sync_playwright() as p:
         expect(rp.get_by_role('dialog')).to_have_attribute('aria-label',s['name'])
         expect(rp.get_by_label('Ręczny kontakt Instagram').get_by_role('link',name='Otwórz profil Instagram')).to_have_attribute('href','https://www.instagram.com/synthetic_day_0/')
         report=request(m,csrf,'/focus-calendar/report');assert report['counts']['contacts_recorded']>=2
-        import psycopg
-        from sqlalchemy.engine import make_url
-        target=make_url(os.environ['DATABASE_URL'])
-        assert target.host in ('localhost','127.0.0.1') and target.database.startswith('focus3_ci_')
-        with psycopg.connect(os.environ['DATABASE_URL']) as sql:
+        with synthetic_db() as sql:
             rows=sql.execute("SELECT kind,count(*) FROM activities WHERE salon_id=ANY(%s) AND kind IN ('sales_draft','instagram_manual','instagram_reply_manual','sales_refused') GROUP BY kind",([s['id'] for s in salons],)).fetchall()
-            assert dict(rows)=={'sales_draft':2,'instagram_manual':2,'instagram_reply_manual':1,'sales_refused':1}
+            assert dict(rows)=={'sales_draft':3,'instagram_manual':2,'instagram_reply_manual':1,'sales_refused':1}
             assert sql.execute("SELECT count(*) FROM activities WHERE salon_id=ANY(%s) AND kind='instagram_manual' AND (body::jsonb->>'api_confirmed_sent')::boolean",([s['id'] for s in salons],)).fetchone()[0]==0
         manifest=request(m,csrf,'/health') # PII-free readiness only, not production.
         cache=page.evaluate('''async()=>{let result=[];for(const key of await caches.keys()){for(const r of await (await caches.open(key)).keys())result.push(r.url)}return result}''')
@@ -194,7 +214,7 @@ with sync_playwright() as p:
         assert not browser_external, 'External browser request detected'
         attempts=Path(os.environ['FOCUS_TEST_EXTERNAL_ATTEMPTS'])
         assert not attempts.exists(), 'External backend request detected'
-        results.append({'service_worker':'blocked_for_fault_injection; tested separately by production_browser_check','negative_control':probe,'engine':label,'synthetic_salons':10,'duplicate_rejected':True,'manual_sent_declarations':2,'positive_reply':1,'refusal':1,'inbound_fixture_deduplicated':True,'outbound_http_calls':0,'kpi':report['counts'],'passed':True})
+        results.append({'service_worker':'blocked_for_fault_injection; tested separately by production_browser_check','negative_control':probe,'engine':label,'expired_unsent_draft_renewed':True,'old_draft_preserved':True,'synthetic_salons':10,'duplicate_rejected':True,'manual_sent_declarations':2,'positive_reply':1,'refusal':1,'inbound_fixture_deduplicated':True,'outbound_http_calls':0,'kpi':report['counts'],'passed':True})
         m.close();rep.close();browser.close()
 Path('test-results/sales-day.json').write_text(json.dumps(results,indent=2))
 print('Sales day acceptance: Chromium + WebKit PASS (synthetic only, no DM)')
