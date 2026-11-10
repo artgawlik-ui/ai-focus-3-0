@@ -38,7 +38,8 @@ function App(){
   if(user?.role==='manager')setTeam((await api<User[]>('/users')).filter((u:any)=>u.active));
  }
  useEffect(()=>{api('/auth/me').then(r=>{csrf=r.csrf;setUser(r.user)}).catch(()=>{}).finally(()=>setChecking(false));if('serviceWorker' in navigator)navigator.serviceWorker.register('/sw.js').catch(()=>{});},[]);
- useEffect(()=>{if(user)refresh().catch(e=>setError(e.message));},[user,period,page]);
+ useEffect(()=>{if(user)refresh().catch(e=>setError(e.message));},[user,period]);
+ useEffect(()=>{if(user&&page==='crm')refresh().catch(e=>setError(e.message));},[page]);
  useEffect(()=>{if(!user||page!=='agent')return;const timer=setInterval(()=>api<Job[]>('/agent/jobs').then(setJobs).catch(()=>{}),4000);return()=>clearInterval(timer)},[user,page]);
  async function act(fn:()=>Promise<void>){setBusy(true);setError('');try{await fn()}catch(e){setError((e as Error).message)}finally{setBusy(false)}}
  async function openSalon(s:Salon){setAddressChecked(false);const [fresh,history]=await Promise.all([api<Salon>('/salons/'+s.id),api('/salons/'+s.id+'/activities')]);setSelected(fresh);setEditing(false);setActivity(history);}

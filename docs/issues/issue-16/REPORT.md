@@ -51,7 +51,8 @@ nie dowód logowania/autoryzacji tego konta.
 - Błąd odblokowuje formularz, pokazuje komunikat i odczytuje historię bez
   optymistycznego przypisania `sent`. Spóźniona odpowiedź zamkniętego profilu
   nie zastępuje aktualnie otwartego salonu.
-- Profil CRM i historia są pobierane przy otwarciu; nawigacja odświeża listy.
+- Profil CRM i historia są pobierane przy otwarciu; wejście na listę CRM odświeża dane.
+  Nie uruchamiamy pełnego pakietu odczytów przy każdej zmianie strony.
 - Starsze tekstowe audyty Meta są odczytywane bez JSON decode error i nadal
   stanowią wcześniejszy kontakt. Nie przepisano historycznych rekordów.
 
@@ -173,3 +174,13 @@ Aktualny kontrakt musi zostać potwierdzony przed jakimkolwiek przyszłym transp
 
 0 zmian produkcji, Render, env/sekretów/allowlisty, kosztów, merge/deploy, realnych DM,
 Google, płatnego OpenAI lub Focus1.0/2.0. PR #3/#9/#15 nietknięte.
+
+## Korekta po pierwszym CI
+
+Dla53b00a7 workflow PR42889973198 przeszedł409 testów, obie przeglądarki i audyty,
+ale push42889959040 nie zobaczył ostrzeżenia diagnostyki w WebKit. Pierwszy test
+nie sprawdzał statusu odpowiedzi, więc sam timeout nie ustalał przyczyny HTTP.
+Ograniczono nowy burst odświeżania do wejścia CRM i wzmocniono istniejący test:
+wymagana odpowiedź200 oraz widoczne ostrzeżenie, bez retry i zwiększenia timeoutu.
+Po zmianie lokalna dotychczasowa ścieżka Chromium/WebKit ponownie PASS. Końcowe CI
+nowego SHA jest odrębnym dowodem w Issue16/PR17; wcześniejszy jeden SUCCESS go nie zastępuje.
