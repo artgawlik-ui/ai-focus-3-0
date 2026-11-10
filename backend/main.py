@@ -221,6 +221,10 @@ def add_appointment(payload:AppointmentIn,user=Depends(current),db=Depends(datab
         lock_contact(db,salon.id)
         from backend.meta_models import MetaConversation
         if salon.status=='do_not_contact' or db.scalar(select(MetaConversation.id).where(MetaConversation.salon_id==salon.id,MetaConversation.opted_out==1).limit(1)):raise HTTPException(409,'Kontakt zablokowany')
+    from backend.sales_workflow import enabled as sales_enabled, history as sales_history, data as sales_data
+    if sales_enabled():
+        events=sales_history(db,salon)
+        if any(a.kind=='sales_draft' for a in events) and not any(a.kind=='instagram_reply_manual' and sales_data(a).get('customer_initiated') for a in events):raise HTTPException(409,'Najpierw klient musi zainicjować uzgodnienie terminu')
     if payload.starts_at.tzinfo is None: raise HTTPException(422,'Termin wymaga strefy czasowej')
     start=payload.starts_at.astimezone(timezone.utc); end=start+timedelta(minutes=payload.minutes)
     owner=salon.owner_id
@@ -324,7 +328,7 @@ def integrations(user=Depends(current),db=Depends(database)):
         try:
             require_config('diagnostics');meta.update(connected=bool(credentials(db)),mode='development')
         except HTTPException:meta['mode']='needs_configuration'
-    return {'instagram':meta,'google_calendar':{'connected':False,'mode':'manual_link','local_planner_enabled':visit_planner_enabled()},'livespace':{'connected':False,'mode':'adapter_schema_ready'},'agent':{'mode':'openai' if os.getenv('AI_PAID_PROCESSING_APPROVED','false').lower()=='true' and os.getenv('OPENAI_API_KEY') else 'rules','qualification_enabled':os.getenv('AGENT_V2_ENABLED','false').lower()=='true','outbound':False},'discovery':{'provider':'OpenStreetMap','radius_enabled':radius_discovery_enabled(),'connected':True,'note':'Publiczne wpisy wymagają weryfikacji; nie stanowią zgody na kontakt.'}}
+    return {'sales_workflow':{'enabled':__import__('backend.sales_workflow',fromlist=['enabled']).enabled(),'outbound':False},'instagram':meta,'google_calendar':{'connected':False,'mode':'manual_link','local_planner_enabled':visit_planner_enabled()},'livespace':{'connected':False,'mode':'adapter_schema_ready'},'agent':{'mode':'openai' if os.getenv('AI_PAID_PROCESSING_APPROVED','false').lower()=='true' and os.getenv('OPENAI_API_KEY') else 'rules','qualification_enabled':os.getenv('AGENT_V2_ENABLED','false').lower()=='true','outbound':False},'discovery':{'provider':'OpenStreetMap','radius_enabled':radius_discovery_enabled(),'connected':True,'note':'Publiczne wpisy wymagają weryfikacji; nie stanowią zgody na kontakt.'}}
 @app.post('/api/agent/jobs',status_code=202)
 def queue_job(payload:JobIn,user=Depends(current),db=Depends(database)):
     from backend.contact_guard import lock_contact
@@ -438,6 +442,9 @@ app.include_router(google_router)
 from backend.native_planning import router as native_router
 from backend import native_retention, native_diagnostics
 app.include_router(native_router)
+
+from backend.sales_workflow import router as sales_router
+app.include_router(sales_router)
 
 DIST=Path(__file__).resolve().parent.parent/'frontend'/'dist'
 if DIST.exists():

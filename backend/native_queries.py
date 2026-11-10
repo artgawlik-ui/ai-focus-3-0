@@ -16,7 +16,7 @@ WITH eligible AS MATERIALIZED (
  SELECT DISTINCT ON (a.salon_id) a.salon_id,a.id,
  CASE WHEN pg_input_is_valid(a.created_at,'timestamp with time zone') THEN CAST(a.created_at AS timestamptz) END AS at
  FROM activities a JOIN eligible e ON e.id=a.salon_id
- WHERE a.kind IN ('call','visit','email_received','instagram_received')
+ WHERE a.kind IN ('call','visit','email_received','instagram_received','instagram_manual','instagram_reply_manual')
  AND CASE WHEN pg_input_is_valid(a.created_at,'timestamp with time zone') THEN CAST(a.created_at AS timestamptz) END<=CAST(:until AS timestamptz)
  ORDER BY a.salon_id,at DESC,a.id DESC
 ), followups AS (
@@ -112,7 +112,7 @@ def report_summary(db,user,day,rep=''):
     AND a.starts_at>=:start AND a.starts_at<:end GROUP BY s.owner_id"""),p).mappings().all()
     cc=db.execute(text("""SELECT a.user_id,count(*) AS contacts_recorded FROM activities a JOIN salons s ON s.id=a.salon_id
     WHERE (:manager OR s.owner_id=:user_id) AND (:rep='' OR s.owner_id=:rep)
-    AND a.kind IN ('call','visit','email_received','instagram_received') AND a.created_at>=:start AND a.created_at<:end AND a.created_at<=:now
+    AND a.kind IN ('call','visit','email_received','instagram_received','instagram_manual','instagram_reply_manual') AND a.created_at>=:start AND a.created_at<:end AND a.created_at<=:now
     AND s.status<>'do_not_contact' AND NOT EXISTS(SELECT 1 FROM meta_conversations m WHERE m.salon_id=s.id AND m.opted_out=1)
     GROUP BY a.user_id"""),p).mappings().all()
     groups={}
