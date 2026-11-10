@@ -1,0 +1,64 @@
+[
+  {
+    "service_worker": "blocked_for_fault_injection; tested separately by production_browser_check",
+    "negative_control": {
+      "negative_control_blocked": true,
+      "record_sanitized": true
+    },
+    "engine": "chromium",
+    "synthetic_salons": 10,
+    "duplicate_rejected": true,
+    "manual_sent_declarations": 2,
+    "positive_reply": 1,
+    "refusal": 1,
+    "inbound_fixture_deduplicated": true,
+    "outbound_http_calls": 0,
+    "kpi": {
+      "neglected": 7,
+      "high_priority": 6,
+      "overdue_tasks": 1,
+      "completed_tasks": 0,
+      "completed_on_time": 0,
+      "tasks_today": 1,
+      "due_next_24h": 1,
+      "at_risk_tasks": 0,
+      "visits_today": 0,
+      "visits_completed_recorded": 0,
+      "visits_uncompleted": 0,
+      "visits_next_2h": 0,
+      "contacts_recorded": 3
+    },
+    "passed": true
+  },
+  {
+    "service_worker": "blocked_for_fault_injection; tested separately by production_browser_check",
+    "negative_control": {
+      "negative_control_blocked": true,
+      "record_sanitized": true
+    },
+    "engine": "webkit",
+    "synthetic_salons": 10,
+    "duplicate_rejected": true,
+    "manual_sent_declarations": 2,
+    "positive_reply": 1,
+    "refusal": 1,
+    "inbound_fixture_deduplicated": true,
+    "outbound_http_calls": 0,
+    "kpi": {
+      "neglected": 13,
+      "high_priority": 12,
+      "overdue_tasks": 1,
+      "completed_tasks": 0,
+      "completed_on_time": 0,
+      "tasks_today": 1,
+      "due_next_24h": 2,
+      "at_risk_tasks": 0,
+      "visits_today": 0,
+      "visits_completed_recorded": 0,
+      "visits_uncompleted": 0,
+      "visits_next_2h": 0,
+      "contacts_recorded": 6
+    },
+    "passed": true
+  }
+]

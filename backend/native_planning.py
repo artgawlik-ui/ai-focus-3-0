@@ -15,7 +15,7 @@ from backend.meta_models import MetaConversation
 router=APIRouter(prefix='/api/focus-calendar',tags=['Natywny kalendarz'])
 ZONE=ZoneInfo('Europe/Warsaw')
 DEFAULTS={'A+':7,'A':14,'B':30,'C':60}
-CONTACT_KINDS=('call','visit','email_received','instagram_received')
+CONTACT_KINDS=('call','visit','email_received','instagram_received','instagram_manual','instagram_reply_manual')
 def schema_enabled():return os.getenv('FOCUS_CALENDAR_SCHEMA_ENABLED','false').strip().lower()=='true'
 def enabled():return schema_enabled() and os.getenv('FOCUS_CALENDAR_ENABLED','false').strip().lower()=='true'
 def require():

@@ -45,7 +45,8 @@ def install():
         if request.url.host=='overpass-api.de':
             return httpx.Response(200,json={'elements':[{'type':'node','id':900000000001,'lat':51.67,'lon':16.08,'tags':{'name':'[TEST] Salon promień','addr:city':'Głogów','addr:street':'Syntetyczna','addr:housenumber':'1'}}]},request=request)
         if request.url.host not in ('localhost','127.0.0.1','::1'):
-            raise AssertionError('External HTTP forbidden in synthetic E2E')
+            from tests.e2e_network_guard import deny
+            deny('http',request.url.host)
         return None
     def handle(self,request):
         result=fixture(request)

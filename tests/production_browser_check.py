@@ -125,8 +125,11 @@ with sync_playwright() as p:
             if label=='webkit-iphone':page.get_by_label('Otwórz menu').click()
             page.get_by_role('button',name='Ustawienia i integracje',exact=True).click()
             operations=page.get_by_label('Diagnostyka kolejki Focus',exact=True)
-            operations.get_by_role('button',name='Odczytaj stan kolejki',exact=True).click()
-            operations.get_by_text('Świeży sygnał procesu nie potwierdza wykonania przypomnień.',exact=False).wait_for()
+            # Require a successful read, rather than masking a missing response with retries.
+            with page.expect_response(lambda response:response.url==origin+'/api/focus-calendar/diagnostics') as diagnostic_response:
+                operations.get_by_role('button',name='Odczytaj stan kolejki',exact=True).click()
+            assert diagnostic_response.value.status==200, 'Diagnostics read failed'
+            expect(operations.get_by_text('Świeży sygnał procesu nie potwierdza wykonania przypomnień.',exact=False)).to_be_visible()
             # A queued job with an invalid timestamp is not an empty queue.
             fault=Path(os.environ['FOCUS_TEST_INVALID_QUEUE_TIME_FLAG'])
             fault.touch()
