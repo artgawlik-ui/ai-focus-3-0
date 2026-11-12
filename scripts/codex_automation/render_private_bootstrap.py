@@ -1,5 +1,6 @@
 """Private Render database bootstrap. No URLs or credentials are logged."""
 import os
+import time
 from urllib.parse import unquote, urlsplit
 
 from durable_reservations import SCHEMA
@@ -48,7 +49,12 @@ def main():
                     raise SystemExit("BLOCKED_WRONG_DATABASE")
     except psycopg.Error:
         raise SystemExit("BLOCKED_DB_CONNECT_OR_SCHEMA") from None
-    print("PASS: isolated private database schema initialized")
+    print("PASS: isolated private database schema initialized", flush=True)
+    # Render Background Worker must stay alive after one-time initialization.
+    # Deliberately idle: no Codex calls, reservations, paid API, or outbound work.
+    print("READY_IDLE: Codex execution disabled pending separate authorization", flush=True)
+    while True:
+        time.sleep(300)
 
 
 if __name__ == "__main__":
