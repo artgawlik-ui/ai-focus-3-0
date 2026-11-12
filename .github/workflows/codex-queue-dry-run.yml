@@ -1,0 +1,26 @@
+name: Codex queue dry-run (no paid API)
+on:
+  workflow_dispatch:
+  pull_request:
+    paths:
+      - 'scripts/codex_automation/queue_policy.py'
+      - 'scripts/codex_automation/queue_dry_run.py'
+      - 'tests/automation/test_queue_policy.py'
+      - '.github/workflows/codex-queue-dry-run.yml'
+permissions:
+  contents: read
+jobs:
+  verify-queue:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Static checks and offline queue transitions
+        run: |
+          python -m compileall -q scripts/codex_automation/queue_policy.py scripts/codex_automation/queue_dry_run.py
+          python scripts/codex_automation/queue_dry_run.py
+      - name: Confirm no paid execution or secrets
+        run: |
+          echo 'Dry-run only. No OpenAI token, billing key, write token or environment used.'
