@@ -8,12 +8,12 @@ import threading
 import uuid
 from decimal import Decimal
 
-from render_private_bootstrap import private_url
+from render_private_bootstrap import validate_private_url
 from durable_reservations import reserve_transaction, BudgetBlocked
 
 def main():
     url = os.environ.get("CODEX_BUDGET_DATABASE_URL", "")
-    if not private_url(url):
+    if validate_private_url(url):
         raise SystemExit("BLOCKED_PRIVATE_DB_URL_REQUIRED")
     import psycopg
     month = "test-" + uuid.uuid4().hex[:12]
