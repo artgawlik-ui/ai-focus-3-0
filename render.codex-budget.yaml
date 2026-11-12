@@ -1,0 +1,17 @@
+# Dedicated isolated worker; do not enable paid Codex execution.
+services:
+  - type: worker
+    name: ai-focus-codex-budget-worker
+    runtime: python
+    region: frankfurt
+    plan: starter
+    repo: https://github.com/artgawlik-ui/ai-focus-3-0
+    branch: feat/codex-private-db-integration
+    autoDeployTrigger: off
+    buildCommand: pip install "psycopg[binary]>=3.2,<4"
+    startCommand: python scripts/codex_automation/render_private_bootstrap.py
+    envVars:
+      - key: CODEX_BUDGET_DATABASE_URL
+        sync: false
+      - key: FOCUS_CODEX_EXECUTION_ENABLED
+        value: "false"
