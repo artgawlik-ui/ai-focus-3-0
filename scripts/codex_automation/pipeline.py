@@ -88,9 +88,10 @@ def authorize(event, api, actor, triggering_actor):
         raise Blocked('TASK_TOO_LARGE')
     # Keep each paid Codex invocation below the model's TPM envelope.
     # Large issues must be decomposed into separately approved atomic tasks.
-    numbered_steps = re.findall(r'(?m)^\\s*\\d+[.)]\\s+\\S', current.get('body') or '')
+    numbered_steps = re.findall(r'(?m)^\s*\d+[.)]\s+\S', current.get('body') or '')
     if len(numbered_steps) > 3:
-        raise Blocked('TASK_SPLIT_REQUIRED')\n    if digest(current) != match[1]:
+        raise Blocked('TASK_SPLIT_REQUIRED')
+    if digest(current) != match[1]:
         raise Blocked('APPROVAL_CONTENT_CHANGED')
     return current
 
