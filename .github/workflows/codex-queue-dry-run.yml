@@ -5,6 +5,7 @@ on:
     paths:
       - 'scripts/codex_automation/queue_policy.py'
       - 'scripts/codex_automation/queue_dry_run.py'
+      - 'scripts/codex_automation/budget_ledger.py'
       - 'tests/automation/test_queue_policy.py'
       - '.github/workflows/codex-queue-dry-run.yml'
 permissions:
@@ -19,7 +20,7 @@ jobs:
           persist-credentials: false
       - name: Static checks and offline queue transitions
         run: |
-          python -m compileall -q scripts/codex_automation/queue_policy.py scripts/codex_automation/queue_dry_run.py
+          python -m compileall -q scripts/codex_automation/queue_policy.py scripts/codex_automation/queue_dry_run.py scripts/codex_automation/budget_ledger.py
           python scripts/codex_automation/queue_dry_run.py
       - name: Confirm no paid execution or secrets
         run: |
