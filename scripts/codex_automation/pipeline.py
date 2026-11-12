@@ -86,7 +86,7 @@ def authorize(event, api, actor, triggering_actor):
         raise Blocked('AUTHOR_PERMISSION_DENIED')
     if len(current.get('body') or '') > 16_000 or len(current['title']) > 256:
         raise Blocked('TASK_TOO_LARGE')
-    if digest(current) != match[1]:
+    # Keep each paid Codex invocation below the model's TPM envelope.\n    # Large issues must be decomposed into separately approved atomic tasks.\n    numbered_steps = re.findall(r'(?m)^\\s*\\d+[.)]\\s+\\S', current.get('body') or '')\n    if len(numbered_steps) > 3:\n        raise Blocked('TASK_SPLIT_REQUIRED')\n    if digest(current) != match[1]:
         raise Blocked('APPROVAL_CONTENT_CHANGED')
     return current
 
@@ -169,7 +169,7 @@ def admit():
     Path('task').mkdir()
     Path('task/snapshot.json').write_text(json.dumps(snapshot))
     Path('task/prompt.txt').write_text(
-        'Implement only the approved task below. No production, network services, credentials, '
+        'Implement only ONE small, independently testable change from the approved task. '\n        'Token/TPM safety: do not dump entire source files, huge diffs or test logs into context; '\n        'inspect only relevant line ranges, run targeted tests, and stop after a small patch. '\n        'If the issue requires more than one change, implement the first atomic change only and '\n        'describe remaining work in the final report for separately approved follow-up issues. '\n        'Do not retry a rate-limit error with the same oversized request. '\n        'No production, network services, credentials, '
         'merge, deployment, migrations or real client messages. Do not change workflows, '
         'instructions or dependency files. Use synthetic tests only. Allowed change roots: '
         'backend/, frontend/src/, tests/, docs/. Write a concise Polish final report. '
