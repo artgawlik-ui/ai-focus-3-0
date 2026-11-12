@@ -22,3 +22,21 @@ assert decide(gate(spend_usd=None))[0] == "BLOCKED_SPEND_UNKNOWN"
 assert decide(gate(provider_hard_cap_verified=False))[0] == "BLOCKED_PROJECT_CAP_OR_KEY"
 assert decide(gate(approved_issues=frozenset())) == ("WAIT_EXPLICIT_APPROVAL", 28)
 print("PASS: offline queue transitions and fail-closed budget gates")
+
+# Exercise reservation and reconciliation with a temporary isolated ledger.
+import tempfile
+from budget_ledger import reserve, reconcile
+with tempfile.TemporaryDirectory() as folder:
+    reserve(folder, month="2026-11", provider_spend="0.03", task=28)
+    try:
+        reserve(folder, month="2026-11", provider_spend="0.03", task=29)
+        raise AssertionError("duplicate reservation unexpectedly succeeded")
+    except FileExistsError:
+        pass
+    reconcile(folder, month="2026-11", task=28, verified_spend="0.04")
+    try:
+        reserve(folder, month="2026-12", provider_spend="7.99", task=29)
+        raise AssertionError("budget check unexpectedly passed")
+    except ValueError:
+        pass
+print("PASS: isolated budget reservation and reconciliation")
