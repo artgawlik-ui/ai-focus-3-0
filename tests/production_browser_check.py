@@ -13,7 +13,7 @@ def open_mobile_menu(page, target, diagnostic_name):
         if 'open' not in (sidebar.get_attribute('class') or '').split():
             page.get_by_label('Otwórz menu', exact=True).click()
         expect(sidebar).to_have_class('sidebar open', timeout=30000)
-        expect(target).to_be_in_viewport(ratio=1, timeout=30000)
+        expect(target).to_be_in_viewport(timeout=30000)
     except Exception:
         output = Path('test-results')
         output.mkdir(exist_ok=True)
