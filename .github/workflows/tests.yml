@@ -26,6 +26,8 @@ jobs:
       - run: npm run build --prefix frontend
       - run: python -m playwright install --with-deps chromium webkit
       - run: python -m tests.ci_e2e
+        env:
+          FOCUS_TEST_WEBKIT_REPETITIONS: '10'
       - run: npm audit --prefix frontend
       - run: pip-audit -r requirements.txt --format=json --output=test-results/pip-audit-ci.json
       - uses: actions/upload-artifact@v4
