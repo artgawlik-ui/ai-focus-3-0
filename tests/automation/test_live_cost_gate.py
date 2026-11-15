@@ -4,13 +4,14 @@ from decimal import Decimal
 from io import BytesIO, StringIO
 import json
 from pathlib import Path
-from unittest.mock import Mock, patch
+from unittest.mock import Mock, MagicMock, patch
 from contextlib import redirect_stderr
 
 import pytest
 
 from scripts.codex_automation import live_cost_gate as gate
-from scripts.codex_automation.openai_costs import read_project_costs, CostsUnavailable
+from scripts.codex_automation.openai_costs import read_project_costs, CostsUnavailable, RejectRedirect
+from scripts.codex_automation.durable_reservations import BudgetBlocked
 
 NOW = datetime(2026, 11, 16, 12, tzinfo=timezone.utc)
 ENV = {"OPENAI_COSTS_ADMIN_KEY": "synthetic-only", "OPENAI_PROJECT_ID": "proj_test"}
@@ -121,6 +122,22 @@ def test_provider_error_is_sanitized_before_cli_output():
     with patch.dict("os.environ",ENV,clear=True), patch.object(gate,"read_project_costs",side_effect=RuntimeError("SYNTHETIC_SECRET")), redirect_stderr(output):
         assert gate.main(["check"])==1
     assert output.getvalue()=="BLOCKED: COSTS_UNAVAILABLE\n"
+
+
+def test_pending_reservations_block_even_when_provider_costs_are_low():
+    conn=MagicMock()
+    conn.__enter__.return_value=conn
+    cursor=conn.cursor.return_value.__enter__.return_value
+    cursor.fetchone.return_value=(Decimal("6.00"),)
+    with pytest.raises(BudgetBlocked,match="MONTHLY_BUDGET"):
+        gate.reserve_approved_task(conn,authorize=lambda:True,issue=28,
+            reservation_id="synthetic",env=ENV,now=NOW,
+            reader=lambda **kw:(Decimal("0.03"),NOW))
+    assert not any("INSERT" in call.args[0] for call in cursor.execute.call_args_list)
+
+
+def test_admin_credential_cannot_follow_provider_redirect():
+    assert RejectRedirect().redirect_request(Mock(),None,302,"redirect",{},"https://example.invalid")==None
 
 
 def test_workflow_cost_check_precedes_paid_action_and_key_is_step_scoped():
