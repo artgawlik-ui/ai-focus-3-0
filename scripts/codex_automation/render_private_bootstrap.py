@@ -1,7 +1,7 @@
 """Private Render database bootstrap. No URLs or credentials are logged."""
 import os
 import time
-from urllib.parse import unquote, urlsplit
+from urllib.parse import urlsplit
 
 from durable_reservations import SCHEMA
 
@@ -14,6 +14,12 @@ def validate_private_url(url: str) -> str:
     """Return a non-sensitive error code; never include the URL in errors."""
     if not url:
         return "BLOCKED_DB_URL_MISSING"
+    if not isinstance(url, str) or any(ord(char) < 32 or ord(char) == 127 for char in url):
+        return "BLOCKED_DB_URL_INVALID"
+    # libpq query options can override the authority/path validated below.
+    # This private bootstrap accepts only the canonical credential URI.
+    if "?" in url or "#" in url:
+        return "BLOCKED_DB_URL_OPTIONS"
     try:
         parsed = urlsplit(url.strip())
         if parsed.scheme not in ("postgres", "postgresql"):
@@ -22,7 +28,7 @@ def validate_private_url(url: str) -> str:
             return "BLOCKED_DB_URL_AUTH"
         if (parsed.hostname or "").lower() != EXPECTED_HOST:
             return "BLOCKED_DB_URL_HOST"
-        if unquote(parsed.path.lstrip("/")) != EXPECTED_DB:
+        if parsed.path != "/" + EXPECTED_DB:
             return "BLOCKED_DB_URL_NAME"
         if parsed.port not in (None, 5432):
             return "BLOCKED_DB_URL_PORT"
