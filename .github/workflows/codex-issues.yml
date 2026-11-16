@@ -44,11 +44,15 @@ jobs:
           if-no-files-found: error
   codex:
     needs: admission
+    concurrency:
+      group: focus-codex-paid-executor
+      cancel-in-progress: false
     runs-on: ubuntu-24.04
     environment: codex-development
     timeout-minutes: 15
     permissions:
       contents: read
+      statuses: read # read only the private controller's reservation receipt
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
         with:
@@ -65,6 +69,34 @@ jobs:
         run: |
           test -n "$API_KEY" || { echo 'BLOCKED: API_AUTH_MISSING'; exit 1; }
           test -n "$MODEL" || { echo 'BLOCKED: APPROVED_MODEL_MISSING'; exit 1; }
+      - name: Authenticated live costs preflight (fail closed)
+        env:
+          OPENAI_COSTS_ADMIN_KEY: ${{ secrets.OPENAI_COSTS_ADMIN_KEY }}
+          OPENAI_PROJECT_ID: ${{ vars.OPENAI_PROJECT_ID }}
+        run: python scripts/codex_automation/live_cost_gate.py check
+      - name: Prepare immutable private budget request
+        env:
+          FOCUS_PRIVATE_TRANSPORT_ENABLED: ${{ vars.FOCUS_PRIVATE_TRANSPORT_ENABLED }}
+          APPROVED_NUMBER: ${{ needs.admission.outputs.number }}
+          APPROVED_BASE: ${{ needs.admission.outputs.base }}
+          APPROVED_BRANCH: ${{ needs.admission.outputs.branch }}
+          APPROVED_DIGEST: ${{ needs.admission.outputs.digest }}
+        run: python scripts/codex_automation/github_budget_transport.py request
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: budget-request-${{ github.run_id }}-${{ github.run_attempt }}
+          path: budget-request/request.json
+          retention-days: 1
+          if-no-files-found: error
+      - name: Wait for private PostgreSQL reservation receipt
+        env:
+          GH_TOKEN: ${{ github.token }}
+          FOCUS_PRIVATE_TRANSPORT_ENABLED: ${{ vars.FOCUS_PRIVATE_TRANSPORT_ENABLED }}
+        run: python scripts/codex_automation/github_budget_transport.py wait
+      - name: Require private admission transport (not provisioned)
+        run: |
+          echo "BLOCKED: PRIVATE_ADMISSION_TRANSPORT_REQUIRED"
+          exit 1
       - name: Real Codex executor (no mock fallback)
         uses: openai/codex-action@bdf19a4a223ec2549a3e2274a0cf61556bc07675 # v1
         with:
