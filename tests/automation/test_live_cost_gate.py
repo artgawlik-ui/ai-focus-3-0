@@ -133,3 +133,25 @@ class LiveCostGateTests(unittest.TestCase):
     def test_unrecognized_cost_exception_text_is_sanitized(self):
         with self.assertRaisesRegex(gate.CostGateBlocked, '^COSTS_UNAVAILABLE$'):
             gate.check_live_costs(env=ENV, now=NOW, reader=Mock(side_effect=CostsUnavailable('SYNTHETIC_SECRET')))
+
+
+class ProviderRetryAfterTests(unittest.TestCase):
+    def test_retry_after_metadata_survives_cost_gate_without_raw_provider_data(self):
+        for value, expected in [('3600',3600),('Mon, 16 Nov 2026 14:00:00 GMT',7200),
+                                ('0',900),('-1',900),('not-a-date SYNTHETIC_SECRET',900),
+                                ('999999999',86400),('Mon, 16 Nov 2026 11:00:00 GMT',900),
+                                ('x'*129,900),('3600\r\nSYNTHETIC_SECRET',900)]:
+            def reader(**kwargs):
+                return read_pages([HTTPError('https://example.invalid',429,'SYNTHETIC_SECRET',{'Retry-After':value},BytesIO(b'SYNTHETIC_SECRET'))])
+            with self.subTest(value=value),self.assertRaises(gate.CostGateBlocked) as cm:
+                gate.check_live_costs(env=ENV,now=NOW,reader=reader)
+            self.assertEqual(str(cm.exception),'COSTS_RATE_LIMITED')
+            self.assertEqual(cm.exception.retry_after_seconds,expected)
+
+    def test_unrelated_errors_cannot_inject_retry_metadata(self):
+        for reason, delay in [('SYNTHETIC_SECRET',3600),('COSTS_RATE_LIMITED','SYNTHETIC_SECRET'),
+                              ('COSTS_RATE_LIMITED',True),('COSTS_RATE_LIMITED',86401)]:
+            reader=Mock(side_effect=CostsUnavailable(reason,retry_after_seconds=delay))
+            with self.subTest(reason=reason,delay=delay),self.assertRaises(gate.CostGateBlocked) as cm:
+                gate.check_live_costs(env=ENV,now=NOW,reader=reader)
+            self.assertIsNone(cm.exception.retry_after_seconds)

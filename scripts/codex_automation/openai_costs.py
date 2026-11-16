@@ -1,5 +1,7 @@
 """Read-only OpenAI organization costs client. Never logs credentials or raw responses."""
 import json
+from email.utils import parsedate_to_datetime
+from math import ceil
 from datetime import datetime, timezone
 from decimal import Decimal, InvalidOperation
 import re
@@ -11,7 +13,29 @@ ENDPOINT = "https://api.openai.com/v1/organization/costs"
 
 
 class CostsUnavailable(RuntimeError):
-    pass
+    def __init__(self, code, *, retry_after_seconds=None):
+        super().__init__(code)
+        self.retry_after_seconds = retry_after_seconds
+
+
+def retry_delay(value, now):
+    """Bounded Retry-After seconds/date; raw provider fields never leave here."""
+    fallback, maximum = 900, 86400
+    if (not isinstance(value, str) or len(value) > 128 or
+        any(ord(c) < 32 or ord(c) == 127 for c in value)):
+        return fallback
+    value = value.strip()
+    try:
+        if re.fullmatch(r'[0-9]{1,9}', value):
+            seconds = int(value)
+        else:
+            until = parsedate_to_datetime(value)
+            if until.utcoffset() is None:
+                return fallback
+            seconds = ceil((until-now).total_seconds())
+        return max(fallback, min(seconds, maximum))
+    except (ValueError, TypeError, OverflowError):
+        return fallback
 
 
 class RejectRedirect(HTTPRedirectHandler):
@@ -52,7 +76,8 @@ def read_project_costs(*, admin_key: str, project_id: str, month_start: int,
                 data = json.load(response, parse_float=Decimal)
         except HTTPError as exc:
             code = "COSTS_RATE_LIMITED" if exc.code == 429 else "COSTS_API_UNAVAILABLE"
-            raise CostsUnavailable(code) from None
+            delay = retry_delay(exc.headers.get('Retry-After') if exc.headers else None, now) if exc.code == 429 else None
+            raise CostsUnavailable(code, retry_after_seconds=delay) from None
         except Exception:
             raise CostsUnavailable("COSTS_API_UNAVAILABLE") from None
         if not isinstance(data, dict) or not isinstance(data.get("data"), list):

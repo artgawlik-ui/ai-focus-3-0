@@ -152,3 +152,25 @@ remains a provider-side availability constraint. A subsequent live smoke still
 requires separate release authorization, reconciliation of the existing hold and
 a new approved issue. CI uses synthetic HTTP and isolated PostgreSQL; it does
 not establish successful live transport.
+
+
+### Waiting for genuine cost coverage
+
+An unresolved hold blocks admission until provider coverage includes the trusted
+finish timestamp. No timeout, low historical spend or skipped model step releases
+it. Pending coverage is now logged as WAIT: COSTS_NOT_YET_COVERING_EXECUTION and
+checked again after 900 seconds instead of 60. This reduces unnecessary reads
+without caching an observation as authorization or changing reconciliation rules.
+
+HTTP 429 remains fail-closed. Its Retry-After header can supply seconds or an
+HTTP date (RFC 9110 section 10.2.3). Only a normalized integer delay crosses the
+cost adapter/gate boundary. Invalid values use 900 seconds; valid values are
+bounded to 900–86400 seconds. Raw headers, URLs, bodies and credentials are never
+logged. These are local scheduling bounds, not a provider freshness guarantee.
+The existing 120-second runner wait and 90-second admission window do not grow;
+a rate-limited task may fail and must not be replayed automatically.
+
+Cooldown uses the existing interruptible stop event, so SIGTERM remains prompt.
+It is process-local: a restart may perform one fresh GET sooner; durable holds
+remain authoritative across restart. There is no new cron, service, schema,
+permission, model call or hold release. Default ready polling stays unchanged.

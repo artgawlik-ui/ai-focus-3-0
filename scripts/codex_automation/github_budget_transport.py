@@ -370,7 +370,15 @@ def serve(api, connect, *, trusted_sha, stop, logger=print):
         except CostGateBlocked as exc:
             code = "COSTS_RATE_LIMITED" if str(exc) == "COSTS_RATE_LIMITED" else "COSTS_UNAVAILABLE"
             message, delay = "BLOCKED: " + code, 60
-        except (TransportBlocked, lifecycle.ExecutionBlocked, policy.Blocked):
+            if code == 'COSTS_RATE_LIMITED':
+                retry = getattr(exc, 'retry_after_seconds', None)
+                delay = retry if type(retry) is int and 900 <= retry <= 86400 else 900
+        except lifecycle.ExecutionBlocked as exc:
+            if str(exc) == 'COSTS_NOT_YET_COVERING_EXECUTION':
+                message, delay = 'WAIT: COSTS_NOT_YET_COVERING_EXECUTION', 900
+            else:
+                message, delay = 'BLOCKED: PRIVATE_CONTROLLER_CHECK_FAILED', 60
+        except (TransportBlocked, policy.Blocked):
             # Leave holds untouched. API/DB/Costs errors cannot grant a receipt.
             message, delay = 'BLOCKED: PRIVATE_CONTROLLER_CHECK_FAILED', 60
         except Exception:
