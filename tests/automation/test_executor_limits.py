@@ -204,8 +204,9 @@ class LimitsTests(unittest.TestCase):
             ({'tools': [{'type': 'mcp'}]}, 'HOSTED_OR_UNKNOWN_TOOL_REJECTED'),
             ({'input': [{'type': 'input_image', 'image_url': 'https://example.invalid'}]},
              'OPAQUE_OR_MEDIA_INPUT_REJECTED'),
-            ({'input': [{'type': 'reasoning', 'encrypted_content': 'opaque'}]},
+            ({'input': [{'type': 'compaction', 'encrypted_content': 'opaque'}]},
              'OPAQUE_OR_MEDIA_INPUT_REJECTED'),
+            ({'reasoning': {'mode': 'pro'}}, 'REASONING_MODE_REJECTED'),
             ({'previous_response_id': 'external'}, 'UNSUPPORTED_REQUEST'),
             ({'service_tier': 'priority'}, 'SERVICE_TIER_REJECTED'),
             ({'background': True}, 'UNSUPPORTED_REQUEST'),
@@ -328,6 +329,13 @@ class LimitsTests(unittest.TestCase):
         self.blocked(gate, 'REQUEST_TOO_LARGE', b'x' * 262145)
         self.assertFalse(self.fake.calls)
 
+
+    def test_explicit_reasoning_history_is_included_in_provider_count(self):
+        gate = self.gate()
+        history = [{'type': 'reasoning', 'encrypted_content': 'synthetic-provider-history'}]
+        gate.exchange(self.request(input=history, reasoning={'mode': 'standard'}))
+        self.assertEqual(self.fake.calls[0][1]['input'], history)
+        self.assertEqual(self.fake.calls[1][1]['input'], history)
 
 if __name__ == '__main__':
     unittest.main()

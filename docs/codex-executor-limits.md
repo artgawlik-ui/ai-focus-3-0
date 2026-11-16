@@ -13,7 +13,7 @@ The action and agent never receive it. Preserve the pinned action's provider,
 permission and sudo protections; do not replace this with an unguarded CLI.
 
 Only POST /responses is exposed. Redirects, environment proxies, alternate
-origins, compaction, persistent conversation IDs, opaque encrypted history,
+origins, compaction, persistent conversation IDs,
 media and hosted billable tools are rejected. Only local function/custom tool
 definitions are accepted. Compatibility failures stop the session; they must
 not fall back to a direct API endpoint.
@@ -24,7 +24,9 @@ counts or an unsupported count request stop execution without generating.
 max_output_tokens is imposed on the outgoing generation request, independent
 of CLI config or prompt instructions. It includes the provider's total output
 allowance, including reasoning tokens. service_tier is fixed to default,
-store=false and truncation=disabled.
+store=false and truncation=disabled. Pro reasoning mode is rejected.
+Explicit provider reasoning history is passed unchanged to token counting;
+there is no local guess at the size of encrypted reasoning content.
 
 Under one lock the gateway checks request count, input limit, total reserved
 tokens, rolling 60-second token allowance, deadline and conservative cost.

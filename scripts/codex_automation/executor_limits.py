@@ -111,8 +111,12 @@ def normalize(body, policy):
         raise Limit('MODEL_OR_INPUT_REJECTED')
     if body.get('service_tier', 'default') not in ('default', None):
         raise Limit('SERVICE_TIER_REJECTED')
+    reasoning = body.get('reasoning')
+    if reasoning is not None and (not isinstance(reasoning, dict) or
+        reasoning.get('mode') not in (None, 'standard')):
+        raise Limit('REASONING_MODE_REJECTED')
     # Only client-executed tools; no separately billable hosted tools, nested
-    # namespaces, external state, media, files, compaction or opaque token input.
+    # namespaces, external state, media, files or compaction.
     tools = body.get('tools', [])
     if not isinstance(tools, list) or any(not isinstance(t, dict) or
         t.get('type') not in ('function', 'custom') for t in tools):
@@ -121,7 +125,7 @@ def normalize(body, policy):
                     'item_reference', 'image_generation_call'}
     def inspect(value):
         if isinstance(value, dict):
-            if value.get('type') in denied_types or 'encrypted_content' in value:
+            if value.get('type') in denied_types:
                 raise Limit('OPAQUE_OR_MEDIA_INPUT_REJECTED')
             for child in value.values():
                 inspect(child)
