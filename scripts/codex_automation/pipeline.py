@@ -37,13 +37,13 @@ def digest(issue):
 
 
 class API:
-    def __init__(self):
-        self.token = os.environ.get('GH_TOKEN', '')
+    def __init__(self, token=None):
+        self.token = os.environ.get('GH_TOKEN', '') if token is None else token
         if not self.token:
             raise Blocked('GITHUB_AUTH_MISSING')
 
     def call(self, method, path, data=None):
-        if not path.startswith(f'/repos/{REPO}/'):
+        if not path.startswith(f'/repos/{REPO}/') and not (method == 'GET' and path == '/user'):
             raise Blocked('API_SCOPE_REJECTED')
         request = Request('https://api.github.com' + path, method=method,
                           data=json.dumps(data).encode() if data is not None else None,
