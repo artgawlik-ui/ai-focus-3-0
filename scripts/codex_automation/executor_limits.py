@@ -145,7 +145,7 @@ def normalize(body, policy):
                     'item_reference', 'image_generation_call'}
     def inspect(value):
         if isinstance(value, dict):
-            if value.get('type') in denied_types:
+            if isinstance(value.get('type'), str) and value['type'] in denied_types:
                 raise Limit('OPAQUE_OR_MEDIA_INPUT_REJECTED')
             for child in value.values():
                 inspect(child)

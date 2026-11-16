@@ -389,5 +389,13 @@ class LimitsTests(unittest.TestCase):
                 normalize({'model': 'synthetic-model', 'input': 'offline',
                            'tools': [{'type': 'namespace', 'tools': [child]}]}, policy())
 
+    def test_nullable_json_schema_does_not_break_media_validation(self):
+        gate = self.gate()
+        tools = [{'type': 'function', 'name': 'shell',
+                  'parameters': {'type': 'object', 'properties': {
+                      'cwd': {'type': ['string', 'null']}}}}]
+        gate.exchange(self.request(tools=tools))
+        self.assertEqual(self.fake.calls[0][1]['tools'], tools)
+
 if __name__ == '__main__':
     unittest.main()
