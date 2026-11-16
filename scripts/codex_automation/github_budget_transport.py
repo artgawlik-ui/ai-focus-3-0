@@ -191,14 +191,16 @@ def verify_request(api, payload, *, trusted_sha, now=None):
     return task
 
 
-def handle_request(api, conn, payload, *, trusted_sha, now=None, reader=None):
+def handle_request(api, conn, payload, *, trusted_sha, now=None, reader=None, accepting=lambda: True):
     if api.call('GET', '/user').get('login') != RECEIPT_LOGIN:
         raise TransportBlocked('PRIVATE_CONTROLLER_IDENTITY_REQUIRED')
     task = verify_request(api, payload, trusted_sha=trusted_sha, now=now)
     # No success receipt is posted unless this exact run is durably reserved.
     # Re-delivery fails closed (no second receipt/paid run) rather than creating a
     # second hold. A lost receipt retains its hold for explicit reconciliation.
-    lifecycle.admit(conn, task=task, authorize=lambda candidate: candidate == task,
+    if not accepting():
+        raise TransportBlocked('CONTROLLER_DRAINING')
+    lifecycle.admit(conn, task=task, authorize=lambda candidate: candidate == task and accepting(),
                     now=now, reader=reader)
     receipt = api.call('POST', f'{PREFIX}/statuses/{task.base}', {
         'state':'success', 'context':context(payload),
@@ -219,7 +221,11 @@ def wait_receipt(api, payload, *, timeout=120, clock=time.monotonic, sleep=time.
         # Paginate boundedly; no receipt within the bounds means BLOCKED, never
         # infer success from the combined status or a different run's context.
         for page in range(1, 6):
+            if clock() >= deadline:
+                raise TransportBlocked('PRIVATE_RECEIPT_TIMEOUT')
             rows = api.call('GET', f"{PREFIX}/commits/{payload['base']}/statuses?per_page=100&page={page}")
+            if clock() >= deadline:
+                raise TransportBlocked('PRIVATE_RECEIPT_TIMEOUT')
             if not isinstance(rows, list):
                 raise TransportBlocked('INVALID_RECEIPT_RESPONSE')
             for row in rows:
@@ -237,7 +243,7 @@ def wait_receipt(api, payload, *, timeout=120, clock=time.monotonic, sleep=time.
     raise TransportBlocked('PRIVATE_RECEIPT_TIMEOUT')
 
 
-def poll_once(api, conn, *, trusted_sha, now=None, reader=None, downloader=download):
+def poll_once(api, conn, *, trusted_sha, now=None, reader=None, downloader=download, accepting=lambda: True):
     runs = api.call('GET', f'{PREFIX}/actions/workflows/codex-issues.yml/runs?event=issue_comment&status=in_progress&per_page=10')
     for run in runs.get('workflow_runs', []):
         run_id = run.get('id')
@@ -255,7 +261,8 @@ def poll_once(api, conn, *, trusted_sha, now=None, reader=None, downloader=downl
         payload = decode_archive(downloader(api, requests[0]['id']))
         if payload['run_id'] != run_id:
             raise TransportBlocked('ARTIFACT_RUN_MISMATCH')
-        handle_request(api, conn, payload, trusted_sha=trusted_sha, now=now, reader=reader)
+        handle_request(api, conn, payload, trusted_sha=trusted_sha, now=now, reader=reader,
+                       accepting=accepting)
         return 1  # at most one reservation per explicit poll
     return 0
 
@@ -308,7 +315,9 @@ def serve(api, connect, *, trusted_sha, stop, logger=print):
         try:
             with connect() as conn:
                 if refresh_runs(api, conn):
-                    count = poll_once(api, conn, trusted_sha=trusted_sha)
+                    if stop.is_set():
+                        break
+                    count = poll_once(api, conn, trusted_sha=trusted_sha, accepting=lambda: not stop.is_set())
                     message = 'READY: private controller polling' if not count else 'PASS: reservation committed'
                 else:
                     message = 'WAIT: active execution retains reservation'

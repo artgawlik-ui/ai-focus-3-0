@@ -23,7 +23,8 @@ workflows, change Render settings, create a credential or expose PostgreSQL.
    task instead of automatic retry. First-attempt only is intentional.
 4. The private PostgreSQL lifecycle commits the reservation and immutable task
    identity before the controller posts a success commit status. Receipt context
-   binds run, attempt and all 256 nonce bits. The GitHub job waits at most 120s for
+   binds run, attempt and all 256 nonce bits. The GitHub job uses a 120s deadline
+   (plus a possible in-flight HTTP timeout of 20s) for
    that exact status, target URL, description and pinned controller user. It never
    accepts a combined CI success, another run's context or github-actions[bot].
 5. A failed/lost receipt leaves the reservation intact; repeat delivery cannot

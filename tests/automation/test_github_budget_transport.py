@@ -7,7 +7,7 @@ import os
 from pathlib import Path
 import tempfile
 import unittest
-from unittest.mock import Mock, patch
+from unittest.mock import MagicMock, Mock, patch
 from urllib.error import HTTPError
 from zipfile import ZipFile, ZipInfo
 
@@ -280,6 +280,19 @@ class TransportTests(unittest.TestCase):
         connect,logger=Mock(),Mock()
         t.serve(API(),connect,trusted_sha=BASE,stop=stop,logger=logger)
         connect.assert_not_called(); logger.assert_not_called()
+
+    def test_signal_during_refresh_stops_before_next_poll(self):
+        stop=Mock(); stop.is_set.side_effect=[False,True]
+        with patch.object(t,'refresh_runs',return_value=True) as refresh,patch.object(t,'poll_once') as poll:
+            t.serve(API(),MagicMock(),trusted_sha=BASE,stop=stop,logger=Mock())
+        refresh.assert_called_once()
+        poll.assert_not_called()
+
+    def test_signal_after_authorization_prevents_new_reservation(self):
+        with patch.object(t.lifecycle,'admit') as admit:
+            with self.assertRaisesRegex(t.TransportBlocked,'CONTROLLER_DRAINING'):
+                t.handle_request(API(),Mock(),payload(),trusted_sha=BASE,now=NOW,accepting=lambda:False)
+            admit.assert_not_called()
 
     def test_loop_failure_leaves_holds_and_exits_on_signal(self):
         stop=Mock(); stop.is_set.side_effect=[False,True]
