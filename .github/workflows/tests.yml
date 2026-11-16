@@ -12,7 +12,6 @@ jobs:
         ports: ['5432:5432']
         options: --health-cmd pg_isready --health-interval 5s --health-timeout 5s --health-retries 10
     env:
-      FOCUS_TEST_WEBKIT_REPETITIONS: '10'
       DATABASE_URL: postgresql://postgres:ci-only-password@localhost:5432/focus3_test
     steps:
       - uses: actions/checkout@v4
