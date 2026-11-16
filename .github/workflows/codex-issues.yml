@@ -44,6 +44,9 @@ jobs:
           if-no-files-found: error
   codex:
     needs: admission
+    concurrency:
+      group: focus-codex-paid-executor
+      cancel-in-progress: false
     runs-on: ubuntu-24.04
     environment: codex-development
     timeout-minutes: 15
@@ -65,6 +68,11 @@ jobs:
         run: |
           test -n "$API_KEY" || { echo 'BLOCKED: API_AUTH_MISSING'; exit 1; }
           test -n "$MODEL" || { echo 'BLOCKED: APPROVED_MODEL_MISSING'; exit 1; }
+      - name: Authenticated live costs preflight (fail closed)
+        env:
+          OPENAI_COSTS_ADMIN_KEY: ${{ secrets.OPENAI_COSTS_ADMIN_KEY }}
+          OPENAI_PROJECT_ID: ${{ vars.OPENAI_PROJECT_ID }}
+        run: python scripts/codex_automation/live_cost_gate.py check
       - name: Real Codex executor (no mock fallback)
         uses: openai/codex-action@bdf19a4a223ec2549a3e2274a0cf61556bc07675 # v1
         with:

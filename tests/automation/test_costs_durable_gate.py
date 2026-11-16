@@ -21,7 +21,8 @@ def fake_open(request, timeout):
     return Response(json.dumps({"data": [{
         "end_time": 1794441600,
         "results": [{"project_id": "proj_test", "amount": {
-            "currency": "usd", "value": 0.15}}]}]}).encode())
+            "currency": "usd", "value": 0.15}}]}],
+            "has_more": False, "next_page": None}).encode())
 
 
 def test_read_only_costs():
