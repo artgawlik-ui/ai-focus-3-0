@@ -37,7 +37,9 @@ class OfflineGateway(Gateway):
             # CI fixture only: fixed error code and protocol field names, no values.
             body = json.loads(data)
             keys = sorted(body) if isinstance(body, dict) else []
-            print('OFFLINE_REJECT: ' + str(error) + ' keys=' + repr(keys), flush=True)
+            types = [tool.get('type') for tool in body.get('tools', []) if isinstance(tool, dict)]
+            print('OFFLINE_REJECT: ' + str(error) + ' keys=' + repr(keys) +
+                  ' tool_types=' + repr(types), flush=True)
             raise
 
 

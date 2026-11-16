@@ -43,6 +43,7 @@ jobs:
           openai-api-key: 'offline-dummy-no-real-key'
           responses-api-endpoint: 'http://127.0.0.1:8765/responses'
           codex-version: '0.167.0'
+          codex-args: '["-c","web_search=\"disabled\""]'
           permission-profile: ':workspace'
           safety-strategy: drop-sudo
           allow-bots: false
