@@ -79,6 +79,16 @@ class Policy:
         self.expires = expires
         self.input_price = money(quote.get('input_usd_per_million'), 1000)
         self.output_price = money(quote.get('output_usd_per_million'), 1000)
+        # Require an explicit reviewed count-endpoint ceiling, including zero
+        # only when verified free. Never silently omit preflight API charges.
+        try:
+            fee = Decimal(str(quote.get('max_count_usd_per_request')))
+            if not fee.is_finite() or not 0 <= fee <= 2:
+                raise ValueError()
+            self.count_fee = int((fee * 1_000_000_000).to_integral_value(
+                rounding=ROUND_CEILING))
+        except (InvalidOperation, ValueError):
+            raise Limit('COUNT_ENDPOINT_PRICE_REQUIRED') from None
         self.budget = int(money(raw.get('max_usd'), 2) * 1_000_000_000)
         self.requests = integer(raw.get('max_requests'), 5)
         self.input_tokens = integer(raw.get('max_input_tokens_per_request'), 60000)
@@ -183,13 +193,17 @@ class Gateway:
         self.directory = Path(state_dir)
         self.directory.mkdir(mode=0o700, parents=False, exist_ok=False)
         self.records = []
+        self.count_records = []
         self.stopped = False
         self.save()
 
     def save(self):
         ledger = {'schema': 1, 'stopped': self.stopped, 'requests': len(self.records),
                   'reserved_tokens': sum(r['tokens'] for r in self.records),
-                  'reserved_nusd': sum(r['nusd'] for r in self.records),
+                  'reserved_nusd': sum(r['nusd'] for r in self.records) +
+                      sum(r['nusd'] for r in self.count_records),
+                  'count_requests': len(self.count_records),
+                  'count_reservations': self.count_records,
                   'reservations': self.records}
         temporary = self.directory / 'ledger.tmp'
         with temporary.open('w', encoding='utf-8') as file:
@@ -225,6 +239,11 @@ class Gateway:
                 if len(self.records) >= self.policy.requests:
                     self.stop('REQUEST_LIMIT')
                 counting = {k: v for k, v in body.items() if k in COUNT_FIELDS}
+                committed = sum(r['nusd'] for r in self.records + self.count_records)
+                if committed + self.policy.count_fee > self.policy.budget:
+                    self.stop('COUNT_COST_CEILING')
+                self.count_records.append({'nusd': self.policy.count_fee})
+                self.save()  # Reserve preflight API allowance before sending it.
                 _, counted = self.upstream.post('input_tokens', counting,
                                                 min(20, self.remaining()))
                 count = decode(counted)
@@ -245,7 +264,7 @@ class Gateway:
                 now = self.clock()
                 if sum(r['tokens'] for r in self.records if now - r['at'] < 60) + reserved > self.policy.tpm:
                     self.stop('TPM_LIMIT')
-                if sum(r['nusd'] for r in self.records) + nusd > self.policy.budget:
+                if sum(r['nusd'] for r in self.records + self.count_records) + nusd > self.policy.budget:
                     self.stop('COST_CEILING')
                 # Durable conservative reservation BEFORE the potentially paid POST.
                 # Never refund on errors, disconnects, missing usage or short output.

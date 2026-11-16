@@ -33,7 +33,9 @@ tokens, rolling 60-second token allowance, deadline and conservative cost.
 It fsyncs a reservation BEFORE a generation POST. Reservation =
 counted input + maximum output. Cost ceiling uses Decimal arithmetic, rounds
 UP to nanodollars, prices all input as uncached and reserves all possible
-output. Unused allowance is NEVER refunded in this gateway. Errors, HTTP429,
+output. A separate reviewed maximum count-endpoint fee is also reserved
+and fsynced BEFORE each counting request. Both allowances share the same budget.
+Unused allowance is NEVER refunded in this gateway. Errors, HTTP429,
 timeouts and missing results never retry or reset this allowance.
 
 Reaching a quota permanently stops further generation for that job. A request
@@ -53,9 +55,10 @@ a reviewed exact model and current STANDARD/default-tier tariff. Policy review
 must record official pricing URL, repository review reference, verified_at and
 expires_at (at most 24 hours apart), input/output USD per million, compatible
 model context/output limits, and an allowance no higher than the controller's
-live private receipt and available monthly budget. Verify the token-counting
-endpoint's billing/permissions and compatibility before activation; its costs
-are not assumed to be zero or included in the generation-only calculation.
+live private receipt and available monthly budget. The tariff must explicitly include max_count_usd_per_request (a reviewed upper
+bound per counting request, or zero only with evidence that it is free). Missing
+count pricing blocks launch. Verify endpoint billing/permissions and compatibility
+before activation; count costs are never silently assumed to be zero.
 
 The policy is loaded into root memory before drop-sudo; later agent edits do
 not change it. The root-owned exclusive /run/focus-codex-RUN-ATTEMPT directory

@@ -22,7 +22,8 @@ def policy(**changes):
                    'verified_at': '2026-11-16T00:00:00Z',
                    'expires_at': '2026-11-17T00:00:00Z',
                    'input_usd_per_million': '1',
-                   'output_usd_per_million': '1'},
+                   'output_usd_per_million': '1',
+                   'max_count_usd_per_request': '0'},
         'max_usd': '0.001', 'max_requests': 2,
         'max_input_tokens_per_request': 100,
         'max_output_tokens_per_request': 20,
@@ -150,7 +151,7 @@ class LimitsTests(unittest.TestCase):
         with patch.object(gate, 'save', side_effect=OSError('disk unavailable')):
             with self.assertRaises(Exception):
                 gate.exchange(self.request())
-        self.assertEqual([c[0] for c in self.fake.calls], ['input_tokens'])
+        self.assertEqual(self.fake.calls, [])
         self.assertTrue(gate.stopped)
 
     def test_deadline_before_request(self):
@@ -344,6 +345,32 @@ class LimitsTests(unittest.TestCase):
         self.assertNotIn('client_metadata', self.fake.calls[1][1])
         self.assertNotIn('synthetic-trace-marker',
                          (gate.directory / 'ledger.json').read_text())
+
+    def test_preflight_fee_reserved_before_count_and_retained_after_error(self):
+        raw_policy = policy()
+        raw_policy.count_fee = 20000
+        fake = Fake()
+        def broken(*args):
+            raise TimeoutError('count interrupted')
+        fake.post = broken
+        gate = Gateway(raw_policy, fake, Path(self.temporary.name) / 'run',
+                       wall=lambda: self.now)
+        self.blocked(gate, 'UPSTREAM_OR_LEDGER_FAILURE')
+        ledger = json.loads((gate.directory / 'ledger.json').read_text())
+        self.assertEqual(ledger['reserved_nusd'], 20000)
+        self.assertEqual(ledger['count_requests'], 1)
+        self.assertFalse(gate.records)
+
+    def test_preflight_and_generation_share_same_cost_ceiling(self):
+        raw_policy = policy(max_usd='0.00005')
+        raw_policy.count_fee = 20000
+        gate = Gateway(raw_policy, self.fake, Path(self.temporary.name) / 'run',
+                       wall=lambda: self.now)
+        gate.exchange(self.request())
+        self.blocked(gate, 'COUNT_COST_CEILING')
+        ledger = json.loads((gate.directory / 'ledger.json').read_text())
+        self.assertEqual(ledger['reserved_nusd'], 50000)
+        self.assertEqual([c[0] for c in self.fake.calls], ['input_tokens', 'generate'])
 
 if __name__ == '__main__':
     unittest.main()
