@@ -9,11 +9,31 @@ credentials=json.loads(Path(os.getenv('FOCUS_TEST_CREDENTIAL_FILE','.render-auth
 def open_mobile_menu(page, target, diagnostic_name):
     """Open, rather than toggle, the mobile menu and verify its target is reachable."""
     sidebar = page.locator('.sidebar')
+    if isolated:
+        page.evaluate("""() => {
+            window.__focusMenuDiagnostic = {armed:true,events:[]};
+            if (!window.__focusMenuDiagnosticInstalled) {
+                window.__focusMenuDiagnosticInstalled = true;
+                for (const type of ['pointerdown','pointerup','touchstart','touchend','click']) {
+                    document.addEventListener(type, event => {
+                        const d=window.__focusMenuDiagnostic;
+                        if (!d?.armed || d.events.length >= 12) return;
+                        d.events.push({type:event.type,trusted:event.isTrusted,
+                            menu:!!event.target?.closest?.('.mobile-menu'),
+                            tag:event.target?.tagName || null});
+                    }, {capture:true,passive:true});
+                }
+            }
+        }""")
     try:
         if 'open' not in (sidebar.get_attribute('class') or '').split():
-            page.get_by_label('Otwórz menu', exact=True).click()
+            # This helper is used only for the touch-enabled iPhone case.
+            # Exercise native touch input instead of mouse compatibility events.
+            page.get_by_label('Otwórz menu', exact=True).tap()
         expect(sidebar).to_have_class('sidebar open', timeout=30000)
         expect(target).to_be_in_viewport(timeout=30000)
+        if isolated:
+            page.evaluate("window.__focusMenuDiagnostic.armed=false")
     except Exception:
         output = Path('test-results')
         output.mkdir(exist_ok=True)
@@ -30,11 +50,19 @@ def open_mobile_menu(page, target, diagnostic_name):
                 viewport:{width:innerWidth,height:innerHeight},
                 sidebar:{className:sidebar?.className,rect:rect(sidebar),
                          transform:sidebar ? getComputedStyle(sidebar).transform : null},
-                settings:rect(target)
+                inputEvents:window.__focusMenuDiagnostic?.events || [],
+                settings:rect(target),
+                menu:rect(document.querySelector('.mobile-menu')),
+                scroll:{x:scrollX,y:scrollY},
+                visualViewport:visualViewport ? {
+                    offsetTop:visualViewport.offsetTop,offsetLeft:visualViewport.offsetLeft,
+                    width:visualViewport.width,height:visualViewport.height,scale:visualViewport.scale
+                } : null
             };
         }""")
         (output / (diagnostic_name + '-menu-geometry.json')).write_text(
             json.dumps(geometry, indent=2))
+        print('MENU_GEOMETRY: ' + json.dumps(geometry), flush=True)
         if isolated:
             page.screenshot(path=str(output / (diagnostic_name + '-menu-failure.png')),
                             full_page=True)
@@ -60,6 +88,14 @@ with sync_playwright() as p:
         page.get_by_text('Salony w bazie',exact=True).wait_for()
         assert page.evaluate('document.documentElement.scrollWidth<=innerWidth')
         page.screenshot(path='test-results/'+label+'-production-dashboard.png',full_page=True)
+        if isolated and label == 'webkit-iphone':
+            # A repeated activation of an OPEN control must not close the menu.
+            menu = page.get_by_label('Otwórz menu', exact=True)
+            menu.press('Enter')
+            expect(menu).to_have_attribute('aria-expanded', 'true')
+            menu.press('Enter')
+            expect(menu).to_have_attribute('aria-expanded', 'true')
+            expect(page.locator('#focus-main-navigation')).to_have_class('sidebar open')
         if label=='webkit-iphone':open_mobile_menu(page, page.get_by_role('button',name='Baza salonów',exact=True), label+'-nav-1')
         page.get_by_role('button',name='Baza salonów',exact=True).click()
         page.get_by_label('Szukaj salonu').fill('[TEST TECHNICZNY]')
