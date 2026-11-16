@@ -56,5 +56,39 @@ https://developers.openai.com/api/reference/resources/admin/subresources/organiz
 
 Local tests use synthetic responses and mocked connections. No model call, real cost
 read, new credential or production database operation is implied by their PASS.
-Current account inspection found no administrative API key. Therefore the live read
-remains BLOCKED pending secure credential entry and subsequent runtime verification.
+Runtime verification on 2026-11-16 confirmed authenticated Costs API PASS on
+0862b912, with 0.027258215 USD reported through 2026-11-16 00:00 UTC.
+The separate restricted key is now stored in GitHub environment and the existing
+isolated Render worker; never ask the owner to repeat credential entry.
+
+## Private execution lifecycle (dependent candidate)
+
+`private_execution.py` records an approved immutable task identity (issue, workflow
+run and first attempt, digest and base SHA), reservation and start atomically in
+PostgreSQL. Its authorization callback must come from a trusted controller; a local
+boolean or a downloaded agent artifact is not authorization. No HTTP endpoint or
+model executor is provided by this module.
+
+One unresolved run blocks the next one globally, including month rollover.
+Finish records success/failure/cancellation/unknown without releasing the hold.
+Reconciliation requires a fresh authenticated observation covering the finish time.
+The full 2 USD allowance remains charged after settlement; aggregate project costs
+cannot establish a precise per-run bill. Provider spend plus retained allowances
+is deliberately conservative and may double-count reported costs. It may block work
+early. This is not a hard per-task spend cap, proof of credit, or instant billing.
+
+Transactions use psycopg's `connection.transaction()` so a connection remains usable
+across lifecycle calls and exceptions roll back partial changes. Existing schema is
+not modified automatically: `SCHEMA` is for the trusted private controller only.
+The diagnostic uses temporary shadow tables, verifies pg_temp namespaces before any
+writes and leaves durable rows unchanged; its later observations are explicitly
+synthetic and are never used to release actual holds.
+
+The candidate workflow now explicitly blocks with
+`PRIVATE_ADMISSION_TRANSPORT_REQUIRED` before the paid action. This is intentional:
+the GitHub-hosted runner cannot reach the private Render database, and neither the
+costs-read key nor the executor API key grants that access. No public database access,
+new service, credential export, environment-review removal or silent alternative ledger
+is introduced. A separately authenticated command transport is still required to
+connect real GitHub admission/finish callbacks to this private lifecycle. Until that
+is provisioned and tested end to end, do not approve a paid task or mark it READY.

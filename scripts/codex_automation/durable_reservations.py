@@ -42,7 +42,7 @@ def reserve_transaction(conn, *, month: str, issue: int, provider_spend: Decimal
                 cur.execute("SELECT pg_advisory_xact_lock(hashtext(%s))", ("focus-codex-" + month,))
                 cur.execute(
                     "SELECT COALESCE(SUM(amount_usd),0) FROM codex_budget_reservations "
-                    "WHERE month=%s AND state='reserved'", (month,))
+                    "WHERE month=%s AND state IN ('reserved','settled')", (month,))
                 reserved = Decimal(str(cur.fetchone()[0]))
                 if provider_spend + reserved + RESERVE > CAP:
                     raise BudgetBlocked("MONTHLY_BUDGET")
