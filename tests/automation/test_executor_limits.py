@@ -337,5 +337,13 @@ class LimitsTests(unittest.TestCase):
         self.assertEqual(self.fake.calls[0][1]['input'], history)
         self.assertEqual(self.fake.calls[1][1]['input'], history)
 
+    def test_native_trace_metadata_is_stripped_from_both_endpoints(self):
+        gate = self.gate()
+        gate.exchange(self.request(client_metadata={'trace': 'synthetic-trace-marker'}))
+        self.assertNotIn('client_metadata', self.fake.calls[0][1])
+        self.assertNotIn('client_metadata', self.fake.calls[1][1])
+        self.assertNotIn('synthetic-trace-marker',
+                         (gate.directory / 'ledger.json').read_text())
+
 if __name__ == '__main__':
     unittest.main()

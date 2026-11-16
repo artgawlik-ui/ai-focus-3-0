@@ -22,7 +22,8 @@ MAX_BODY = 262144
 MAX_RESPONSE = 8 * 1024 * 1024
 FIELDS = {'model', 'input', 'instructions', 'tools', 'tool_choice', 'text',
           'reasoning', 'parallel_tool_calls', 'include', 'store', 'stream',
-          'max_output_tokens', 'service_tier', 'truncation', 'prompt_cache_key'}
+          'max_output_tokens', 'service_tier', 'truncation', 'prompt_cache_key',
+          'client_metadata'}
 COUNT_FIELDS = {'model', 'input', 'instructions', 'tools', 'tool_choice',
                 'text', 'reasoning', 'parallel_tool_calls', 'truncation'}
 
@@ -134,6 +135,9 @@ def normalize(body, policy):
                 inspect(child)
     inspect(body)
     clean = dict(body)
+    # Native CLI trace metadata is not model history. Do not forward it to either
+    # endpoint or persist it; counting and generation receive the same context.
+    clean.pop('client_metadata', None)
     # Enforce on the wire, regardless of CLI config or task instructions.
     clean['max_output_tokens'] = policy.output_tokens
     clean['service_tier'] = 'default'
