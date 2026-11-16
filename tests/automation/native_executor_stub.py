@@ -3,7 +3,7 @@ from datetime import datetime, timedelta, timezone
 import json
 import os
 import threading
-from scripts.codex_automation.executor_limits import Gateway, Policy, server
+from scripts.codex_automation.executor_limits import Gateway, Limit, Policy, server
 
 
 class OfflineProvider:
@@ -29,6 +29,18 @@ class OfflineProvider:
         return 'text/event-stream', response.encode()
 
 
+class OfflineGateway(Gateway):
+    def exchange(self, data):
+        try:
+            return super().exchange(data)
+        except Limit as error:
+            # CI fixture only: fixed error code and protocol field names, no values.
+            body = json.loads(data)
+            keys = sorted(body) if isinstance(body, dict) else []
+            print('OFFLINE_REJECT: ' + str(error) + ' keys=' + repr(keys), flush=True)
+            raise
+
+
 def main():
     if os.geteuid() != 0 or os.environ.get('GITHUB_ACTIONS') != 'true':
         raise SystemExit('CI root probe only')
@@ -47,7 +59,7 @@ def main():
            'max_reserved_tokens_per_minute': 30000,
            'max_seconds': 600}
     # These are synthetic prices/counts. This class cannot call external API.
-    gateway = Gateway(Policy(raw), OfflineProvider(), '/run/focus-codex-offline-probe')
+    gateway = OfflineGateway(Policy(raw), OfflineProvider(), '/run/focus-codex-offline-probe')
     listener = server(gateway, 8765)
     timer = threading.Timer(600, listener.shutdown)
     timer.daemon = True

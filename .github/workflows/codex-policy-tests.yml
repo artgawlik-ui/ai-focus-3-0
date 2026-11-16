@@ -48,6 +48,9 @@ jobs:
           allow-bots: false
           model: 'gpt-5.1-codex-mini'
           prompt: 'Offline protocol test. Reply OFFLINE_EXECUTOR_PASS. Do not use tools or edit files.'
+      - name: Read safe offline protocol diagnostics
+        if: always()
+        run: cat "$RUNNER_TEMP/offline-gate.log"
       - name: Verify response, privilege separation and blocked next request
         env:
           OFFLINE_FINAL: ${{ steps.offline.outputs.final-message }}

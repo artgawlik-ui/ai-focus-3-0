@@ -77,7 +77,10 @@ ambiguous failures, missing counts, tariff expiry, ledger failure before POST,
 deadline checks, unsupported routes/tools/history and disabled policy.
 
 GitHub Actions runs those tests without OPENAI_API_KEY. Green synthetic tests
-prove the control path under that contract, not live billing or CLI integration.
+prove the control path under that contract, not live billing. A separate native
+CLI/action job exercises the same gateway against synthetic loopback SSE, including
+privilege separation and a denied second request. It never constructs OpenAI
+transport or loads an API credential.
 Remaining activation gates: reconcile #50 from actual Costs -> independently
 read private state -> successful NEW GitHub/Render NO-MODEL round trip ->
 review tariff/model/receipt binding and native action compatibility -> controlled
