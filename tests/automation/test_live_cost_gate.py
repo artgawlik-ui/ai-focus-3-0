@@ -3,6 +3,7 @@ from datetime import datetime, timedelta, timezone
 from decimal import Decimal
 from io import BytesIO, StringIO
 import json
+from urllib.error import HTTPError
 from pathlib import Path
 from unittest.mock import Mock, MagicMock, patch
 from contextlib import redirect_stderr
@@ -108,13 +109,27 @@ class LiveCostGateTests(unittest.TestCase):
     def test_admin_credential_cannot_follow_provider_redirect(self):
         assert RejectRedirect().redirect_request(Mock(), None, 302, 'redirect', {}, 'https://example.invalid') == None
 
-    def test_workflow_cost_check_precedes_paid_action_and_key_is_step_scoped(self):
+    def test_workflow_requires_private_cost_receipt_without_duplicate_provider_read(self):
         workflow = (Path(__file__).resolve().parents[2] / '.github/workflows/codex-issues.yml').read_text()
         codex = workflow.split('  codex:\n', 1)[1].split('  publish:\n', 1)[0]
-        assert codex.index('live_cost_gate.py check') < codex.index('uses: openai/codex-action@')
+        assert codex.index('github_budget_transport.py wait') < codex.index('PRIVATE_ADMISSION_TRANSPORT_REQUIRED') < codex.index('uses: openai/codex-action@')
+        assert 'live_cost_gate.py check' not in codex
         assert 'group: focus-codex-paid-executor' in codex
         before_action, action = codex.split('      - name: Real Codex executor', 1)
-        assert 'OPENAI_COSTS_ADMIN_KEY: ${{ secrets.OPENAI_COSTS_ADMIN_KEY }}' in before_action
+        assert 'OPENAI_COSTS_ADMIN_KEY' not in before_action
         assert 'OPENAI_COSTS_ADMIN_KEY' not in action
         assert 'environment: codex-development' in codex
         assert 'contents: read' in codex and 'contents: write' not in codex
+
+    def test_http_errors_never_leak_provider_body_or_grant_reservation(self):
+        for status, expected in [(429, 'COSTS_RATE_LIMITED'), (401, 'COSTS_UNAVAILABLE'), (503, 'COSTS_UNAVAILABLE')]:
+            def reader(**kwargs):
+                return read_pages([HTTPError('https://example.invalid', status, 'SYNTHETIC_SECRET', {}, BytesIO(b'SYNTHETIC_SECRET'))])
+            with self.subTest(status=status), patch.object(gate, 'reserve_transaction') as reserve:
+                with self.assertRaisesRegex(gate.CostGateBlocked, '^'+expected+'$'):
+                    gate.reserve_approved_task(Mock(), authorize=lambda: True, issue=49, reservation_id='synthetic', env=ENV, now=NOW, reader=reader)
+                reserve.assert_not_called()
+
+    def test_unrecognized_cost_exception_text_is_sanitized(self):
+        with self.assertRaisesRegex(gate.CostGateBlocked, '^COSTS_UNAVAILABLE$'):
+            gate.check_live_costs(env=ENV, now=NOW, reader=Mock(side_effect=CostsUnavailable('SYNTHETIC_SECRET')))

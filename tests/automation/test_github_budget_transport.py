@@ -346,3 +346,15 @@ class TransportTests(unittest.TestCase):
                     t.handle_request(api,conn,payload(),trusted_sha=BASE,now=later,
                                      reader=lambda **kw:(Decimal('.10'),later))
                 self.assertEqual(len(api.statuses),1)
+
+
+class CostFailureLoggingTests(unittest.TestCase):
+    def test_rate_limit_is_sanitized_and_backs_off_without_polling_or_receipt(self):
+        for reason, expected in [('COSTS_RATE_LIMITED', 'COSTS_RATE_LIMITED'), ('SYNTHETIC_SECRET', 'COSTS_UNAVAILABLE')]:
+            stop=Mock(); stop.is_set.side_effect=[False,True]
+            logger=Mock()
+            with patch.object(t,'refresh_runs',side_effect=t.CostGateBlocked(reason)), patch.object(t,'poll_once') as poll:
+                t.serve(API(),MagicMock(),trusted_sha=BASE,stop=stop,logger=logger)
+            logger.assert_called_once_with('BLOCKED: '+expected)
+            stop.wait.assert_called_once_with(60)
+            poll.assert_not_called()

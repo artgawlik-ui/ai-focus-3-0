@@ -48,6 +48,9 @@ def check_live_costs(*, env=None, now=None, reader=None):
     try:
         spend, covered_until = reader(admin_key=key, project_id=project,
                                      month_start=int(month_start.timestamp()), now=now)
+    except CostsUnavailable as exc:
+        code = "COSTS_RATE_LIMITED" if str(exc) == "COSTS_RATE_LIMITED" else "COSTS_UNAVAILABLE"
+        raise CostGateBlocked(code) from None
     except Exception:
         raise CostGateBlocked("COSTS_UNAVAILABLE") from None
     if (not isinstance(spend, Decimal) or not spend.is_finite() or spend < 0 or
