@@ -149,6 +149,41 @@ class AuthorizationTests(unittest.TestCase):
 
 
 class DeduplicationTests(unittest.TestCase):
+    def test_authenticated_client_does_not_follow_redirect_or_forward_token(self):
+        from http.server import BaseHTTPRequestHandler, HTTPServer
+        from urllib.request import Request
+        requests = []
+        class Handler(BaseHTTPRequestHandler):
+            def do_GET(self):
+                requests.append(self.path)
+                self.send_response(302)
+                self.send_header('Location', '/capture')
+                self.end_headers()
+            def log_message(self, *args):
+                pass
+        server = HTTPServer(('127.0.0.1', 0), Handler)
+        worker = threading.Thread(target=server.serve_forever, daemon=True)
+        worker.start()
+        try:
+            request = Request(f'http://127.0.0.1:{server.server_port}/redirect',
+                              headers={'Authorization': 'Bearer synthetic-only'})
+            with self.assertRaises(HTTPError) as exc:
+                p.urlopen(request, timeout=2)
+            self.assertEqual(exc.exception.code, 302)
+            self.assertEqual(requests, ['/redirect'])
+        finally:
+            server.shutdown(); server.server_close(); worker.join(timeout=3)
+
+    def test_api_response_size_limit_blocks_before_json_decode(self):
+        from unittest.mock import MagicMock
+        response = MagicMock()
+        response.__enter__.return_value = response
+        response.read.return_value = b'x' * (p.MAX_API_RESPONSE + 1)
+        with patch.dict(os.environ, {'GH_TOKEN': 'synthetic'}, clear=True), patch.object(p, 'urlopen', return_value=response):
+            with self.assertRaisesRegex(p.Blocked, '^GITHUB_RESPONSE_SIZE_LIMIT$'):
+                p.API().call('GET', '/repos/' + p.REPO + '/issues/26')
+        response.read.assert_called_once_with(p.MAX_API_RESPONSE + 1)
+
     def test_repeated_claim_is_rejected(self):
         api = FakeAPI(); first = p.claim(api, issue())
         self.assertEqual(first['branch'], 'codex/issue-26')
