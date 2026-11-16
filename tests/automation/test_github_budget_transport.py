@@ -374,7 +374,7 @@ class CostFailureLoggingTests(unittest.TestCase):
             with patch.object(t,'refresh_runs',side_effect=t.CostGateBlocked(reason)), patch.object(t,'poll_once') as poll:
                 t.serve(API(),MagicMock(),trusted_sha=BASE,stop=stop,logger=logger)
             logger.assert_called_once_with('BLOCKED: '+expected)
-            stop.wait.assert_called_once_with(60)
+            stop.wait.assert_called_once_with(900 if reason == 'COSTS_RATE_LIMITED' else 60)
             poll.assert_not_called()
 
 
@@ -444,3 +444,51 @@ class ReceiptWindowTests(unittest.TestCase):
         with patch.object(t.lifecycle,'utc',side_effect=clock), self.assertRaisesRegex(t.TransportBlocked,'RECEIPT_ADMISSION_WINDOW_CLOSED'):
             t.verify_waiting_job(api,payload())
         self.assertEqual(events,['api','clock'])
+
+
+class ReconciliationCooldownTests(unittest.TestCase):
+    def test_pending_coverage_keeps_admission_blocked_and_waits_interruptibly(self):
+        stop=Mock(); stop.is_set.side_effect=[False,True]
+        logger=Mock()
+        with patch.object(t,'refresh_runs',side_effect=t.lifecycle.ExecutionBlocked('COSTS_NOT_YET_COVERING_EXECUTION')), patch.object(t,'poll_once') as poll, patch.object(t.lifecycle,'finish') as finish:
+            t.serve(API(),MagicMock(),trusted_sha=BASE,stop=stop,logger=logger)
+        stop.wait.assert_called_once_with(900)
+        poll.assert_not_called(); finish.assert_not_called()
+        logger.assert_called_once_with('WAIT: COSTS_NOT_YET_COVERING_EXECUTION')
+
+    def test_provider_retry_delay_is_bounded_and_never_grants_admission(self):
+        for supplied, expected in [(3600,3600),(86400,86400),(None,900),(-1,900),
+                                   (True,900),('SYNTHETIC_SECRET',900),(86401,900)]:
+            stop=Mock(); stop.is_set.side_effect=[False,True]
+            error=t.CostGateBlocked('COSTS_RATE_LIMITED',retry_after_seconds=supplied)
+            logger=Mock()
+            with self.subTest(supplied=supplied), patch.object(t,'refresh_runs',side_effect=error),patch.object(t,'poll_once') as poll:
+                t.serve(API(),MagicMock(),trusted_sha=BASE,stop=stop,logger=logger)
+            stop.wait.assert_called_once_with(expected)
+            poll.assert_not_called()
+            logger.assert_called_once_with('BLOCKED: COSTS_RATE_LIMITED')
+
+    def test_admission_resumes_only_after_wait_and_fresh_reconciliation(self):
+        events=[]
+        stop=Mock(); stop.is_set.side_effect=[False,False,False,True]
+        stop.wait.side_effect=lambda delay:events.append(('wait',delay))
+        attempts=iter([False,True])
+        def refresh(*args):
+            events.append('reconcile')
+            if not next(attempts):
+                raise t.lifecycle.ExecutionBlocked('COSTS_NOT_YET_COVERING_EXECUTION')
+            return True
+        def poll(*args,**kwargs):
+            events.append('admit_poll'); return 0
+        with patch.object(t,'refresh_runs',side_effect=refresh),patch.object(t,'poll_once',side_effect=poll):
+            t.serve(API(),MagicMock(),trusted_sha=BASE,stop=stop,logger=Mock())
+        self.assertEqual(events,['reconcile',('wait',900),'reconcile','admit_poll',('wait',5)])
+
+    def test_other_lifecycle_failures_remain_blocked_and_sanitized(self):
+        stop=Mock(); stop.is_set.side_effect=[False,True]
+        logger=Mock()
+        with patch.object(t,'refresh_runs',side_effect=t.lifecycle.ExecutionBlocked('SYNTHETIC_SECRET')),patch.object(t,'poll_once') as poll:
+            t.serve(API(),MagicMock(),trusted_sha=BASE,stop=stop,logger=logger)
+        stop.wait.assert_called_once_with(60)
+        poll.assert_not_called()
+        logger.assert_called_once_with('BLOCKED: PRIVATE_CONTROLLER_CHECK_FAILED')

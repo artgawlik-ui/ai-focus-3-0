@@ -25,6 +25,10 @@ except ImportError:
 class CostGateBlocked(RuntimeError):
     """Messages are fixed safe codes, never credentials or provider responses."""
 
+    def __init__(self, code, *, retry_after_seconds=None):
+        super().__init__(code)
+        self.retry_after_seconds = retry_after_seconds
+
 
 @dataclass(frozen=True)
 class CostObservation:
@@ -50,7 +54,10 @@ def check_live_costs(*, env=None, now=None, reader=None):
                                      month_start=int(month_start.timestamp()), now=now)
     except CostsUnavailable as exc:
         code = "COSTS_RATE_LIMITED" if str(exc) == "COSTS_RATE_LIMITED" else "COSTS_UNAVAILABLE"
-        raise CostGateBlocked(code) from None
+        delay = getattr(exc, 'retry_after_seconds', None)
+        if code != 'COSTS_RATE_LIMITED' or type(delay) is not int or not 900 <= delay <= 86400:
+            delay = None
+        raise CostGateBlocked(code, retry_after_seconds=delay) from None
     except Exception:
         raise CostGateBlocked("COSTS_UNAVAILABLE") from None
     if (not isinstance(spend, Decimal) or not spend.is_finite() or spend < 0 or
