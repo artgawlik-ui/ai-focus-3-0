@@ -1,0 +1,13 @@
+# Codex budget gate — integration staging
+
+**State: CODE READY FOR REVIEW; LIVE INTEGRATION OFF.** No credentials or project IDs have been provisioned; no real costs have been queried and no shared DB has been created.
+
+- Cost source: OpenAI Organization Costs API, GET /v1/organization/costs. Dedicated organization admin credential with only the necessary organization costs read scope if supported by account policy. An organization admin key may have broader permissions than read-only; if granular read-only credentials are unavailable, use a trusted read-only proxy with an allowlisted endpoint and short-lived access, not the Codex execution key. Never commit secrets, log API responses, or give the Codex agent this credential.
+- Filter strictly by verified project ID (not project display name), USD only, and current UTC month. Reject missing, stale, partial, malformed, or failed data. Costs API reporting may lag and is not a real-time spending guard.
+- Storage: dedicated non-production PostgreSQL DB, initialized separately from production with the SCHEMA in durable_reservations.py. Use an isolated database role permitted only to read/insert/update the reservation table. Never use the production CRM database. Provisioning DB and credentials requires separate approval.
+- Reservations: SERIALIZED via transaction-scoped advisory lock and uniqueness constraint, one active reservation per month. Reserve USD 2 before paid work. Reconcile and settle after the run; do not clear a stuck reservation automatically without independent cost verification.
+- The controller must also check issue digest, human environment reviewer, current actual costs, recent billing evidence, monthly hard cap, and single runner before any paid execution. No bot self-approval. Run GitHub Actions dry-run with no secrets first.
+- A USD 8 monthly project budget setting may be an alert/soft budget rather than a hard spending ceiling. Until an independently verified enforceable spending cap exists, **do not promise strict USD 8 enforcement**; remain OFF.
+- Integration tests in tests/automation/test_costs_durable_gate.py use fake HTTP and DB-API. They do NOT prove a live DB, live Costs API access, or end-to-end security.
+
+Activation checklist: obtain org/project IDs privately; provision isolated costs credential; verify scope and project isolation; create dedicated durable DB and least-privilege role; validate live costs timestamp and account spending controls; run DB integration/concurrency tests; verify environment protection; manually approve each task; only then propose switching executor on. No merge/deploy in this PR.

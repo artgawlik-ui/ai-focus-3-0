@@ -22,6 +22,10 @@ def instagram_username(value: str | None) -> str | None:
     """
     if not isinstance(value, str):
         return None
+    # strip() and urlsplit() can discard controls and turn malformed input into
+    # another account's key. Reject them before either operation.
+    if any(ord(char) < 32 or ord(char) == 127 for char in value):
+        return None
     raw = value.strip()
     if not raw:
         return None
@@ -32,23 +36,28 @@ def instagram_username(value: str | None) -> str | None:
             url = urlsplit(raw)
             if url.scheme.lower() != "https":
                 return None
-            if url.username or url.password or url.port:
+            if url.username is not None or url.password is not None or url.port:
                 return None
             if (url.hostname or "").lower() not in {
                 "instagram.com", "www.instagram.com",
             }:
                 return None
-            parts = [part for part in url.path.split("/") if part]
-            if len(parts) != 1:
+            profile = re.fullmatch(r"/([^/]+)/?", url.path)
+            if profile is None:
                 return None
-            candidate = parts[0]
+            candidate = profile[1]
         except ValueError:
             return None
     else:
         candidate = raw
+    # Some Unicode characters lowercase to ASCII, so validate the original
+    # alphabet before changing case, not only the normalized result.
+    if not candidate.isascii():
+        return None
     candidate = candidate.lower()
     if not _USERNAME.fullmatch(candidate):
         return None
     if candidate in _NON_PROFILE_PATHS:
         return None
     return candidate
+

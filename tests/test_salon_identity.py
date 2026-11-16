@@ -29,6 +29,28 @@ class InstagramIdentityTests(unittest.TestCase):
         self.assertEqual(instagram_username("@example"), "example")
         # This is only a candidate match key, never an API peer ID or send approval.
 
+    def test_unicode_lowercase_cannot_alias_an_ascii_profile(self):
+        # Kelvin sign lowercases to ASCII k; rejecting it before lower() avoids
+        # silently merging an unrecognized reference with the distinct @salonk.
+        for raw in ("@salon\u212a", "salon\u212a", "https://instagram.com/salon\u212a/"):
+            with self.subTest(raw=raw):
+                self.assertIsNone(instagram_username(raw))
+        self.assertEqual(instagram_username("@SALONK"), "salonk")
+
+    def test_control_characters_are_rejected_before_url_parser_or_trim(self):
+        for raw in ("\n@salon", "@salon\r", "https://insta\ngram.com/salon",
+                    "https://instagram.com/sa\tlon", "https://instagram.com/salon?x=\n",
+                    "@salon\x00", "@salon\x7f"):
+            with self.subTest(raw=raw):
+                self.assertIsNone(instagram_username(raw))
+
+    def test_ambiguous_path_and_empty_userinfo_do_not_become_profile_keys(self):
+        for raw in ("https://instagram.com///salon///", "https://instagram.com/salon//",
+                    "https://@instagram.com/salon", "https://:@instagram.com/salon"):
+            with self.subTest(raw=raw):
+                self.assertIsNone(instagram_username(raw))
+
 
 if __name__ == "__main__":
     unittest.main()
+
