@@ -11,11 +11,12 @@ import subprocess
 import sys
 from urllib.error import HTTPError
 from urllib.parse import quote
-from urllib.request import Request, urlopen
+from urllib.request import Request, HTTPRedirectHandler, build_opener
 
 REPO = 'artgawlik-ui/ai-focus-3-0'
 MAX_PATCH = 200_000
 MAX_FILES = 30
+MAX_API_RESPONSE = 2_000_000
 WRITE = {'admin', 'maintain', 'write'}
 COMMAND = re.compile(r'/codex approve ([a-f0-9]{64})\Z')
 SHA = re.compile(r'[a-f0-9]{40}\Z')
@@ -23,6 +24,16 @@ SHA = re.compile(r'[a-f0-9]{40}\Z')
 
 class Blocked(Exception):
     """Only fixed, non-sensitive reason codes may leave the controller."""
+
+
+class RejectGitHubRedirect(HTTPRedirectHandler):
+    def redirect_request(self, req, fp, code, msg, headers, newurl):
+        # Never forward the controller credential to a redirected destination.
+        return None
+
+
+def urlopen(request, timeout):
+    return build_opener(RejectGitHubRedirect()).open(request, timeout=timeout)
 
 
 def enabled(value):
@@ -53,7 +64,9 @@ class API:
                                    'X-GitHub-Api-Version': '2022-11-28'})
         try:
             with urlopen(request, timeout=20) as response:
-                body = response.read()
+                body = response.read(MAX_API_RESPONSE + 1)
+                if len(body) > MAX_API_RESPONSE:
+                    raise Blocked('GITHUB_RESPONSE_SIZE_LIMIT')
                 return json.loads(body) if body else None
         except HTTPError as exc:
             # Never print provider response, headers, URL, or request body.
