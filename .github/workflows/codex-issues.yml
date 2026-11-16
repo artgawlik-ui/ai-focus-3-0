@@ -73,6 +73,10 @@ jobs:
           OPENAI_COSTS_ADMIN_KEY: ${{ secrets.OPENAI_COSTS_ADMIN_KEY }}
           OPENAI_PROJECT_ID: ${{ vars.OPENAI_PROJECT_ID }}
         run: python scripts/codex_automation/live_cost_gate.py check
+      - name: Require private admission transport (not provisioned)
+        run: |
+          echo "BLOCKED: PRIVATE_ADMISSION_TRANSPORT_REQUIRED"
+          exit 1
       - name: Real Codex executor (no mock fallback)
         uses: openai/codex-action@bdf19a4a223ec2549a3e2274a0cf61556bc07675 # v1
         with:
