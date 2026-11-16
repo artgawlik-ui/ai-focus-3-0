@@ -3,6 +3,7 @@ import json
 from datetime import datetime, timezone
 from decimal import Decimal, InvalidOperation
 import re
+from urllib.error import HTTPError
 from urllib.parse import urlencode
 from urllib.request import Request, HTTPRedirectHandler, build_opener
 
@@ -49,6 +50,9 @@ def read_project_costs(*, admin_key: str, project_id: str, month_start: int,
         try:
             with opener(request, timeout=15) as response:
                 data = json.load(response, parse_float=Decimal)
+        except HTTPError as exc:
+            code = "COSTS_RATE_LIMITED" if exc.code == 429 else "COSTS_API_UNAVAILABLE"
+            raise CostsUnavailable(code) from None
         except Exception:
             raise CostsUnavailable("COSTS_API_UNAVAILABLE") from None
         if not isinstance(data, dict) or not isinstance(data.get("data"), list):

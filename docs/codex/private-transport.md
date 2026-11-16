@@ -106,3 +106,20 @@ only statuses-read, never the worker credential. Existing required review remain
 - https://docs.github.com/en/rest/commits/statuses#create-a-commit-status
 - https://docs.github.com/en/rest/collaborators/collaborators#get-repository-permissions-for-a-user
 - https://docs.github.com/en/rest/deployments/environments#get-an-environment
+
+
+### Costs API HTTP 429 after the first installed smoke test
+
+Run 43903822511 (issue #48) failed at receipt wait, before the model barrier.
+Read-only diagnostics found no reservation or execution rows and HTTP 429 on
+the controller's Costs API request. The runner's earlier Costs API GET had
+succeeded; this does not prove the provider's exact rate-limit policy.
+
+The runner now requires the private receipt without making a duplicate Costs API
+request. The controller still authenticates the task and reads live project costs
+before every admission transaction and receipt. HTTP 429 is reported only as
+COSTS_RATE_LIMITED, with the existing 60-second controller backoff; no provider
+body, credentials, cached spend, or manually entered spend grants admission.
+The unconditional paid-model barrier and owner Environment review remain.
+Do not rerun/replay issue #48. Any subsequent smoke needs a new approved issue
+after the fix is reviewed, installed and its trusted commit pin updated.

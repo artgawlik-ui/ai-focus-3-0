@@ -69,11 +69,8 @@ jobs:
         run: |
           test -n "$API_KEY" || { echo 'BLOCKED: API_AUTH_MISSING'; exit 1; }
           test -n "$MODEL" || { echo 'BLOCKED: APPROVED_MODEL_MISSING'; exit 1; }
-      - name: Authenticated live costs preflight (fail closed)
-        env:
-          OPENAI_COSTS_ADMIN_KEY: ${{ secrets.OPENAI_COSTS_ADMIN_KEY }}
-          OPENAI_PROJECT_ID: ${{ vars.OPENAI_PROJECT_ID }}
-        run: python scripts/codex_automation/live_cost_gate.py check
+      # The private controller reads live costs before committing any reservation.
+      # A verified receipt below is mandatory; do not duplicate the Costs API GET here.
       - name: Prepare immutable private budget request
         env:
           FOCUS_PRIVATE_TRANSPORT_ENABLED: ${{ vars.FOCUS_PRIVATE_TRANSPORT_ENABLED }}

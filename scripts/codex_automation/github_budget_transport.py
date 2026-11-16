@@ -25,10 +25,12 @@ from zipfile import ZipFile
 try:
     from . import pipeline as policy
     from . import private_execution as lifecycle
+    from .live_cost_gate import CostGateBlocked
     from .openai_costs import RejectRedirect
 except ImportError:
     import pipeline as policy
     import private_execution as lifecycle
+    from live_cost_gate import CostGateBlocked
     from openai_costs import RejectRedirect
 
 PREFIX = '/repos/' + policy.REPO
@@ -321,6 +323,9 @@ def serve(api, connect, *, trusted_sha, stop, logger=print):
                     message = 'READY: private controller polling' if not count else 'PASS: reservation committed'
                 else:
                     message = 'WAIT: active execution retains reservation'
+        except CostGateBlocked as exc:
+            code = "COSTS_RATE_LIMITED" if str(exc) == "COSTS_RATE_LIMITED" else "COSTS_UNAVAILABLE"
+            message, delay = "BLOCKED: " + code, 60
         except (TransportBlocked, lifecycle.ExecutionBlocked, policy.Blocked):
             # Leave holds untouched. API/DB/Costs errors cannot grant a receipt.
             message, delay = 'BLOCKED: PRIVATE_CONTROLLER_CHECK_FAILED', 60
