@@ -11,11 +11,12 @@ import subprocess
 import sys
 from urllib.error import HTTPError
 from urllib.parse import quote
-from urllib.request import Request, urlopen
+from urllib.request import Request, HTTPRedirectHandler, build_opener
 
 REPO = 'artgawlik-ui/ai-focus-3-0'
 MAX_PATCH = 200_000
 MAX_FILES = 30
+MAX_API_RESPONSE = 2_000_000
 WRITE = {'admin', 'maintain', 'write'}
 COMMAND = re.compile(r'/codex approve ([a-f0-9]{64})\Z')
 SHA = re.compile(r'[a-f0-9]{40}\Z')
@@ -23,6 +24,16 @@ SHA = re.compile(r'[a-f0-9]{40}\Z')
 
 class Blocked(Exception):
     """Only fixed, non-sensitive reason codes may leave the controller."""
+
+
+class RejectGitHubRedirect(HTTPRedirectHandler):
+    def redirect_request(self, req, fp, code, msg, headers, newurl):
+        # Never forward the controller credential to a redirected destination.
+        return None
+
+
+def urlopen(request, timeout):
+    return build_opener(RejectGitHubRedirect()).open(request, timeout=timeout)
 
 
 def enabled(value):
@@ -37,13 +48,13 @@ def digest(issue):
 
 
 class API:
-    def __init__(self):
-        self.token = os.environ.get('GH_TOKEN', '')
+    def __init__(self, token=None):
+        self.token = os.environ.get('GH_TOKEN', '') if token is None else token
         if not self.token:
             raise Blocked('GITHUB_AUTH_MISSING')
 
     def call(self, method, path, data=None):
-        if not path.startswith(f'/repos/{REPO}/'):
+        if not path.startswith(f'/repos/{REPO}/') and not (method == 'GET' and path == '/user'):
             raise Blocked('API_SCOPE_REJECTED')
         request = Request('https://api.github.com' + path, method=method,
                           data=json.dumps(data).encode() if data is not None else None,
@@ -53,7 +64,9 @@ class API:
                                    'X-GitHub-Api-Version': '2022-11-28'})
         try:
             with urlopen(request, timeout=20) as response:
-                body = response.read()
+                body = response.read(MAX_API_RESPONSE + 1)
+                if len(body) > MAX_API_RESPONSE:
+                    raise Blocked('GITHUB_RESPONSE_SIZE_LIMIT')
                 return json.loads(body) if body else None
         except HTTPError as exc:
             # Never print provider response, headers, URL, or request body.
@@ -86,8 +99,7 @@ def authorize(event, api, actor, triggering_actor):
         raise Blocked('AUTHOR_PERMISSION_DENIED')
     if len(current.get('body') or '') > 16_000 or len(current['title']) > 256:
         raise Blocked('TASK_TOO_LARGE')
-    # Keep each paid Codex invocation below the model's TPM envelope.
-    # Large issues must be decomposed into separately approved atomic tasks.
+    # Task-size heuristic only; hard request limits live in executor_limits.py.
     numbered_steps = re.findall(r'(?m)^\s*\d+[.)]\s+\S', current.get('body') or '')
     if len(numbered_steps) > 3:
         raise Blocked('TASK_SPLIT_REQUIRED')
@@ -175,11 +187,9 @@ def admit():
     Path('task/snapshot.json').write_text(json.dumps(snapshot))
     Path('task/prompt.txt').write_text(
         'Implement only ONE small, independently testable change from the approved task. '
-        'Token/TPM safety: do not dump entire source files, huge diffs or test logs into context; '
-        'inspect only relevant line ranges, run targeted tests, and stop after a small patch. '
-        'If the issue requires more than one change, implement the first atomic change only and '
-        'describe remaining work in the final report for separately approved follow-up issues. '
-        'Do not retry a rate-limit error with the same oversized request. '
+        'Inspect relevant fragments only and run targeted tests. Stop after a small patch. '
+        'Do not retry rate-limit failures or attempt to bypass the executor gateway. '
+        'Report additional work for separate follow-up tasks. '
         'No production, network services, credentials, '
         'merge, deployment, migrations or real client messages. Do not change workflows, '
         'instructions or dependency files. Use synthetic tests only. Allowed change roots: '

@@ -1,0 +1,88 @@
+# Bounded Codex executor (PR #27)
+
+This is a per-job request gateway, not the monthly Costs API ledger.
+The model activation barrier remains unchanged and the checked-in policy is
+DISABLED. No production API was called to test this change.
+
+## Enforced request path
+
+Existing pinned codex-action / drop-sudo -> its authentication proxy (dummy
+credential) -> root-owned loopback quota gateway -> fixed OpenAI Responses API.
+The actual API key is read from stdin only by the privileged quota gateway.
+The action and agent never receive it. Preserve the pinned action's provider,
+permission and sudo protections; do not replace this with an unguarded CLI.
+
+Only POST /responses is exposed. Redirects, environment proxies, alternate
+origins, compaction, persistent conversation IDs, opaque encrypted history,
+media and hosted billable tools are rejected. Only local function/custom tool
+definitions are accepted. Compatibility failures stop the session; they must
+not fall back to a direct API endpoint.
+
+Before EVERY generation, the gateway asks /v1/responses/input_tokens to count
+the same explicit history, instructions and tools. Unknown/missing token
+counts or an unsupported count request stop execution without generating.
+max_output_tokens is imposed on the outgoing generation request, independent
+of CLI config or prompt instructions. It includes the provider's total output
+allowance, including reasoning tokens. service_tier is fixed to default,
+store=false and truncation=disabled.
+
+Under one lock the gateway checks request count, input limit, total reserved
+tokens, rolling 60-second token allowance, deadline and conservative cost.
+It fsyncs a reservation BEFORE a generation POST. Reservation =
+counted input + maximum output. Cost ceiling uses Decimal arithmetic, rounds
+UP to nanodollars, prices all input as uncached and reserves all possible
+output. Unused allowance is NEVER refunded in this gateway. Errors, HTTP429,
+timeouts and missing results never retry or reset this allowance.
+
+Reaching a quota permanently stops further generation for that job. A request
+already accepted by the provider can finish or remain billable after a timeout;
+the full reservation remains. A wall deadline prevents new requests and closes
+the local listener; it is not a provider cancellation/billing guarantee.
+
+## Policy and activation
+
+executor-limits.json currently sets ceilings: 2USD/job, 3 generation requests,
+24,000 input tokens/request, 2,048 output tokens/request, 60,000 total reserved
+tokens, 30,000 reserved tokens/rolling minute and 300 seconds. These are upper
+bounds, not measured spend or assertions about the selected model's rate limit.
+
+enabled=false and model/tariff=null deliberately prevent launch until there is
+a reviewed exact model and current STANDARD/default-tier tariff. Policy review
+must record official pricing URL, repository review reference, verified_at and
+expires_at (at most 24 hours apart), input/output USD per million, compatible
+model context/output limits, and an allowance no higher than the controller's
+live private receipt and available monthly budget. Verify the token-counting
+endpoint's billing/permissions and compatibility before activation; its costs
+are not assumed to be zero or included in the generation-only calculation.
+
+The policy is loaded into root memory before drop-sudo; later agent edits do
+not change it. The root-owned exclusive /run/focus-codex-RUN-ATTEMPT directory
+prevents accidental restart/reset. Never manually restart the gateway to get
+another allowance or reuse a receipt. A new action attempt requires a new
+controller admission, not merely another local ledger.
+
+The per-job quota cannot account for unrelated project/API calls, provider
+pricing changes, undocumented fees or provider counting/enforcement errors.
+It does not replace the private monthly 8USD gate, the 50PLN agreement or
+reconciliation against real Costs API data. This change does not settle #50.
+
+## Offline evidence and next gates
+
+tests/automation/test_executor_limits.py uses synthetic models/prices/counts,
+an injected fake provider, temporary ledgers and loopback HTTP. It covers
+boundary admission, denied paid POSTs, concurrent callers, no refund after
+ambiguous failures, missing counts, tariff expiry, ledger failure before POST,
+deadline checks, unsupported routes/tools/history and disabled policy.
+
+GitHub Actions runs those tests without OPENAI_API_KEY. Green synthetic tests
+prove the control path under that contract, not live billing or CLI integration.
+Remaining activation gates: reconcile #50 from actual Costs -> independently
+read private state -> successful NEW GitHub/Render NO-MODEL round trip ->
+review tariff/model/receipt binding and native action compatibility -> controlled
+activation in the agreed 09:00–18:00 Europe/Warsaw window. Keep owner review.
+
+Official contract references (consulted 2026-11-16):
+- https://developers.openai.com/api/docs/guides/token-counting
+- https://developers.openai.com/api/reference/resources/responses/subresources/input_tokens/methods/count
+- https://developers.openai.com/api/reference/resources/responses/methods/create
+- https://github.com/openai/codex-action/blob/bdf19a4a223ec2549a3e2274a0cf61556bc07675/action.yml
