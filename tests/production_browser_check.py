@@ -9,6 +9,22 @@ credentials=json.loads(Path(os.getenv('FOCUS_TEST_CREDENTIAL_FILE','.render-auth
 def open_mobile_menu(page, target, diagnostic_name):
     """Open, rather than toggle, the mobile menu and verify its target is reachable."""
     sidebar = page.locator('.sidebar')
+    if isolated:
+        page.evaluate("""() => {
+            window.__focusMenuDiagnostic = {armed:true,events:[]};
+            if (!window.__focusMenuDiagnosticInstalled) {
+                window.__focusMenuDiagnosticInstalled = true;
+                for (const type of ['pointerdown','pointerup','touchstart','touchend','click']) {
+                    document.addEventListener(type, event => {
+                        const d=window.__focusMenuDiagnostic;
+                        if (!d?.armed || d.events.length >= 12) return;
+                        d.events.push({type:event.type,trusted:event.isTrusted,
+                            menu:!!event.target?.closest?.('.mobile-menu'),
+                            tag:event.target?.tagName || null});
+                    }, {capture:true,passive:true});
+                }
+            }
+        }""")
     try:
         if 'open' not in (sidebar.get_attribute('class') or '').split():
             # This helper is used only for the touch-enabled iPhone case.
@@ -16,6 +32,8 @@ def open_mobile_menu(page, target, diagnostic_name):
             page.get_by_label('Otwórz menu', exact=True).tap()
         expect(sidebar).to_have_class('sidebar open', timeout=30000)
         expect(target).to_be_in_viewport(timeout=30000)
+        if isolated:
+            page.evaluate("window.__focusMenuDiagnostic.armed=false")
     except Exception:
         output = Path('test-results')
         output.mkdir(exist_ok=True)
@@ -32,6 +50,7 @@ def open_mobile_menu(page, target, diagnostic_name):
                 viewport:{width:innerWidth,height:innerHeight},
                 sidebar:{className:sidebar?.className,rect:rect(sidebar),
                          transform:sidebar ? getComputedStyle(sidebar).transform : null},
+                inputEvents:window.__focusMenuDiagnostic?.events || [],
                 settings:rect(target),
                 menu:rect(document.querySelector('.mobile-menu')),
                 scroll:{x:scrollX,y:scrollY},
