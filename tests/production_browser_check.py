@@ -11,7 +11,9 @@ def open_mobile_menu(page, target, diagnostic_name):
     sidebar = page.locator('.sidebar')
     try:
         if 'open' not in (sidebar.get_attribute('class') or '').split():
-            page.get_by_label('Otwórz menu', exact=True).click()
+            # This helper is used only for the touch-enabled iPhone case.
+            # Exercise native touch input instead of mouse compatibility events.
+            page.get_by_label('Otwórz menu', exact=True).tap()
         expect(sidebar).to_have_class('sidebar open', timeout=30000)
         expect(target).to_be_in_viewport(timeout=30000)
     except Exception:
@@ -30,11 +32,18 @@ def open_mobile_menu(page, target, diagnostic_name):
                 viewport:{width:innerWidth,height:innerHeight},
                 sidebar:{className:sidebar?.className,rect:rect(sidebar),
                          transform:sidebar ? getComputedStyle(sidebar).transform : null},
-                settings:rect(target)
+                settings:rect(target),
+                menu:rect(document.querySelector('.mobile-menu')),
+                scroll:{x:scrollX,y:scrollY},
+                visualViewport:visualViewport ? {
+                    offsetTop:visualViewport.offsetTop,offsetLeft:visualViewport.offsetLeft,
+                    width:visualViewport.width,height:visualViewport.height,scale:visualViewport.scale
+                } : null
             };
         }""")
         (output / (diagnostic_name + '-menu-geometry.json')).write_text(
             json.dumps(geometry, indent=2))
+        print('MENU_GEOMETRY: ' + json.dumps(geometry), flush=True)
         if isolated:
             page.screenshot(path=str(output / (diagnostic_name + '-menu-failure.png')),
                             full_page=True)
