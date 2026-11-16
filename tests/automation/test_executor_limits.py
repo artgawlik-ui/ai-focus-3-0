@@ -372,5 +372,22 @@ class LimitsTests(unittest.TestCase):
         self.assertEqual(ledger['reserved_nusd'], 50000)
         self.assertEqual([c[0] for c in self.fake.calls], ['input_tokens', 'generate'])
 
+    def test_native_namespace_only_allows_local_children_and_is_counted(self):
+        gate = self.gate()
+        tools = [{'type': 'namespace', 'name': 'functions', 'description': 'local tools',
+                  'tools': [{'type': 'function', 'name': 'shell',
+                             'parameters': {'type': 'object'}}]}]
+        gate.exchange(self.request(tools=tools))
+        self.assertEqual(self.fake.calls[0][1]['tools'], tools)
+        self.assertEqual(self.fake.calls[1][1]['tools'], tools)
+
+    def test_namespace_cannot_hide_hosted_or_further_nested_tools(self):
+        for child in ({'type': 'web_search'}, {'type': 'mcp'},
+                      {'type': 'namespace', 'tools': [{'type': 'function'}]}):
+            with self.subTest(child=child), self.assertRaisesRegex(
+                    Limit, 'HOSTED_OR_UNKNOWN_TOOL_REJECTED'):
+                normalize({'model': 'synthetic-model', 'input': 'offline',
+                           'tools': [{'type': 'namespace', 'tools': [child]}]}, policy())
+
 if __name__ == '__main__':
     unittest.main()

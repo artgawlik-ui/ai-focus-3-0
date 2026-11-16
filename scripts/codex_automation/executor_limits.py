@@ -126,11 +126,20 @@ def normalize(body, policy):
     if reasoning is not None and (not isinstance(reasoning, dict) or
         reasoning.get('mode') not in (None, 'standard')):
         raise Limit('REASONING_MODE_REJECTED')
-    # Only client-executed tools; no separately billable hosted tools, nested
-    # namespaces, external state, media, files or compaction.
+    # Only client-executed tools, optionally grouped once under a namespace.
+    # No hosted tools, external state, media, files or compaction.
     tools = body.get('tools', [])
-    if not isinstance(tools, list) or any(not isinstance(t, dict) or
-        t.get('type') not in ('function', 'custom') for t in tools):
+    def local_tool(tool, namespace=True):
+        if not isinstance(tool, dict):
+            return False
+        if tool.get('type') in ('function', 'custom'):
+            return True
+        if namespace and tool.get('type') == 'namespace':
+            children = tool.get('tools')
+            return (isinstance(children, list) and bool(children) and
+                    all(local_tool(child, namespace=False) for child in children))
+        return False
+    if not isinstance(tools, list) or not all(local_tool(tool) for tool in tools):
         raise Limit('HOSTED_OR_UNKNOWN_TOOL_REJECTED')
     denied_types = {'input_image', 'input_audio', 'input_file', 'compaction',
                     'item_reference', 'image_generation_call'}

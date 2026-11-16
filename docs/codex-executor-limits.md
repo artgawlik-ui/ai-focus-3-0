@@ -15,7 +15,8 @@ permission and sudo protections; do not replace this with an unguarded CLI.
 Only POST /responses is exposed. Redirects, environment proxies, alternate
 origins, compaction, persistent conversation IDs,
 media and hosted billable tools are rejected. Only local function/custom tool
-definitions are accepted. Compatibility failures stop the session; they must
+definitions, including a single namespace grouping of such local tools, are
+accepted. A namespace cannot contain hosted or further nested namespaces. Compatibility failures stop the session; they must
 not fall back to a direct API endpoint.
 
 Before EVERY generation, the gateway asks /v1/responses/input_tokens to count
