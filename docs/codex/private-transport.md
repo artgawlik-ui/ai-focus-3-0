@@ -123,3 +123,32 @@ body, credentials, cached spend, or manually entered spend grants admission.
 The unconditional paid-model barrier and owner Environment review remain.
 Do not rerun/replay issue #48. Any subsequent smoke needs a new approved issue
 after the fix is reviewed, installed and its trusted commit pin updated.
+
+
+### Reject admission after the runner stops waiting
+
+Issue #50 / run 43909025185 timed out at 16:39:20 UTC on 2026-11-16.
+After transient Costs API HTTP 429 responses the controller committed its hold
+and receipt at 16:39:40 UTC. Whole-workflow `in_progress` was insufficient:
+the Codex job's receipt-wait step had already failed. The model action was skipped.
+The private lifecycle recorded failure/awaiting_costs and retained a 2 USD hold;
+this is an accounting reservation, not a model charge. Do not delete/release it
+because the workflow failed, and do not rerun/replay issue #50.
+
+Admission now checks authenticated GitHub job metadata for exactly one `codex`
+job with the matching run, first attempt and SHA. The receipt-wait step must be
+in progress, unfinished and inside 90 seconds of GitHub's start timestamp,
+leaving 30 seconds of the runner's 120-second wait. The check occurs before
+Costs I/O, again under the PostgreSQL lock after Costs I/O, and before posting
+a receipt. Production recomputes wall time after the GitHub read. Closed or
+ambiguous steps never authorize admission. If the step closes after commit,
+withhold the receipt and retain the hold for the existing finish/reconcile path.
+This narrows the distributed race; it cannot atomically join GitHub and PostgreSQL.
+The runner still enforces its own timeout and exact nonce receipt.
+
+No timeout increase, synthetic spend fallback, hold release, model activation,
+review bypass, automatic replay or new service is introduced. HTTP 429 itself
+remains a provider-side availability constraint. A subsequent live smoke still
+requires separate release authorization, reconciliation of the existing hold and
+a new approved issue. CI uses synthetic HTTP and isolated PostgreSQL; it does
+not establish successful live transport.

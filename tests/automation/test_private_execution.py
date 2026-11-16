@@ -105,3 +105,17 @@ class PrivateExecutionTests(TestCase):
         with self.assertRaisesRegex(p.ExecutionBlocked, '^EXECUTION_ADMISSION_UNAVAILABLE$'):
             p.admit(conn, task=TASK, authorize=lambda task: True, env=ENV, now=NOW,
                     reader=lambda **kw: (Decimal('.03'), NOW))
+
+
+class AuthorizationExpiryTests(TestCase):
+    def test_authorization_expiring_after_cost_read_never_inserts(self):
+        for second in (False,'true',RuntimeError('SYNTHETIC_SECRET')):
+            conn,cur=database([])
+            authorize=Mock(side_effect=[True,second])
+            reader=Mock(return_value=(Decimal('.03'),NOW))
+            with self.subTest(second=type(second).__name__), self.assertRaisesRegex(p.ExecutionBlocked,'^TASK_AUTHORIZATION_REQUIRED$'):
+                p.admit(conn,task=TASK,authorize=authorize,env=ENV,now=NOW,reader=reader)
+            reader.assert_called_once()
+            self.assertEqual(authorize.call_count,2)
+            self.assertIn('pg_advisory_xact_lock',cur.execute.call_args_list[0].args[0])
+            self.assertFalse(any('INSERT' in c.args[0] for c in cur.execute.call_args_list))
