@@ -60,6 +60,14 @@ with sync_playwright() as p:
         page.get_by_text('Salony w bazie',exact=True).wait_for()
         assert page.evaluate('document.documentElement.scrollWidth<=innerWidth')
         page.screenshot(path='test-results/'+label+'-production-dashboard.png',full_page=True)
+        if isolated and label == 'webkit-iphone':
+            # A repeated activation of an OPEN control must not close the menu.
+            menu = page.get_by_label('Otwórz menu', exact=True)
+            menu.press('Enter')
+            expect(menu).to_have_attribute('aria-expanded', 'true')
+            menu.press('Enter')
+            expect(menu).to_have_attribute('aria-expanded', 'true')
+            expect(page.locator('#focus-main-navigation')).to_have_class('sidebar open')
         if label=='webkit-iphone':open_mobile_menu(page, page.get_by_role('button',name='Baza salonów',exact=True), label+'-nav-1')
         page.get_by_role('button',name='Baza salonów',exact=True).click()
         page.get_by_label('Szukaj salonu').fill('[TEST TECHNICZNY]')
