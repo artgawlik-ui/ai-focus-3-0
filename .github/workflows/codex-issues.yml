@@ -102,11 +102,12 @@ jobs:
           set -euo pipefail
           state_dir="/run/focus-codex-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}"
           # Privileged gateway and ledger survive drop-sudo; key never reaches CLI.
-          env -u FOCUS_EXECUTOR_API_KEY sudo -n python3 scripts/codex_automation/executor_limits.py \
-            --policy scripts/codex_automation/executor-limits.json \
-            --state-dir "$state_dir" <<< "$FOCUS_EXECUTOR_API_KEY" \
-            > "$RUNNER_TEMP/focus-limit-gate.log" 2>&1 &
+          printf '%s\n' "$FOCUS_EXECUTOR_API_KEY" | \
+            env -u FOCUS_EXECUTOR_API_KEY sudo -n /usr/bin/python3 scripts/codex_automation/executor_limits.py \
+              --policy scripts/codex_automation/executor-limits.json \
+              --state-dir "$state_dir" > "$RUNNER_TEMP/focus-limit-gate.log" 2>&1 &
           gate_pid=$!
+          unset FOCUS_EXECUTOR_API_KEY
           for attempt in {1..20}; do
             if test -f "$RUNNER_TEMP/focus-limit-gate.log" && \
                grep -q '^EXECUTOR_LIMIT_GATE_READY$' "$RUNNER_TEMP/focus-limit-gate.log"; then

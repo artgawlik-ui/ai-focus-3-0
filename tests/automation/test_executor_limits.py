@@ -13,9 +13,6 @@ from scripts.codex_automation.executor_limits import (
     Gateway, Limit, Policy, OpenAI, normalize, server,
 )
 
-NOW = 1805400000
-
-
 def policy(**changes):
     raw = {
         'schema': 1, 'enabled': True, 'model': 'synthetic-model',
@@ -294,6 +291,42 @@ class LimitsTests(unittest.TestCase):
             http.shutdown()
             http.server_close()
             thread.join(timeout=2)
+
+
+    def test_workflow_preserves_barrier_key_isolation_and_no_reset(self):
+        workflow = Path('.github/workflows/codex-issues.yml').read_text()
+        barrier = workflow.index('echo "BLOCKED: PRIVATE_ADMISSION_TRANSPORT_REQUIRED"')
+        gate = workflow.index('- name: Start private bounded executor gateway')
+        agent = workflow.index('- name: Real Codex executor')
+        self.assertLess(barrier, gate)
+        self.assertLess(gate, agent)
+        action = workflow[agent:workflow.index('- name: Collect untrusted proposal only')]
+        self.assertNotIn('secrets.OPENAI_API_KEY', action)
+        self.assertIn("openai-api-key: 'focus-bounded-local-proxy'", action)
+        self.assertIn("responses-api-endpoint: 'http://127.0.0.1:8765/responses'", action)
+        self.assertIn('safety-strategy: drop-sudo', action)
+        setup = workflow[gate:agent]
+        self.assertIn('env -u FOCUS_EXECUTOR_API_KEY sudo -n /usr/bin/python3', setup)
+        self.assertNotIn('<<<', setup)
+        self.assertIn('unset FOCUS_EXECUTOR_API_KEY', setup)
+
+    def test_count_failure_is_not_retried_and_does_not_generate(self):
+        fake = Fake()
+        calls = []
+        def broken(*args):
+            calls.append(args[0])
+            raise TimeoutError('synthetic provider failure')
+        fake.post = broken
+        gate = self.gate(fake=fake)
+        self.blocked(gate, 'UPSTREAM_OR_LEDGER_FAILURE')
+        self.blocked(gate, 'EXECUTOR_STOPPED')
+        self.assertEqual(calls, ['input_tokens'])
+        self.assertFalse(gate.records)
+
+    def test_body_size_limit_precedes_upstream(self):
+        gate = self.gate()
+        self.blocked(gate, 'REQUEST_TOO_LARGE', b'x' * 262145)
+        self.assertFalse(self.fake.calls)
 
 
 if __name__ == '__main__':
