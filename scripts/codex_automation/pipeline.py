@@ -99,6 +99,10 @@ def authorize(event, api, actor, triggering_actor):
         raise Blocked('AUTHOR_PERMISSION_DENIED')
     if len(current.get('body') or '') > 16_000 or len(current['title']) > 256:
         raise Blocked('TASK_TOO_LARGE')
+    # Task-size heuristic only; hard request limits live in executor_limits.py.
+    numbered_steps = re.findall(r'(?m)^\s*\d+[.)]\s+\S', current.get('body') or '')
+    if len(numbered_steps) > 3:
+        raise Blocked('TASK_SPLIT_REQUIRED')
     if digest(current) != match[1]:
         raise Blocked('APPROVAL_CONTENT_CHANGED')
     return current
@@ -182,7 +186,11 @@ def admit():
     Path('task').mkdir()
     Path('task/snapshot.json').write_text(json.dumps(snapshot))
     Path('task/prompt.txt').write_text(
-        'Implement only the approved task below. No production, network services, credentials, '
+        'Implement only ONE small, independently testable change from the approved task. '
+        'Inspect relevant fragments only and run targeted tests. Stop after a small patch. '
+        'Do not retry rate-limit failures or attempt to bypass the executor gateway. '
+        'Report additional work for separate follow-up tasks. '
+        'No production, network services, credentials, '
         'merge, deployment, migrations or real client messages. Do not change workflows, '
         'instructions or dependency files. Use synthetic tests only. Allowed change roots: '
         'backend/, frontend/src/, tests/, docs/. Write a concise Polish final report. '

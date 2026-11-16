@@ -94,11 +94,38 @@ jobs:
         run: |
           echo "BLOCKED: PRIVATE_ADMISSION_TRANSPORT_REQUIRED"
           exit 1
+      # Remains after the unconditional activation barrier; no paid API in CI.
+      - name: Start private bounded executor gateway
+        env:
+          FOCUS_EXECUTOR_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+        run: |
+          set -euo pipefail
+          state_dir="/run/focus-codex-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}"
+          # Privileged gateway and ledger survive drop-sudo; key never reaches CLI.
+          printf '%s\n' "$FOCUS_EXECUTOR_API_KEY" | \
+            env -u FOCUS_EXECUTOR_API_KEY sudo -n /usr/bin/python3 scripts/codex_automation/executor_limits.py \
+              --policy scripts/codex_automation/executor-limits.json \
+              --state-dir "$state_dir" > "$RUNNER_TEMP/focus-limit-gate.log" 2>&1 &
+          gate_pid=$!
+          unset FOCUS_EXECUTOR_API_KEY
+          for attempt in {1..20}; do
+            if test -f "$RUNNER_TEMP/focus-limit-gate.log" && \
+               grep -q '^EXECUTOR_LIMIT_GATE_READY$' "$RUNNER_TEMP/focus-limit-gate.log"; then
+              exit 0
+            fi
+            kill -0 "$gate_pid" 2>/dev/null || { echo 'BLOCKED: EXECUTOR_LIMIT_GATE_NOT_READY'; exit 1; }
+            sleep 0.1
+          done
+          echo 'BLOCKED: EXECUTOR_LIMIT_GATE_NOT_READY'
+          exit 1
       - name: Real Codex executor (no mock fallback)
         uses: openai/codex-action@bdf19a4a223ec2549a3e2274a0cf61556bc07675 # v1
         with:
-          openai-api-key: ${{ secrets.OPENAI_API_KEY }}
+          # Real key stays in the root-owned gateway; action gets a dummy.
+          openai-api-key: 'focus-bounded-local-proxy'
+          responses-api-endpoint: 'http://127.0.0.1:8765/responses'
           codex-version: '0.167.0'
+          codex-args: '["-c","web_search=\"disabled\""]'
           permission-profile: ':workspace'
           safety-strategy: drop-sudo
           allow-bots: false

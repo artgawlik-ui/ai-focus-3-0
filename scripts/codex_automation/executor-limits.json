@@ -1,0 +1,13 @@
+{
+  "schema": 1,
+  "enabled": false,
+  "model": null,
+  "tariff": null,
+  "max_usd": "2.00",
+  "max_requests": 3,
+  "max_input_tokens_per_request": 24000,
+  "max_output_tokens_per_request": 2048,
+  "max_total_reserved_tokens": 60000,
+  "max_reserved_tokens_per_minute": 30000,
+  "max_seconds": 300
+}
