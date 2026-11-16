@@ -86,6 +86,14 @@ def admit(conn, *, task, authorize, env=None, now=None, reader=None):
         with conn.transaction():
             with conn.cursor() as cur:
                 lock(cur)
+                # Costs I/O and lock contention can outlive the runner's wait.
+                # Re-authorize under the lock before either durable INSERT.
+                try:
+                    still_authorized = authorize(task)
+                except Exception:
+                    raise ExecutionBlocked('TASK_AUTHORIZATION_REQUIRED') from None
+                if still_authorized is not True:
+                    raise ExecutionBlocked('TASK_AUTHORIZATION_REQUIRED')
                 cur.execute("SELECT 1 FROM codex_budget_reservations WHERE state='reserved' LIMIT 1")
                 if cur.fetchone() is not None:
                     raise ExecutionBlocked('UNRECONCILED_EXECUTION')

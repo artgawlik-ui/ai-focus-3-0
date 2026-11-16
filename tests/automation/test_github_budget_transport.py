@@ -43,6 +43,11 @@ class API:
                         head_repository={'full_name':t.policy.REPO},
                         actor={'login':'artgawlik-ui'}, triggering_actor={'login':'artgawlik-ui'},
                         run_started_at=NOW.isoformat())
+        self.job = dict(name='codex', run_id=123, run_attempt=1, head_sha=BASE,
+                        status='in_progress', steps=[dict(
+                            name='Wait for private PostgreSQL reservation receipt',
+                            status='in_progress', conclusion=None, completed_at=None,
+                            started_at=NOW.isoformat())])
         self.issue = copy.deepcopy(ISSUE)
         self.comment = dict(id=456, issue_url=f'https://api.github.com{t.PREFIX}/issues/40',
                             body='/codex approve '+t.policy.digest(self.issue),
@@ -66,6 +71,8 @@ class API:
             return self.statuses
         if '/workflows/' in path and '/runs?' in path:
             return {'workflow_runs':[self.run]}
+        if path.endswith('/actions/runs/123/jobs?per_page=100'):
+            return {'total_count':1,'jobs':[copy.deepcopy(self.job)]}
         if path.endswith('/actions/runs/123'):
             return copy.deepcopy(self.run)
         if '/artifacts?' in path:
@@ -326,6 +333,17 @@ class TransportTests(unittest.TestCase):
             env={'OPENAI_COSTS_ADMIN_KEY':'synthetic','OPENAI_PROJECT_ID':'proj_test'}
             reader=lambda **kw:(Decimal('.03'),NOW-timedelta(hours=1))
             with patch.dict(os.environ,env):
+                # Real PostgreSQL must remain empty if Costs I/O outlives wait.
+                def closed_wait_reader(**kwargs):
+                    api.job['steps'][0].update(status='completed',conclusion='failure')
+                    return reader(**kwargs)
+                with self.assertRaisesRegex(t.lifecycle.ExecutionBlocked,'TASK_AUTHORIZATION_REQUIRED'):
+                    t.handle_request(api,conn,payload(),trusted_sha=BASE,now=NOW,reader=closed_wait_reader)
+                with conn.transaction():
+                    self.assertEqual(conn.execute('SELECT count(*) FROM codex_execution_runs').fetchone()[0],0)
+                    self.assertEqual(conn.execute('SELECT count(*) FROM codex_budget_reservations').fetchone()[0],0)
+                self.assertEqual(api.statuses,[])
+                api.job['steps'][0].update(status='in_progress',conclusion=None)
                 admitted=t.poll_once(api,conn,trusted_sha=BASE,now=NOW,reader=reader,
                                       downloader=lambda *a:archive())
                 self.assertEqual(admitted,1)
@@ -358,3 +376,71 @@ class CostFailureLoggingTests(unittest.TestCase):
             logger.assert_called_once_with('BLOCKED: '+expected)
             stop.wait.assert_called_once_with(60)
             poll.assert_not_called()
+
+
+class ReceiptWindowTests(unittest.TestCase):
+    def test_closed_or_wrong_wait_cannot_authorize(self):
+        changes = [dict(status='completed'), dict(run_id=999), dict(run_attempt=2),
+                   dict(head_sha='a'*40), dict(steps=[]), dict(steps=None)]
+        for change in changes:
+            api=API(); api.job.update(change)
+            with self.subTest(change=change), self.assertRaises(t.TransportBlocked):
+                t.verify_waiting_job(api,payload(),now=NOW)
+        for change in [dict(status='completed',conclusion='failure'),
+                       dict(completed_at=NOW.isoformat()),dict(conclusion='cancelled'),
+                       dict(started_at='invalid'),dict(started_at=NOW.replace(tzinfo=None).isoformat()),
+                       dict(started_at=(NOW+timedelta(seconds=1)).isoformat())]:
+            api=API(); api.job['steps'][0].update(change)
+            with self.subTest(step=change), self.assertRaises(t.TransportBlocked):
+                t.verify_waiting_job(api,payload(),now=NOW)
+
+    def test_wait_window_is_bounded_before_runner_timeout(self):
+        t.verify_waiting_job(API(),payload(),now=NOW+timedelta(seconds=89))
+        for elapsed in (90,119,120,121):
+            with self.subTest(elapsed=elapsed),self.assertRaisesRegex(t.TransportBlocked,'RECEIPT_ADMISSION_WINDOW_CLOSED'):
+                t.verify_waiting_job(API(),payload(),now=NOW+timedelta(seconds=elapsed))
+
+    def test_ambiguous_or_incomplete_jobs_fail_closed(self):
+        for response in [{'total_count':2,'jobs':[API().job]},
+                         {'total_count':2,'jobs':[API().job,API().job]},
+                         {'total_count':0,'jobs':[]}, {'total_count':1,'jobs':None}]:
+            api=API(); original=api.call
+            api.call=lambda method,path,data=None: response if '/jobs?' in path else original(method,path,data)
+            with self.subTest(response=response),self.assertRaises(t.TransportBlocked):
+                t.verify_waiting_job(api,payload(),now=NOW)
+
+    def test_wait_ending_during_cost_read_creates_no_hold_or_receipt(self):
+        from decimal import Decimal
+        api=API(); conn=MagicMock()
+        cur=conn.cursor.return_value.__enter__.return_value
+        def reader(**kwargs):
+            api.job['steps'][0].update(status='completed',conclusion='failure',completed_at=NOW.isoformat())
+            return Decimal('.03'),NOW
+        env={'OPENAI_COSTS_ADMIN_KEY':'synthetic','OPENAI_PROJECT_ID':'proj_test'}
+        with patch.dict(os.environ,env),self.assertRaisesRegex(t.lifecycle.ExecutionBlocked,'TASK_AUTHORIZATION_REQUIRED'):
+            t.handle_request(api,conn,payload(),trusted_sha=BASE,now=NOW,reader=reader)
+        self.assertFalse(any('INSERT' in c.args[0] for c in cur.execute.call_args_list))
+        self.assertEqual(api.statuses,[])
+
+    def test_wait_ending_after_commit_withholds_ack_and_preserves_hold(self):
+        api=API()
+        def committed(*args,**kwargs):
+            api.job['status']='completed'
+        with patch.object(t.lifecycle,'admit',side_effect=committed) as admit, patch.object(t.lifecycle,'finish') as finish:
+            with self.assertRaisesRegex(t.TransportBlocked,'ACTIVE_RECEIPT_WAIT_REQUIRED'):
+                t.handle_request(api,Mock(),payload(),trusted_sha=BASE,now=NOW)
+            admit.assert_called_once(); finish.assert_not_called()
+        self.assertEqual(api.statuses,[])
+
+    def test_live_clock_is_checked_after_github_io(self):
+        api=API(); original=api.call; events=[]
+        def call(*args,**kwargs):
+            events.append('api')
+            return original(*args,**kwargs)
+        def clock(now):
+            events.append('clock')
+            return NOW+timedelta(seconds=90)
+        api.call=call
+        with patch.object(t.lifecycle,'utc',side_effect=clock), self.assertRaisesRegex(t.TransportBlocked,'RECEIPT_ADMISSION_WINDOW_CLOSED'):
+            t.verify_waiting_job(api,payload())
+        self.assertEqual(events,['api','clock'])

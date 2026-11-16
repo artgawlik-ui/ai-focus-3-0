@@ -193,6 +193,40 @@ def verify_request(api, payload, *, trusted_sha, now=None):
     return task
 
 
+def verify_waiting_job(api, payload, *, now=None):
+    """Require a live trusted wait step, leaving 30s of its 120s timeout.
+
+    Use GitHub job timestamps, never the issue/agent clock. Recompute wall time
+    after the API read; production callers leave `now` unset.
+    """
+    result = api.call('GET', f"{PREFIX}/actions/runs/{payload['run_id']}/jobs?per_page=100")
+    jobs = result.get('jobs')
+    if (not isinstance(jobs, list) or result.get('total_count') != len(jobs) or
+        len(jobs) > 100):
+        raise TransportBlocked('INCOMPLETE_JOB_LIST')
+    matches = [j for j in jobs if isinstance(j, dict) and j.get('name') == 'codex']
+    if len(matches) != 1:
+        raise TransportBlocked('ACTIVE_RECEIPT_WAIT_REQUIRED')
+    job = matches[0]
+    if (job.get('run_id') != payload['run_id'] or job.get('run_attempt') != 1 or
+        job.get('head_sha') != payload['base'] or job.get('status') != 'in_progress'):
+        raise TransportBlocked('ACTIVE_RECEIPT_WAIT_REQUIRED')
+    steps = job.get('steps')
+    if not isinstance(steps, list):
+        raise TransportBlocked('ACTIVE_RECEIPT_WAIT_REQUIRED')
+    waits = [s for s in steps if isinstance(s, dict) and
+             s.get('name') == 'Wait for private PostgreSQL reservation receipt']
+    if (len(waits) != 1 or waits[0].get('status') != 'in_progress' or
+        waits[0].get('conclusion') is not None or waits[0].get('completed_at') is not None):
+        raise TransportBlocked('ACTIVE_RECEIPT_WAIT_REQUIRED')
+    try:
+        started = datetime.fromisoformat(waits[0]['started_at'].replace('Z', '+00:00'))
+        if started.utcoffset() is None or not timedelta(0) <= lifecycle.utc(now)-started < timedelta(seconds=90):
+            raise ValueError()
+    except Exception:
+        raise TransportBlocked('RECEIPT_ADMISSION_WINDOW_CLOSED') from None
+
+
 def handle_request(api, conn, payload, *, trusted_sha, now=None, reader=None, accepting=lambda: True):
     if api.call('GET', '/user').get('login') != RECEIPT_LOGIN:
         raise TransportBlocked('PRIVATE_CONTROLLER_IDENTITY_REQUIRED')
@@ -202,8 +236,18 @@ def handle_request(api, conn, payload, *, trusted_sha, now=None, reader=None, ac
     # second hold. A lost receipt retains its hold for explicit reconciliation.
     if not accepting():
         raise TransportBlocked('CONTROLLER_DRAINING')
-    lifecycle.admit(conn, task=task, authorize=lambda candidate: candidate == task and accepting(),
+    def authorize(candidate):
+        if candidate != task or not accepting():
+            return False
+        verify_waiting_job(api, payload, now=now)
+        return True
+    lifecycle.admit(conn, task=task, authorize=authorize,
                     now=now, reader=reader)
+    # A job can end after commit. Withhold the receipt and retain its hold;
+    # terminal GitHub evidence and genuine cost coverage govern reconciliation.
+    verify_waiting_job(api, payload, now=now)
+    if not accepting():
+        raise TransportBlocked('CONTROLLER_DRAINING')
     receipt = api.call('POST', f'{PREFIX}/statuses/{task.base}', {
         'state':'success', 'context':context(payload),
         'description':'Private budget reservation committed',
