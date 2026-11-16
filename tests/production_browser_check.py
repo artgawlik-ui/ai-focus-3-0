@@ -35,8 +35,9 @@ def open_mobile_menu(page, target, diagnostic_name):
         }""")
         (output / (diagnostic_name + '-menu-geometry.json')).write_text(
             json.dumps(geometry, indent=2))
-        page.screenshot(path=str(output / (diagnostic_name + '-menu-failure.png')),
-                        full_page=True)
+        if isolated:
+            page.screenshot(path=str(output / (diagnostic_name + '-menu-failure.png')),
+                            full_page=True)
         raise
 
 results=[]
