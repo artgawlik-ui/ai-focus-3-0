@@ -308,7 +308,13 @@ class LimitsTests(unittest.TestCase):
         self.assertIn("responses-api-endpoint: 'http://127.0.0.1:8765/responses'", action)
         self.assertIn('safety-strategy: drop-sudo', action)
         setup = workflow[gate:agent]
-        self.assertIn('env -u FOCUS_EXECUTOR_API_KEY sudo -n /usr/bin/python3', setup)
+        self.assertIn('env -u FOCUS_EXECUTOR_API_KEY sudo -n --preserve-env=', setup)
+        preserved = setup.split('--preserve-env=', 1)[1].split()[0].split(',')
+        self.assertEqual(set(preserved), {'GH_TOKEN','MODEL','APPROVED_NUMBER','APPROVED_BASE',
+                         'APPROVED_BRANCH','APPROVED_DIGEST','GITHUB_REPOSITORY','GITHUB_REF',
+                         'GITHUB_RUN_ATTEMPT','GITHUB_RUN_ID','GITHUB_SHA'})
+        self.assertNotIn('FOCUS_EXECUTOR_API_KEY', preserved)
+        self.assertIn('/usr/bin/python3 scripts/codex_automation/executor_limits.py', setup)
         self.assertNotIn('<<<', setup)
         self.assertIn('unset FOCUS_EXECUTOR_API_KEY', setup)
 
