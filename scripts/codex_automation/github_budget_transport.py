@@ -379,11 +379,13 @@ def serve(api, connect, *, trusted_sha, stop, logger=print,
                 delay = retry if type(retry) is int and 900 <= retry <= 86400 else 900
                 # Report the effective validated wait, never raw headers/errors.
                 # Every 429 needs a new deadline even if the fixed code repeats.
+                resume_at = lifecycle.utc(clock()) + timedelta(seconds=delay)
+                if resume_at.microsecond:
+                    resume_at = (resume_at + timedelta(seconds=1)).replace(microsecond=0)
                 logger('COSTS_BACKOFF: ' + json.dumps({
                     'code': 'COSTS_RATE_LIMITED',
                     'effective_retry_after_seconds': delay,
-                    'not_before_utc': (lifecycle.utc(clock()) + timedelta(seconds=delay))
-                        .strftime('%Y-%m-%dT%H:%M:%SZ'),
+                    'not_before_utc': resume_at.strftime('%Y-%m-%dT%H:%M:%SZ'),
                     'delay_source': 'validated_metadata' if delay == retry and
                         type(retry) is int else 'fallback',
                 }, sort_keys=True))

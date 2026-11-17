@@ -489,7 +489,7 @@ class ReconciliationCooldownTests(unittest.TestCase):
             logger=Mock()
             with self.subTest(supplied=supplied), patch.object(t,'refresh_runs',side_effect=error),patch.object(t,'poll_once') as poll:
                 t.serve(API(),MagicMock(),trusted_sha=BASE,stop=stop,logger=logger,
-                        clock=lambda: NOW)
+                        clock=lambda: NOW.replace(microsecond=500000))
             stop.wait.assert_called_once_with(expected)
             poll.assert_not_called()
             logger.assert_any_call('BLOCKED: COSTS_RATE_LIMITED')
@@ -497,7 +497,7 @@ class ReconciliationCooldownTests(unittest.TestCase):
             record=json.loads(logger.call_args_list[0].args[0].split(': ',1)[1])
             self.assertEqual(record['effective_retry_after_seconds'],expected)
             self.assertEqual(record['not_before_utc'],
-                (NOW+timedelta(seconds=expected)).strftime('%Y-%m-%dT%H:%M:%SZ'))
+                (NOW+timedelta(seconds=expected+1)).strftime('%Y-%m-%dT%H:%M:%SZ'))
             self.assertEqual(record['delay_source'],
                 'validated_metadata' if type(supplied) is int and supplied == expected else 'fallback')
             self.assertNotIn('SYNTHETIC_SECRET',str(logger.call_args_list))
