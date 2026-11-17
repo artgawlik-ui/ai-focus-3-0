@@ -16,6 +16,7 @@ from pathlib import Path
 import re
 import threading
 import time
+from zoneinfo import ZoneInfo
 from urllib.request import Request, HTTPRedirectHandler, build_opener
 
 MAX_BODY = 262144
@@ -56,6 +57,12 @@ def timestamp(value):
         return date.timestamp()
     except (AttributeError, TypeError, ValueError):
         raise Limit('INVALID_TARIFF_TIME') from None
+
+
+def require_paid_window(wall):
+    local = datetime.fromtimestamp(wall, timezone.utc).astimezone(ZoneInfo('Europe/Warsaw'))
+    if not 9 <= local.hour < 18:
+        raise Limit('PAID_EXECUTION_WINDOW_CLOSED')
 
 
 class Policy:
@@ -193,7 +200,8 @@ class OpenAI:
 
 
 class Gateway:
-    def __init__(self, policy, upstream, state_dir, clock=time.monotonic, wall=time.time):
+    def __init__(self, policy, upstream, state_dir, clock=time.monotonic, wall=time.time, admission_guard=None):
+        self.admission_guard = admission_guard
         self.policy, self.upstream = policy, upstream
         self.clock, self.wall = clock, wall
         self.started = clock()
@@ -247,6 +255,8 @@ class Gateway:
                 body = normalize(decode(data), self.policy)
                 if len(self.records) >= self.policy.requests:
                     self.stop('REQUEST_LIMIT')
+                if self.admission_guard:
+                    self.admission_guard(self.wall())
                 counting = {k: v for k, v in body.items() if k in COUNT_FIELDS}
                 committed = sum(r['nusd'] for r in self.records + self.count_records)
                 if committed + self.policy.count_fee > self.policy.budget:
@@ -275,6 +285,8 @@ class Gateway:
                     self.stop('TPM_LIMIT')
                 if sum(r['nusd'] for r in self.records + self.count_records) + nusd > self.policy.budget:
                     self.stop('COST_CEILING')
+                if self.admission_guard:
+                    self.admission_guard(self.wall())
                 # Durable conservative reservation BEFORE the potentially paid POST.
                 # Never refund on errors, disconnects, missing usage or short output.
                 self.records.append({'at': now, 'tokens': reserved, 'nusd': nusd,
@@ -344,10 +356,11 @@ def main():
     if os.geteuid() != 0 or not args.state_dir.startswith('/run/focus-codex-'):
         raise Limit('ROOT_PRIVATE_STATE_REQUIRED')
     policy = Policy(decode(Path(args.policy).read_bytes()))
+    require_paid_window(time.time())
     key = __import__('sys').stdin.readline(512).strip()
     if not key or len(key) >= 511:
         raise Limit('API_AUTH_MISSING')
-    gateway = Gateway(policy, OpenAI(key), args.state_dir)
+    gateway = Gateway(policy, OpenAI(key), args.state_dir, admission_guard=require_paid_window)
     listener = server(gateway, 8765)
     # Independent lifetime; later action steps cannot restart/reset its ledger.
     timer = threading.Timer(policy.seconds, listener.shutdown)
