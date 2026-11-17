@@ -21,6 +21,15 @@ def insert_for(db,model):
         from sqlalchemy.dialects.sqlite import insert
     return insert(model)
 
+def valid_status_evidence(event,message,account):
+    # Never interpret strings/numbers as boolean provider evidence. Apply this
+    # both before deduplication and when processing previously queued payloads.
+    if any(key in message and type(message[key]) is not bool
+           for key in ('is_echo','is_deleted')):return False
+    sender=event.get('sender')
+    return message.get('is_echo') is not True or (
+        isinstance(sender,dict) and str(sender.get('id',''))==account)
+
 def persist(payload):
     """Separate bounded transaction. Never locks a credential or processes CRM."""
     from backend.meta import seal
@@ -34,6 +43,7 @@ def persist(payload):
             if len(rows)>=MAX_EVENTS:raise ValueError('Event limit')
             message=event.get('message',{})
             if not isinstance(message,dict):continue
+            if not valid_status_evidence(event,message,os.environ['META_TEST_ACCOUNT_ID']):continue
             mid=message.get('mid')
             # Include event kind so deletion/echo never collide with an inbound mid.
             kind='deleted' if message.get('is_deleted') else 'echo' if message.get('is_echo') else 'message'
@@ -62,6 +72,7 @@ def apply_payload(db,payload):
             if not isinstance(event,dict):continue
             message=event.get('message',{})
             if not isinstance(message,dict):continue
+            if not valid_status_evidence(event,message,os.environ['META_TEST_ACCOUNT_ID']):continue
             mid=message.get('mid')
             if not isinstance(mid,str) or not 0<len(mid)<=250:continue
             sender=str(event.get('sender',{}).get('id',''));recipient=str(event.get('recipient',{}).get('id',''))
