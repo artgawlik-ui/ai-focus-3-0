@@ -121,11 +121,22 @@ class TransportTests(unittest.TestCase):
                 admit.assert_not_called()
 
     def test_stale_future_and_invalid_run_clock_block(self):
-        for value in ((NOW-timedelta(minutes=16)).isoformat(),
-                      (NOW+timedelta(seconds=1)).isoformat(), 'garbage', NOW.replace(tzinfo=None).isoformat()):
+        for value in ((NOW+timedelta(seconds=1)).isoformat(), 'garbage', NOW.replace(tzinfo=None).isoformat()):
             api=API(); api.run['run_started_at']=value
             with self.subTest(value=value), self.assertRaisesRegex(t.TransportBlocked, 'STALE_WORKFLOW_REQUEST'):
                 t.verify_request(api, payload(), trusted_sha=BASE, now=NOW)
+
+
+    def test_long_owner_review_accepts_only_fresh_active_wait(self):
+        api=API()
+        api.run['run_started_at']=(NOW-timedelta(hours=4)).isoformat()
+        self.assertEqual(t.verify_request(api,payload(),trusted_sha=BASE,now=NOW).run_id,'123:1')
+        api.job['steps'][0]['started_at']=(NOW-timedelta(seconds=90)).isoformat()
+        with patch.object(t.lifecycle,'admit') as admit:
+            with self.assertRaisesRegex(t.TransportBlocked,'RECEIPT_ADMISSION_WINDOW_CLOSED'):
+                t.handle_request(api,Mock(),payload(),trusted_sha=BASE,now=NOW)
+            admit.assert_not_called()
+        self.assertFalse(any(c[0]=='POST' for c in api.calls))
 
     def test_changed_task_role_comment_and_claim_block(self):
         for kind in ('task','role','comment','claim','actor'):

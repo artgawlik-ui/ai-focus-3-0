@@ -170,10 +170,13 @@ def verify_request(api, payload, *, trusted_sha, now=None):
         raise TransportBlocked('UNTRUSTED_WORKFLOW_RUN')
     try:
         started = datetime.fromisoformat(run['run_started_at'].replace('Z','+00:00'))
-        if started.utcoffset() is None or not timedelta(0) <= now-started <= timedelta(minutes=15):
+        if started.utcoffset() is None or not timedelta(0) <= now-started:
             raise ValueError()
     except Exception:
         raise TransportBlocked('STALE_WORKFLOW_REQUEST') from None
+    # Environment review may take hours. Freshness belongs to the authenticated
+    # active receipt-wait step (strict <90s), not time spent awaiting owner review.
+    verify_waiting_job(api, payload, now=now)
     comment = api.call('GET', f"{PREFIX}/issues/comments/{payload['comment_id']}")
     if (comment.get('id') != payload['comment_id'] or
         comment.get('issue_url') != f'https://api.github.com{PREFIX}/issues/{task.issue}'):
