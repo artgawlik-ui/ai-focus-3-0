@@ -114,7 +114,7 @@ jobs:
               --state-dir "$state_dir" > "$RUNNER_TEMP/focus-limit-gate.log" 2>&1 &
           gate_pid=$!
           unset FOCUS_EXECUTOR_API_KEY
-          for attempt in {1..20}; do
+          for attempt in {1..300}; do
             if test -f "$RUNNER_TEMP/focus-limit-gate.log" && \
                grep -q '^EXECUTOR_LIMIT_GATE_READY$' "$RUNNER_TEMP/focus-limit-gate.log"; then
               exit 0

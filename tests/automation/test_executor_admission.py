@@ -19,7 +19,7 @@ class AdmissionBindingTests(unittest.TestCase):
     def test_exact_context_rechecks_receipt(self):
         with patch.object(admission.transport,'wait_receipt') as verify:
             self.call()
-            self.assertEqual(verify.call_args.kwargs,{'timeout':1})
+            self.assertEqual(verify.call_args.kwargs,{'timeout':20})
             self.assertEqual(verify.call_args.args[1],payload())
 
     def test_missing_or_changed_context_never_reads_receipt(self):

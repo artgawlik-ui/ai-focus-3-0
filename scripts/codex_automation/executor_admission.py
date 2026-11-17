@@ -1,6 +1,4 @@
 """Bind production gateway startup to the exact private receipt; no model calls."""
-import re
-from decimal import Decimal
 try:
     from . import github_budget_transport as transport
 except ImportError:
@@ -25,4 +23,4 @@ def require_private_admission(env, payload, policy, state_dir, api):
         raise transport.TransportBlocked('GATEWAY_ALLOWANCE_MISMATCH')
     # Authenticated GitHub statuses: exact nonce context/run/attempt/SHA and creator.
     # This checks the already committed receipt; it never invokes Costs or reserves.
-    transport.wait_receipt(api, payload, timeout=1)
+    transport.wait_receipt(api, payload, timeout=20)
