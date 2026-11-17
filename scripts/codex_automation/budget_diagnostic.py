@@ -57,7 +57,46 @@ def snapshot(conn):
 def emit_snapshot(conn, logger):
     try:
         result = snapshot(conn)
+        try:
+            result['attempt58'] = snapshot_attempt58(conn)
+        except Exception:
+            result['attempt58'] = {'status':'UNAVAILABLE'}
         logger('BUDGET_DIAGNOSTIC: ' + json.dumps(result, sort_keys=True))
     except Exception:
         # Never log driver errors, connection strings or unexpected DB values.
         logger('BUDGET_DIAGNOSTIC: UNAVAILABLE')
+
+def snapshot_attempt58(conn):
+    """Fixed incident scope; absence is evidence only from an actual DB read."""
+    with conn.transaction():
+        with conn.cursor() as cur:
+            cur.execute('SET TRANSACTION ISOLATION LEVEL REPEATABLE READ READ ONLY')
+            cur.execute('SELECT COUNT(*) FROM codex_execution_runs WHERE run_id=%s',
+                        ('44116166552:1',))
+            runs = cur.fetchone()[0]
+            cur.execute('SELECT COUNT(*) FROM codex_budget_reservations '
+                        'WHERE reservation_id=%s OR issue_number=58',
+                        ('github-run-44116166552:1',))
+            reservations = cur.fetchone()[0]
+            if type(runs) is not int or type(reservations) is not int:
+                return {'status':'UNVERIFIED'}
+            if runs == 0 and reservations == 0:
+                return {'status':'NO_DURABLE_RECORDS', 'run_count':0, 'reservation_count':0}
+            if runs != 1 or reservations != 1:
+                return {'status':'INCONSISTENT_RECORDS'}
+            cur.execute('SELECT e.state,r.state,r.amount_usd FROM codex_execution_runs e '
+                        'JOIN codex_budget_reservations r ON r.reservation_id=e.reservation_id '
+                        'WHERE e.run_id=%s AND e.issue_number=58 AND r.issue_number=58 '
+                        'AND r.reservation_id=%s',
+                        ('44116166552:1','github-run-44116166552:1'))
+            rows = cur.fetchall()
+            if len(rows) != 1:
+                return {'status':'INCONSISTENT_RECORDS'}
+            execution, reservation, amount = rows[0]
+            if (execution not in {'running','awaiting_costs','reconciled'}
+                    or reservation not in {'reserved','settled','blocked'}
+                    or amount != Decimal('2')):
+                return {'status':'INCONSISTENT_RECORDS'}
+            # This does not assert cost coverage, settlement correctness or readiness.
+            return {'status':'DURABLE_RECORDS_PRESENT','execution':execution,
+                    'reservation':reservation,'amount_usd':'2.00'}
