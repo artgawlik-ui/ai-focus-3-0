@@ -436,7 +436,12 @@ def main(argv=None):
                 from costs_cooldown import wait_for_costs_window
             logger = lambda message: print(message, flush=True)
             if wait_for_costs_window(os.environ, stop, logger):
-                serve(api, connect, trusted_sha=pinned, stop=stop, logger=logger)
+                try:
+                    from .costs_recovery import observe_recovery
+                except ImportError:
+                    from costs_recovery import observe_recovery
+                if observe_recovery(os.environ, stop, logger):
+                    serve(api, connect, trusted_sha=pinned, stop=stop, logger=logger)
         else:
             with connect() as conn:
                 count = poll_once(api, conn, trusted_sha=pinned) if refresh_runs(api, conn) else 0
