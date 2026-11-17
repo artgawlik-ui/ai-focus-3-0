@@ -61,6 +61,10 @@ def emit_snapshot(conn, logger):
             result['attempt58'] = snapshot_attempt58(conn)
         except Exception:
             result['attempt58'] = {'status':'UNAVAILABLE'}
+        try:
+            result['attempt65'] = snapshot_attempt65(conn)
+        except Exception:
+            result['attempt65'] = {'status':'UNAVAILABLE'}
         logger('BUDGET_DIAGNOSTIC: ' + json.dumps(result, sort_keys=True))
     except Exception:
         # Never log driver errors, connection strings or unexpected DB values.
@@ -68,15 +72,24 @@ def emit_snapshot(conn, logger):
 
 def snapshot_attempt58(conn):
     """Fixed incident scope; absence is evidence only from an actual DB read."""
+    return _snapshot_attempt(conn, 58, '44116166552:1')
+
+
+def snapshot_attempt65(conn):
+    """Read only the failed #65 incident; never calls Costs or settles a hold."""
+    return _snapshot_attempt(conn, 65, '44130029661:1')
+
+
+def _snapshot_attempt(conn, issue, run):
     with conn.transaction():
         with conn.cursor() as cur:
             cur.execute('SET TRANSACTION ISOLATION LEVEL REPEATABLE READ READ ONLY')
             cur.execute('SELECT COUNT(*) FROM codex_execution_runs WHERE run_id=%s',
-                        ('44116166552:1',))
+                        (run,))
             runs = cur.fetchone()[0]
             cur.execute('SELECT COUNT(*) FROM codex_budget_reservations '
-                        'WHERE reservation_id=%s OR issue_number=58',
-                        ('github-run-44116166552:1',))
+                        'WHERE reservation_id=%s OR issue_number=%s',
+                        ('github-run-'+run, issue))
             reservations = cur.fetchone()[0]
             if type(runs) is not int or type(reservations) is not int:
                 return {'status':'UNVERIFIED'}
@@ -86,9 +99,9 @@ def snapshot_attempt58(conn):
                 return {'status':'INCONSISTENT_RECORDS'}
             cur.execute('SELECT e.state,r.state,r.amount_usd FROM codex_execution_runs e '
                         'JOIN codex_budget_reservations r ON r.reservation_id=e.reservation_id '
-                        'WHERE e.run_id=%s AND e.issue_number=58 AND r.issue_number=58 '
+                        'WHERE e.run_id=%s AND e.issue_number=%s AND r.issue_number=%s '
                         'AND r.reservation_id=%s',
-                        ('44116166552:1','github-run-44116166552:1'))
+                        (run, issue, issue, 'github-run-'+run))
             rows = cur.fetchall()
             if len(rows) != 1:
                 return {'status':'INCONSISTENT_RECORDS'}

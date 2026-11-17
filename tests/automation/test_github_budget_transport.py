@@ -384,7 +384,8 @@ class CostFailureLoggingTests(unittest.TestCase):
             logger=Mock()
             with patch.object(t,'refresh_runs',side_effect=t.CostGateBlocked(reason)), patch.object(t,'poll_once') as poll:
                 t.serve(API(),MagicMock(),trusted_sha=BASE,stop=stop,logger=logger)
-            logger.assert_called_once_with('BLOCKED: '+expected)
+            logger.assert_any_call('BLOCKED: '+expected)
+            self.assertEqual(logger.call_count, 2 if reason == 'COSTS_RATE_LIMITED' else 1)
             stop.wait.assert_called_once_with(900 if reason == 'COSTS_RATE_LIMITED' else 60)
             poll.assert_not_called()
 
@@ -458,6 +459,19 @@ class ReceiptWindowTests(unittest.TestCase):
 
 
 class ReconciliationCooldownTests(unittest.TestCase):
+    def test_repeated_429_logs_each_new_deadline_without_granting_admission(self):
+        stop=Mock(); stop.is_set.side_effect=[False,False,True]
+        logger=Mock(); clock=Mock(side_effect=[NOW,NOW+timedelta(seconds=900)])
+        with (patch.object(t,'refresh_runs',side_effect=t.CostGateBlocked('COSTS_RATE_LIMITED')),
+              patch.object(t,'poll_once') as poll):
+            t.serve(API(),MagicMock(),trusted_sha=BASE,stop=stop,logger=logger,clock=clock)
+        poll.assert_not_called()
+        self.assertEqual([c.args for c in stop.wait.call_args_list],[(900,),(900,)])
+        records=[json.loads(c.args[0].split(': ',1)[1]) for c in logger.call_args_list
+                 if c.args[0].startswith('COSTS_BACKOFF: ')]
+        self.assertEqual(len(records),2)
+        self.assertNotEqual(records[0]['not_before_utc'],records[1]['not_before_utc'])
+
     def test_pending_coverage_keeps_admission_blocked_and_waits_interruptibly(self):
         stop=Mock(); stop.is_set.side_effect=[False,True]
         logger=Mock()
@@ -474,10 +488,19 @@ class ReconciliationCooldownTests(unittest.TestCase):
             error=t.CostGateBlocked('COSTS_RATE_LIMITED',retry_after_seconds=supplied)
             logger=Mock()
             with self.subTest(supplied=supplied), patch.object(t,'refresh_runs',side_effect=error),patch.object(t,'poll_once') as poll:
-                t.serve(API(),MagicMock(),trusted_sha=BASE,stop=stop,logger=logger)
+                t.serve(API(),MagicMock(),trusted_sha=BASE,stop=stop,logger=logger,
+                        clock=lambda: NOW.replace(microsecond=500000))
             stop.wait.assert_called_once_with(expected)
             poll.assert_not_called()
-            logger.assert_called_once_with('BLOCKED: COSTS_RATE_LIMITED')
+            logger.assert_any_call('BLOCKED: COSTS_RATE_LIMITED')
+            self.assertEqual(logger.call_count,2)
+            record=json.loads(logger.call_args_list[0].args[0].split(': ',1)[1])
+            self.assertEqual(record['effective_retry_after_seconds'],expected)
+            self.assertEqual(record['not_before_utc'],
+                (NOW+timedelta(seconds=expected+1)).strftime('%Y-%m-%dT%H:%M:%SZ'))
+            self.assertEqual(record['delay_source'],
+                'validated_metadata' if type(supplied) is int and supplied == expected else 'fallback')
+            self.assertNotIn('SYNTHETIC_SECRET',str(logger.call_args_list))
 
     def test_admission_resumes_only_after_wait_and_fresh_reconciliation(self):
         events=[]
