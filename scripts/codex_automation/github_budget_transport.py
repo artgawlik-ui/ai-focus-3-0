@@ -416,6 +416,17 @@ def main(argv=None):
             stop = threading.Event()
             signal.signal(signal.SIGTERM, lambda *args: stop.set())
             signal.signal(signal.SIGINT, lambda *args: stop.set())
+            # Read-only diagnostic at process startup, separate from polling semantics.
+            try:
+                from .budget_diagnostic import emit_snapshot
+            except ImportError:
+                from budget_diagnostic import emit_snapshot
+            if not stop.is_set():
+                try:
+                    with connect() as diagnostic_conn:
+                        emit_snapshot(diagnostic_conn, lambda message: print(message, flush=True))
+                except Exception:
+                    print('BUDGET_DIAGNOSTIC: UNAVAILABLE', flush=True)
             serve(api, connect, trusted_sha=pinned, stop=stop,
                   logger=lambda message: print(message, flush=True))
         else:
