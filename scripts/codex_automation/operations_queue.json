@@ -1,0 +1,86 @@
+{
+  "version": 1,
+  "repository": "artgawlik-ui/ai-focus-3-0",
+  "coordination_issue": 39,
+  "max_attempts": 2,
+  "tasks": [
+    {
+      "id": "dependency-review",
+      "issue": 66,
+      "mode": "offline",
+      "depends_on": [],
+      "scope": "Review and remediate the dependency audit blocking PR66 without disabling audits.",
+      "acceptance": "Exact candidate SHA has successful Verify and policy/native checks, with dependency review."
+    },
+    {
+      "id": "incident65",
+      "issue": 65,
+      "mode": "private-diagnostic",
+      "depends_on": [
+        "dependency-review"
+      ],
+      "scope": "Deploy reviewed diagnostics preserving provider backoff; read exact durable state of attempt65.",
+      "acceptance": "Private read-only snapshot proves run/reservation counts and state; no manual release."
+    },
+    {
+      "id": "transport",
+      "issue": 39,
+      "mode": "no-model",
+      "depends_on": [
+        "incident65"
+      ],
+      "scope": "One new approved GitHub–Render round trip after Costs availability and durable state are verified.",
+      "acceptance": "Exact nonce/run/SHA receipt and wait SUCCESS; model SKIPPED; no replay of failed attempts."
+    },
+    {
+      "id": "executor",
+      "issue": 39,
+      "mode": "paid",
+      "depends_on": [
+        "transport"
+      ],
+      "scope": "Verify model/tariff/binding/budget and controlled activation before one bounded pilot.",
+      "acceptance": "Verified gates, personal protected approval and paid execution with actual cost reconciliation."
+    },
+    {
+      "id": "technical-access",
+      "issue": 39,
+      "mode": "offline",
+      "depends_on": [],
+      "scope": "Verify persistent scoped service credentials and renewal path without exposing secret values.",
+      "acceptance": "Evidence of actual service access independent of browser, scoped permissions and renewal; absent proof is BLOCKED."
+    },
+    {
+      "id": "review-release",
+      "issue": 39,
+      "mode": "offline",
+      "depends_on": [],
+      "scope": "Review exact candidate SHA, actual CI and production release requirements before routine merge/deploy.",
+      "acceptance": "SHA-bound review and independent CI; production GO/NO-GO10–13 and retained owner review."
+    },
+    {
+      "id": "recovery",
+      "issue": 39,
+      "mode": "offline",
+      "depends_on": [],
+      "scope": "Verify restart recovery, bounded retries, durable claims and duplicate prevention using synthetic data.",
+      "acceptance": "Offline restart/concurrency tests pass; no automatic replay of uncertain paid attempts."
+    },
+    {
+      "id": "reporting",
+      "issue": 39,
+      "mode": "offline",
+      "depends_on": [],
+      "scope": "Use durable checkpoint and material-event fingerprint to suppress unchanged reports.",
+      "acceptance": "Same semantic state suppresses a second report; changed blocker, result or required decision emits an event."
+    },
+    {
+      "id": "crm-contact",
+      "issue": 30,
+      "mode": "offline",
+      "depends_on": [],
+      "scope": "Review main/PR3/frozen PR17 and implement only a genuinely missing contact-history validation with synthetic data.",
+      "acceptance": "No duplicated feature and no real DM; verified distinction between manual declarations and API receipts."
+    }
+  ]
+}
