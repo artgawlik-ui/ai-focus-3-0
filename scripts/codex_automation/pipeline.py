@@ -118,10 +118,16 @@ def check_environment(api):
         raise Blocked('OWNER_ENVIRONMENT_REVIEW_REQUIRED')
 
 
-def claim(api, issue):
+def claim(api, issue, *, expected_base):
+    # Bind the claim to the immutable workflow source, not a newer main fetched
+    # after the issue_comment event. Reject before creating a durable branch.
+    if not isinstance(expected_base, str) or not SHA.fullmatch(expected_base):
+        raise Blocked('INVALID_WORKFLOW_SOURCE')
     base = api.call('GET', f'/repos/{REPO}/git/ref/heads/main')['object']['sha']
     if not SHA.fullmatch(base):
         raise Blocked('INVALID_BASE')
+    if base != expected_base:
+        raise Blocked('SOURCE_MAIN_CHANGED')
     branch = f'codex/issue-{issue["number"]}'
     # GitHub's unique ref constraint is the durable atomic claim. No GET-then-POST race.
     # Existing claim (including failed/abandoned work) fails closed; no automatic retry.
@@ -182,7 +188,7 @@ def admit():
     event = json.loads(Path(os.environ['GITHUB_EVENT_PATH']).read_text())
     issue = authorize(event, api, os.environ['GITHUB_ACTOR'], os.environ['GITHUB_TRIGGERING_ACTOR'])
     check_environment(api)
-    snapshot = claim(api, issue)
+    snapshot = claim(api, issue, expected_base=os.getenv('GITHUB_SHA'))
     Path('task').mkdir()
     Path('task/snapshot.json').write_text(json.dumps(snapshot))
     Path('task/prompt.txt').write_text(
