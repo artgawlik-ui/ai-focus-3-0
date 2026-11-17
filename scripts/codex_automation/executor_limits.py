@@ -357,6 +357,14 @@ def main():
         raise Limit('ROOT_PRIVATE_STATE_REQUIRED')
     policy = Policy(decode(Path(args.policy).read_bytes()))
     require_paid_window(time.time())
+    try:
+        from .executor_admission import require_private_admission
+        from . import pipeline
+    except ImportError:
+        from executor_admission import require_private_admission
+        import pipeline
+    require_private_admission(os.environ, decode(Path('budget-request/request.json').read_bytes()),
+                              policy, args.state_dir, pipeline.API())
     key = __import__('sys').stdin.readline(512).strip()
     if not key or len(key) >= 511:
         raise Limit('API_AUTH_MISSING')

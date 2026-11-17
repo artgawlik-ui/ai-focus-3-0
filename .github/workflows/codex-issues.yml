@@ -98,12 +98,18 @@ jobs:
       - name: Start private bounded executor gateway
         env:
           FOCUS_EXECUTOR_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          GH_TOKEN: ${{ github.token }}
+          MODEL: ${{ vars.FOCUS_CODEX_MODEL }}
+          APPROVED_NUMBER: ${{ needs.admission.outputs.number }}
+          APPROVED_BASE: ${{ needs.admission.outputs.base }}
+          APPROVED_BRANCH: ${{ needs.admission.outputs.branch }}
+          APPROVED_DIGEST: ${{ needs.admission.outputs.digest }}
         run: |
           set -euo pipefail
           state_dir="/run/focus-codex-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}"
           # Privileged gateway and ledger survive drop-sudo; key never reaches CLI.
           printf '%s\n' "$FOCUS_EXECUTOR_API_KEY" | \
-            env -u FOCUS_EXECUTOR_API_KEY sudo -n /usr/bin/python3 scripts/codex_automation/executor_limits.py \
+            env -u FOCUS_EXECUTOR_API_KEY sudo -n --preserve-env=GH_TOKEN,MODEL,APPROVED_NUMBER,APPROVED_BASE,APPROVED_BRANCH,APPROVED_DIGEST,GITHUB_REPOSITORY,GITHUB_REF,GITHUB_RUN_ATTEMPT,GITHUB_RUN_ID,GITHUB_SHA /usr/bin/python3 scripts/codex_automation/executor_limits.py \
               --policy scripts/codex_automation/executor-limits.json \
               --state-dir "$state_dir" > "$RUNNER_TEMP/focus-limit-gate.log" 2>&1 &
           gate_pid=$!
