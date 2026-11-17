@@ -1,0 +1,13 @@
+{
+  "approved_by": "owner",
+  "approved_date_europe_warsaw": "2026-11-02",
+  "maximum_data_loss_minutes": 60,
+  "maximum_data_loss_seconds": 3600,
+  "policy_status": "APPROVED",
+  "production_rpo_verified": false,
+  "authorizes_new_export": false,
+  "authorizes_restore": false,
+  "authorizes_configuration_change": false,
+  "authorizes_purchase": false,
+  "authorizes_merge_or_deploy": false
+}

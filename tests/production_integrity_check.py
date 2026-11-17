@@ -2,7 +2,9 @@
 import os,json,sys
 from pathlib import Path
 import httpx
-origin='https://ai-focus-3-0.onrender.com'
+from scripts.local_test_policy import local_origin, require_historical_artifact_consent
+origin=local_origin()
+require_historical_artifact_consent()
 private=Path('.render-auth')
 credentials=json.loads((private/'verification.json').read_text())
 client=httpx.Client(base_url=origin,timeout=40)

@@ -8,10 +8,10 @@ def no_real_meta_transport(monkeypatch):
     original=httpx.HTTPTransport.handle_request
     async_original=httpx.AsyncHTTPTransport.handle_async_request
     def guarded(self,request):
-        if request.url.host in domains:raise AssertionError('Real Meta transport forbidden')
+        if request.url.host in domains or request.url.host.endswith('.onrender.com'):raise AssertionError('Real Meta/Render transport forbidden')
         return original(self,request)
     async def async_guarded(self,request):
-        if request.url.host in domains:raise AssertionError('Real Meta transport forbidden')
+        if request.url.host in domains or request.url.host.endswith('.onrender.com'):raise AssertionError('Real Meta/Render transport forbidden')
         return await async_original(self,request)
     monkeypatch.setattr(httpx.HTTPTransport,'handle_request',guarded)
     monkeypatch.setattr(httpx.AsyncHTTPTransport,'handle_async_request',async_guarded)

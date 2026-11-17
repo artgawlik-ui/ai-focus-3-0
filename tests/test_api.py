@@ -76,6 +76,8 @@ def test_appointments_collisions_routes_status():
     p={'salon_id':s['id'],'starts_at':'2027-01-20T10:00:00+01:00','minutes':45,'status':'confirmed'}
     r=c.post('/api/appointments',json=p);assert r.status_code==201
     assert c.post('/api/appointments',json=p).status_code==409
+    assert c.get('/api/routes?day=2027-01-20').json()['url'] is None
+    assert c.post('/api/salons/'+s['id']+'/verify-address',json={'address':s['address'],'city':s['city']}).status_code==200
     assert c.get('/api/routes?day=2027-01-20').json()['url'].startswith('https://www.google.com/maps/dir/?')
     assert c.patch('/api/appointments/'+r.json()['id'],json={'status':'completed'}).status_code==200
     assert c.get('/api/routes?day=2027-01-20').json()['url'] is None

@@ -1,0 +1,72 @@
+{
+  "META_ENABLED": {
+    "status": "ustawione",
+    "effective_boolean": false
+  },
+  "META_MODE": {
+    "status": "ustawione",
+    "development_only": true
+  },
+  "META_OAUTH_ENABLED": {
+    "status": "puste"
+  },
+  "META_WEBHOOK_VERIFY_ENABLED": {
+    "status": "puste"
+  },
+  "META_INGEST_ENABLED": {
+    "status": "puste"
+  },
+  "META_CRM_HISTORY_ENABLED": {
+    "status": "puste"
+  },
+  "META_DIAGNOSTICS_ENABLED": {
+    "status": "puste"
+  },
+  "META_DM_TRANSPORT_ENABLED": {
+    "status": "puste"
+  },
+  "META_APP_ID": {
+    "status": "puste"
+  },
+  "META_APP_SECRET": {
+    "status": "puste"
+  },
+  "META_CONFIG_ID": {
+    "status": "ustawione"
+  },
+  "META_VERIFY_TOKEN": {
+    "status": "puste"
+  },
+  "META_ENCRYPTION_KEY": {
+    "status": "puste"
+  },
+  "META_TEST_ACCOUNT_ID": {
+    "status": "puste"
+  },
+  "META_REDIRECT_URI": {
+    "status": "ustawione",
+    "matches_expected": true
+  },
+  "BACKUP_PASSPHRASE": {
+    "status": "puste"
+  },
+  "OFFSITE_BACKUP_ENABLED": {
+    "status": "ustawione",
+    "effective_boolean": false
+  },
+  "BACKUP_S3_PREFIX_URL": {
+    "status": "puste"
+  },
+  "BACKUP_S3_REGION": {
+    "status": "puste"
+  },
+  "BACKUP_RETENTION_CONFIRMED_DAYS": {
+    "status": "puste"
+  },
+  "BACKUP_S3_ACCESS_KEY_ID": {
+    "status": "puste"
+  },
+  "BACKUP_S3_SECRET_ACCESS_KEY": {
+    "status": "puste"
+  }
+}

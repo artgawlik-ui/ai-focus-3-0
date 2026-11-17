@@ -1,0 +1,12 @@
+{
+  "deploy_api_status": 200,
+  "env_group_api_status": 200,
+  "rollback_target": {
+    "id": "dep-dbjhl6jbc2fs73crj65g",
+    "status": "live",
+    "finishedAt": "2026-11-01T10:56:20.939148Z",
+    "commit": "d15265b26524d594bdbcb4bc6b63fcbc398a1424"
+  },
+  "rollback_artifact_retention_api_evidence": false,
+  "workspace_env_group_count": 0
+}

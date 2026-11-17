@@ -1,0 +1,41 @@
+[
+  {
+    "name": "backups",
+    "url": "https://render.com/docs/postgresql-backups.md",
+    "status": 200,
+    "bytes": 9379,
+    "sha256": "e485f79e5208080117cd707e9995afbee3740103b00f99de26f0419c75c6e80a",
+    "checked_date_europe_warsaw": "2026-11-02"
+  },
+  {
+    "name": "compute",
+    "url": "https://render.com/docs/compute-plans.md",
+    "status": 200,
+    "bytes": 14566,
+    "sha256": "960ee1c719b931354ab5a66854ab308a5a67361a035d9f85927cba567699fb07",
+    "checked_date_europe_warsaw": "2026-11-02"
+  },
+  {
+    "name": "pricing",
+    "url": "https://render.com/pricing",
+    "status": 200,
+    "bytes": 750014,
+    "sha256": "3510ebd6fd4798137eb37deb322566452cffe98fffee31cbe9037b88c067a9ee",
+    "checked_date_europe_warsaw": "2026-11-02"
+  },
+  {
+    "name": "api_recovery",
+    "url": "https://api-docs.render.com/reference/get-postgres-recovery-info",
+    "status": 404,
+    "bytes": 106867,
+    "sha256": "2d17ef17e122c4f8c15f5d9240f7920892f0b385e58b5d201ae213c5565a8f99",
+    "checked_date_europe_warsaw": "2026-11-02"
+  },
+  {
+    "name": "cron",
+    "url": "https://render.com/docs/cronjobs.md",
+    "status": 200,
+    "sha256": "0d26a628243f115f0528de18d20a59d18193e969e703e0e0ddaf13f61510eac9",
+    "checked_date_europe_warsaw": "2026-11-02"
+  }
+]

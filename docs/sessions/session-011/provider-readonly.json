@@ -1,0 +1,12 @@
+{
+  "diskSizeGB": 1,
+  "highAvailabilityEnabled": false,
+  "plan": "0.1c-256mb",
+  "region": "frankfurt",
+  "status": "available",
+  "version": "17",
+  "source": "Render get_postgres; read only",
+  "observed_at": "2026-11-05T18:32:37.910Z",
+  "rpo60_proven": false,
+  "latest_recoverable_point": "not provided by this tool"
+}

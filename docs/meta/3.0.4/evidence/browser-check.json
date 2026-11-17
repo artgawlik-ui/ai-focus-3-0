@@ -1,0 +1,28 @@
+[
+  {
+    "browser": "chromium-desktop",
+    "login": true,
+    "logout": true,
+    "private_data_not_in_service_worker_cache": true,
+    "crm_read": true,
+    "crm_write_on_isolated_copy": true,
+    "no_horizontal_scroll": true,
+    "pwa_manifest_icons": true,
+    "apple_standalone_meta": true,
+    "service_worker_offline_fallback": true,
+    "javascript_errors": []
+  },
+  {
+    "browser": "webkit-iphone",
+    "login": true,
+    "logout": true,
+    "private_data_not_in_service_worker_cache": true,
+    "crm_read": true,
+    "crm_write_on_isolated_copy": true,
+    "no_horizontal_scroll": true,
+    "pwa_manifest_icons": true,
+    "apple_standalone_meta": true,
+    "service_worker_offline_fallback": true,
+    "javascript_errors": []
+  }
+]

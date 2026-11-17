@@ -1,0 +1,55 @@
+{
+  "environment": "Synthetic local PostgreSQL; emulated iPhone, not physical device",
+  "results": [
+    {
+      "browser": "chromium-desktop",
+      "login": true,
+      "logout": true,
+      "private_data_not_in_service_worker_cache": true,
+      "crm_read": true,
+      "crm_write_on_isolated_copy": true,
+      "no_horizontal_scroll": true,
+      "pwa_manifest_icons": true,
+      "apple_standalone_meta": true,
+      "service_worker_offline_fallback": true,
+      "javascript_errors": [],
+      "native_pagination": {
+        "search_first_page_ms": 477.81,
+        "next_page_ms": 205.84,
+        "page_size": 20,
+        "records_in_test": 45
+      },
+      "capture_regression": {
+        "legacy_limit_reproduced": false,
+        "tiles": 63,
+        "document_device_height": 33100
+      },
+      "dashboard_capture_tiles": 8
+    },
+    {
+      "browser": "webkit-iphone",
+      "login": true,
+      "logout": true,
+      "private_data_not_in_service_worker_cache": true,
+      "crm_read": true,
+      "crm_write_on_isolated_copy": true,
+      "no_horizontal_scroll": true,
+      "pwa_manifest_icons": true,
+      "apple_standalone_meta": true,
+      "service_worker_offline_fallback": true,
+      "javascript_errors": [],
+      "native_pagination": {
+        "search_first_page_ms": 436.86,
+        "next_page_ms": 344.28,
+        "page_size": 20,
+        "records_in_test": 45
+      },
+      "capture_regression": {
+        "legacy_limit_reproduced": true,
+        "tiles": 83,
+        "document_device_height": 33121
+      },
+      "dashboard_capture_tiles": 53
+    }
+  ]
+}

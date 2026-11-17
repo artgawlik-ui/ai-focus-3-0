@@ -1,0 +1,8 @@
+{
+  "encrypted_backup_sha256": "b35ae63c8553fc5cd5ce12ca715c851dd5c8390ff74bec3c003ec5e4a423f83f",
+  "plaintext_archive_sha256": "fc99b4568c04c13fae9724ffadd85cc50c153d6709ce98e99f979e87cb816be2",
+  "encrypt_decrypt_verified": true,
+  "format": "FOCUS3C1 AES-256-GCM + scrypt; AAD archive/undo",
+  "existing_private_backup_key_binding": true,
+  "key_value_disclosed": false
+}

@@ -1,0 +1,13 @@
+{
+  "database_id": "dpg-dbh1b0gm7kps73f0p2m0-a",
+  "requested_at": "2026-11-01T13:36:36.274318+00:00",
+  "existing_exports": [
+    {
+      "id": "dpg-dbh1b0gm7kps73f0p2m0-a/2026-11-01T12:41Z",
+      "created_at": "2026-11-01T12:41:00Z"
+    }
+  ],
+  "create_status": 202,
+  "production_record_writes": 0,
+  "delete_executed": false
+}

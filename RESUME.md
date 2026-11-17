@@ -1,3 +1,11 @@
+# Integracja CRM — kandydat, bez wdrożenia
+
+18 listopada 2026. PR #71 scalony do main `a2d118b`. Osobna gałąź
+integracyjna łączy kod Draft PR #3/#17 z main. Nie zmienia ich oryginalnych
+gałęzi ani statusu produkcji. Szczegóły: docs/reports/CRM_INTEGRATION_20261118.md.
+
+---
+
 # Wznowienie — sesja026, osobna automatyzacja Codex
 
 Data: 2026-11-09, Europe/Warsaw.

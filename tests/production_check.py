@@ -6,7 +6,9 @@ import httpx
 from openpyxl import load_workbook
 if os.getenv('FOCUS_ALLOW_SYNTHETIC_PRODUCTION_WRITES')!='explicitly-authorized':
     raise SystemExit('Production writes disabled. Use isolated_release_check for normal verification.')
-origin='https://ai-focus-3-0.onrender.com'
+from scripts.local_test_policy import local_origin, require_historical_artifact_consent
+origin=local_origin()
+require_historical_artifact_consent()
 secret_path=Path('.render-auth/verification.json')
 credentials=json.loads(secret_path.read_text())
 client=httpx.Client(base_url=origin,timeout=40)

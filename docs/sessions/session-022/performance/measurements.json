@@ -1,0 +1,482 @@
+{
+  "synthetic": true,
+  "production": false,
+  "postgres_cpu_limit": 1,
+  "postgres_memory_mib": 512,
+  "api_process": "host Python TestClient; not Render hardware",
+  "clock": "perf_counter",
+  "samples": "one warm-up then five samples (before indexes three)",
+  "results": [
+    {
+      "salons": 300,
+      "tasks": 300,
+      "visits": 300,
+      "activities": 600,
+      "server_version": "17.11 (Debian 17.11-1.pgdg13+2)",
+      "legacy_monitor": {
+        "elapsed_ms": 922.45,
+        "sql_queries": 1501,
+        "reference": "pre-feed-role/measurements.json (same function/data shape, prior run)"
+      },
+      "before_indexes": {
+        "median_ms": 12.868,
+        "min_ms": 12.525,
+        "max_ms": 13.372,
+        "samples_ms": [
+          13.372,
+          12.868,
+          12.525
+        ],
+        "payload_bytes": 8101
+      },
+      "reminders": {
+        "inserted": 600,
+        "batches": [
+          600,
+          0
+        ],
+        "elapsed_ms": 25.421
+      },
+      "api": {
+        "contacts": {
+          "median_ms": 9.917,
+          "min_ms": 9.456,
+          "max_ms": 10.908,
+          "samples_ms": [
+            9.917,
+            9.95,
+            9.456,
+            9.56,
+            10.908
+          ],
+          "payload_bytes": 8101
+        },
+        "tasks": {
+          "median_ms": 7.141,
+          "min_ms": 6.797,
+          "max_ms": 7.356,
+          "samples_ms": [
+            7.214,
+            7.356,
+            7.016,
+            7.141,
+            6.797
+          ],
+          "payload_bytes": 9021
+        },
+        "visits": {
+          "median_ms": 8.312,
+          "min_ms": 8.041,
+          "max_ms": 9.936,
+          "samples_ms": [
+            9.936,
+            8.312,
+            8.041,
+            8.228,
+            8.496
+          ],
+          "payload_bytes": 12401
+        },
+        "notifications": {
+          "median_ms": 10.996,
+          "min_ms": 10.27,
+          "max_ms": 11.044,
+          "samples_ms": [
+            10.996,
+            10.965,
+            10.27,
+            11.044,
+            11.012
+          ],
+          "payload_bytes": 2581
+        },
+        "report": {
+          "median_ms": 31.099,
+          "min_ms": 30.836,
+          "max_ms": 31.597,
+          "samples_ms": [
+            31.099,
+            30.836,
+            31.597,
+            31.02,
+            31.388
+          ],
+          "payload_bytes": 61333
+        }
+      },
+      "notification_reader": {
+        "role": "sales",
+        "feed_total": 120
+      },
+      "pagination": {
+        "records_seen": 300,
+        "unique": 300,
+        "page_size": 100,
+        "pages": 3,
+        "elapsed_ms": 39.717
+      }
+    },
+    {
+      "salons": 1000,
+      "tasks": 1000,
+      "visits": 1000,
+      "activities": 2000,
+      "server_version": "17.11 (Debian 17.11-1.pgdg13+2)",
+      "legacy_monitor": {
+        "elapsed_ms": 1854.504,
+        "sql_queries": 5001,
+        "reference": "pre-feed-role/measurements.json (same function/data shape, prior run)"
+      },
+      "before_indexes": {
+        "median_ms": 27.426,
+        "min_ms": 27.041,
+        "max_ms": 27.705,
+        "samples_ms": [
+          27.705,
+          27.041,
+          27.426
+        ],
+        "payload_bytes": 8102
+      },
+      "reminders": {
+        "inserted": 2000,
+        "batches": [
+          1000,
+          1000,
+          0
+        ],
+        "elapsed_ms": 84.081
+      },
+      "api": {
+        "contacts": {
+          "median_ms": 14.208,
+          "min_ms": 13.849,
+          "max_ms": 14.356,
+          "samples_ms": [
+            14.208,
+            14.029,
+            14.306,
+            13.849,
+            14.356
+          ],
+          "payload_bytes": 8102
+        },
+        "tasks": {
+          "median_ms": 7.43,
+          "min_ms": 7.339,
+          "max_ms": 7.874,
+          "samples_ms": [
+            7.874,
+            7.339,
+            7.43,
+            7.541,
+            7.36
+          ],
+          "payload_bytes": 9022
+        },
+        "visits": {
+          "median_ms": 9.621,
+          "min_ms": 8.617,
+          "max_ms": 10.399,
+          "samples_ms": [
+            9.767,
+            8.617,
+            8.806,
+            9.621,
+            10.399
+          ],
+          "payload_bytes": 12402
+        },
+        "notifications": {
+          "median_ms": 31.75,
+          "min_ms": 31.579,
+          "max_ms": 32.074,
+          "samples_ms": [
+            31.841,
+            32.074,
+            31.75,
+            31.704,
+            31.579
+          ],
+          "payload_bytes": 2581
+        },
+        "report": {
+          "median_ms": 50.067,
+          "min_ms": 48.766,
+          "max_ms": 51.371,
+          "samples_ms": [
+            51.371,
+            48.766,
+            50.892,
+            49.957,
+            50.067
+          ],
+          "payload_bytes": 61366
+        }
+      },
+      "notification_reader": {
+        "role": "sales",
+        "feed_total": 400
+      },
+      "pagination": {
+        "records_seen": 1000,
+        "unique": 1000,
+        "page_size": 100,
+        "pages": 10,
+        "elapsed_ms": 194.261
+      }
+    },
+    {
+      "salons": 5000,
+      "tasks": 5000,
+      "visits": 5000,
+      "activities": 10000,
+      "server_version": "17.11 (Debian 17.11-1.pgdg13+2)",
+      "legacy_monitor": {
+        "elapsed_ms": 10287.729,
+        "sql_queries": 25001,
+        "reference": "pre-feed-role/measurements.json (same function/data shape, prior run)"
+      },
+      "before_indexes": {
+        "median_ms": 117.789,
+        "min_ms": 117.186,
+        "max_ms": 118.622,
+        "samples_ms": [
+          118.622,
+          117.789,
+          117.186
+        ],
+        "payload_bytes": 8102
+      },
+      "reminders": {
+        "inserted": 10000,
+        "batches": [
+          1000,
+          1000,
+          1000,
+          1000,
+          1000,
+          1000,
+          1000,
+          1000,
+          1000,
+          1000,
+          0
+        ],
+        "elapsed_ms": 769.199
+      },
+      "api": {
+        "contacts": {
+          "median_ms": 39.001,
+          "min_ms": 38.667,
+          "max_ms": 39.416,
+          "samples_ms": [
+            39.118,
+            38.667,
+            38.794,
+            39.416,
+            39.001
+          ],
+          "payload_bytes": 8102
+        },
+        "tasks": {
+          "median_ms": 13.431,
+          "min_ms": 13.275,
+          "max_ms": 13.572,
+          "samples_ms": [
+            13.353,
+            13.431,
+            13.572,
+            13.433,
+            13.275
+          ],
+          "payload_bytes": 9022
+        },
+        "visits": {
+          "median_ms": 16.342,
+          "min_ms": 15.763,
+          "max_ms": 16.612,
+          "samples_ms": [
+            16.467,
+            15.763,
+            16.063,
+            16.342,
+            16.612
+          ],
+          "payload_bytes": 12402
+        },
+        "notifications": {
+          "median_ms": 53.573,
+          "min_ms": 51.682,
+          "max_ms": 55.692,
+          "samples_ms": [
+            52.109,
+            53.674,
+            55.692,
+            53.573,
+            51.682
+          ],
+          "payload_bytes": 2582
+        },
+        "report": {
+          "median_ms": 173.006,
+          "min_ms": 166.523,
+          "max_ms": 174.255,
+          "samples_ms": [
+            174.255,
+            173.511,
+            167.661,
+            173.006,
+            166.523
+          ],
+          "payload_bytes": 61387
+        }
+      },
+      "notification_reader": {
+        "role": "sales",
+        "feed_total": 2000
+      },
+      "pagination": {
+        "records_seen": 5000,
+        "unique": 5000,
+        "page_size": 100,
+        "pages": 50,
+        "elapsed_ms": 2934.319
+      }
+    },
+    {
+      "salons": 10000,
+      "tasks": 10000,
+      "visits": 10000,
+      "activities": 20000,
+      "server_version": "17.11 (Debian 17.11-1.pgdg13+2)",
+      "legacy_monitor": {
+        "elapsed_ms": 20254.095,
+        "sql_queries": 50001,
+        "reference": "pre-feed-role/measurements.json (same function/data shape, prior run)"
+      },
+      "before_indexes": {
+        "median_ms": 145.395,
+        "min_ms": 145.319,
+        "max_ms": 147.712,
+        "samples_ms": [
+          147.712,
+          145.319,
+          145.395
+        ],
+        "payload_bytes": 8103
+      },
+      "reminders": {
+        "inserted": 20000,
+        "batches": [
+          1000,
+          1000,
+          1000,
+          1000,
+          1000,
+          1000,
+          1000,
+          1000,
+          1000,
+          1000,
+          1000,
+          1000,
+          1000,
+          1000,
+          1000,
+          1000,
+          1000,
+          1000,
+          1000,
+          1000,
+          0
+        ],
+        "elapsed_ms": 2566.5
+      },
+      "api": {
+        "contacts": {
+          "median_ms": 80.369,
+          "min_ms": 79.525,
+          "max_ms": 86.805,
+          "samples_ms": [
+            80.369,
+            86.805,
+            80.313,
+            79.525,
+            84.701
+          ],
+          "payload_bytes": 8103
+        },
+        "tasks": {
+          "median_ms": 23.597,
+          "min_ms": 23.109,
+          "max_ms": 26.264,
+          "samples_ms": [
+            26.264,
+            25.647,
+            23.415,
+            23.109,
+            23.597
+          ],
+          "payload_bytes": 9023
+        },
+        "visits": {
+          "median_ms": 27.254,
+          "min_ms": 26.277,
+          "max_ms": 28.92,
+          "samples_ms": [
+            27.254,
+            26.277,
+            26.736,
+            28.278,
+            28.92
+          ],
+          "payload_bytes": 12403
+        },
+        "notifications": {
+          "median_ms": 101.467,
+          "min_ms": 100.263,
+          "max_ms": 106.864,
+          "samples_ms": [
+            106.864,
+            101.467,
+            103.042,
+            100.263,
+            101.248
+          ],
+          "payload_bytes": 2582
+        },
+        "report": {
+          "median_ms": 320.594,
+          "min_ms": 313.032,
+          "max_ms": 336.76,
+          "samples_ms": [
+            329.314,
+            336.76,
+            320.594,
+            313.032,
+            314.442
+          ],
+          "payload_bytes": 61400
+        }
+      },
+      "notification_reader": {
+        "role": "sales",
+        "feed_total": 4000
+      },
+      "pagination": {
+        "records_seen": 10000,
+        "unique": 10000,
+        "page_size": 100,
+        "pages": 100,
+        "elapsed_ms": 11549.028
+      }
+    }
+  ],
+  "query_fingerprints": {
+    "contacts": "236b7ac01d35d4650f0cf5ac85407e2bc5a3b6eefea02d8d2f7842b2aeb4025a",
+    "tasks": "cebc3623510e515c2956c080bfe8b68774e89db3372563f3d0e205720f836f78",
+    "notifications": "35e06f160282b6befc23e4e2d0fffc50296335cc291856614b74c891ad2bbb18"
+  },
+  "data_shape": "one task, one confirmed visit, one actual call and one draft per salon; small synthetic texts; intentionally overlapping visits for queue stress"
+}

@@ -1,0 +1,30 @@
+{
+  "head": "60644d8bc208f356060b7629273c1412786d14a2",
+  "ci_pr": "41362554862:success",
+  "ci_push": "41362548637:success",
+  "code_changes": false,
+  "local_application_test_reruns": 0,
+  "restore_reruns": 0,
+  "new_exports": 0,
+  "production_mutations": 0,
+  "sql_authorization_A": "NOT_GRANTED",
+  "sql_queries": 0,
+  "tcp_domains": [],
+  "tcp_ip_ranges": [],
+  "vpn_configured": false,
+  "new_evidence_validation": "PASS",
+  "release_decision": "BLOCKED",
+  "remaining_basic_sessions": 5,
+  "remaining_dm_min": 1,
+  "commands": [
+    "git status --short",
+    "git rev-parse HEAD",
+    "git ls-remote origin refs/heads/fix/3.0.4-meta-validation",
+    "gh pr checks 3 --repo artgawlik-ui/ai-focus-3-0",
+    "official Render CLI whoami (identity output not retained)",
+    "GET service/postgres/recovery/export/deploy/env metadata only",
+    "GET official postgresql-backups.md; compare SHA with session006",
+    "validate sanitized metadata and absence of production mutations",
+    "git diff --check"
+  ]
+}

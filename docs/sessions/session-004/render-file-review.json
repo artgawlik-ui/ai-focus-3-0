@@ -1,0 +1,9 @@
+{
+  "status": "PASS",
+  "strict_allowlist_schema": true,
+  "only_resource_metadata": true,
+  "contains_customer_records": false,
+  "contains_authentication_secrets": false,
+  "runtime_references_found": false,
+  "file_sha256": "3c262c10beece6b6c6261cc5b23450239c8f15b8913b07ccfb6827779072b58a"
+}

@@ -1,0 +1,16 @@
+{
+  "required_rpo_seconds": 3600,
+  "paid_compute_supports_pitr": true,
+  "pitr_available": true,
+  "earliest_recoverable_at": "2026-10-29T06:32:47Z",
+  "latest_recoverable_at": null,
+  "current_pitr_lag_seconds": null,
+  "documented_minimum_target_age_seconds": 600,
+  "documented_maximum_wal_lag_seconds": null,
+  "production_pitr_restore_tested": false,
+  "logical_export_age_seconds": 17278,
+  "logical_export_alone_meets_rpo": false,
+  "workspace_billing_tier_verified": false,
+  "decision": "BLOCKED",
+  "new_resource_spend": 0
+}

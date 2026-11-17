@@ -1,0 +1,18 @@
+{
+  "source": "synthetic",
+  "version": "3.0.4",
+  "schema_revision": "004",
+  "flags": {
+    "META_ENABLED": "false",
+    "META_OAUTH_ENABLED": "false",
+    "META_WEBHOOK_VERIFY_ENABLED": "false",
+    "META_INGEST_ENABLED": "false",
+    "META_CRM_HISTORY_ENABLED": "false",
+    "META_DIAGNOSTICS_ENABLED": "false",
+    "META_DM_TRANSPORT_ENABLED": "false"
+  },
+  "synthetic_restore_verified": true,
+  "synthetic_rollback_verified": true,
+  "synthetic_technical_disabled": true,
+  "synthetic_owner_login_verified": true
+}
