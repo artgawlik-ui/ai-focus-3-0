@@ -356,7 +356,8 @@ def refresh_runs(api, conn, *, now=None, reader=None):
     return ready
 
 
-def serve(api, connect, *, trusted_sha, stop, logger=print):
+def serve(api, connect, *, trusted_sha, stop, logger=print,
+          clock=lambda: datetime.now(timezone.utc)):
     """Explicit polling process; SIGTERM never releases a reservation."""
     last = None
     while not stop.is_set():
@@ -376,6 +377,16 @@ def serve(api, connect, *, trusted_sha, stop, logger=print):
             if code == 'COSTS_RATE_LIMITED':
                 retry = getattr(exc, 'retry_after_seconds', None)
                 delay = retry if type(retry) is int and 900 <= retry <= 86400 else 900
+                # Report the effective validated wait, never raw headers/errors.
+                # Every 429 needs a new deadline even if the fixed code repeats.
+                logger('COSTS_BACKOFF: ' + json.dumps({
+                    'code': 'COSTS_RATE_LIMITED',
+                    'effective_retry_after_seconds': delay,
+                    'not_before_utc': (lifecycle.utc(clock()) + timedelta(seconds=delay))
+                        .strftime('%Y-%m-%dT%H:%M:%SZ'),
+                    'delay_source': 'validated_metadata' if delay == retry and
+                        type(retry) is int else 'fallback',
+                }, sort_keys=True))
         except lifecycle.ExecutionBlocked as exc:
             if str(exc) == 'COSTS_NOT_YET_COVERING_EXECUTION':
                 message, delay = 'WAIT: COSTS_NOT_YET_COVERING_EXECUTION', 900

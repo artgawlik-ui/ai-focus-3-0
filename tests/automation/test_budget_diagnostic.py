@@ -2,14 +2,14 @@ import unittest
 from contextlib import nullcontext
 from datetime import datetime, timezone
 from decimal import Decimal
-from scripts.codex_automation.budget_diagnostic import snapshot, emit_snapshot, snapshot_attempt58
+from scripts.codex_automation.budget_diagnostic import snapshot, emit_snapshot, snapshot_attempt58, snapshot_attempt65
 
 class DB:
     def __init__(self, rows):
-        self.rows=iter(rows); self.calls=[]
+        self.rows=iter(rows); self.calls=[]; self.parameters=[]
     def transaction(self): return nullcontext()
     def cursor(self): return nullcontext(self)
-    def execute(self, sql, args=None): self.calls.append(sql)
+    def execute(self, sql, args=None): self.calls.append(sql); self.parameters.append(args)
     def fetchall(self): return next(self.rows)
     def fetchone(self): return next(self.rows)
 
@@ -72,6 +72,48 @@ class Attempt58Tests(unittest.TestCase):
         for rows in ([], [('SECRET','reserved',Decimal('2'))]):
             r=snapshot_attempt58(DB([(1,),(1,),rows]))
             self.assertEqual(r,{'status':'INCONSISTENT_RECORDS'})
+
+class Attempt65Tests(unittest.TestCase):
+    def test_actual_absence_requires_both_tables_for_exact_incident(self):
+        db=DB([(0,), (0,)])
+        self.assertEqual(snapshot_attempt65(db),
+                         {'status':'NO_DURABLE_RECORDS','run_count':0,'reservation_count':0})
+        self.assertEqual(db.parameters[1], ('44130029661:1',))
+        self.assertEqual(db.parameters[2], ('github-run-44130029661:1',65))
+        self.assertIn('READ ONLY',db.calls[0])
+        self.assertTrue(all(s.startswith(('SELECT','SET TRANSACTION')) for s in db.calls))
+
+    def test_partial_duplicates_and_invalid_counts_never_imply_absence(self):
+        for runs,holds in ((1,0),(0,1),(2,1),(1,2),('secret',0),(True,0)):
+            with self.subTest(runs=runs,holds=holds):
+                result=snapshot_attempt65(DB([(runs,),(holds,)]))
+                self.assertIn(result['status'],('INCONSISTENT_RECORDS','UNVERIFIED'))
+                self.assertNotIn('secret',str(result))
+
+    def test_present_hold_reports_only_validated_state_and_exact_join(self):
+        db=DB([(1,), (1,), [('awaiting_costs','reserved',Decimal('2'))]])
+        result=snapshot_attempt65(db)
+        self.assertEqual(result,{'status':'DURABLE_RECORDS_PRESENT',
+            'execution':'awaiting_costs','reservation':'reserved','amount_usd':'2.00'})
+        self.assertEqual(db.parameters[-1],
+                         ('44130029661:1',65,65,'github-run-44130029661:1'))
+        self.assertTrue(all(s.startswith(('SELECT','SET TRANSACTION')) for s in db.calls))
+
+    def test_bad_link_amount_or_state_is_never_logged(self):
+        for rows in ([], [('secret','reserved',Decimal('2'))],
+                     [('awaiting_costs','reserved',Decimal('3'))]):
+            self.assertEqual(snapshot_attempt65(DB([(1,),(1,),rows])),
+                             {'status':'INCONSISTENT_RECORDS'})
+
+    def test_startup_emits_both_incidents_without_provider_or_writes(self):
+        db=DB(DiagnosticTests().rows()+[(0,),(0,),(0,),(0,)])
+        logs=[]; emit_snapshot(db,logs.append)
+        import json
+        result=json.loads(logs[0].split(': ',1)[1])
+        self.assertEqual(result['attempt58']['status'],'NO_DURABLE_RECORDS')
+        self.assertEqual(result['attempt65']['status'],'NO_DURABLE_RECORDS')
+        self.assertTrue(all(s.startswith(('SELECT','SET TRANSACTION')) for s in db.calls))
+
 
 if __name__ == '__main__': unittest.main()
 
