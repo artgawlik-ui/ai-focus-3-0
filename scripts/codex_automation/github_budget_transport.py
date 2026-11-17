@@ -355,6 +355,16 @@ def refresh_runs(api, conn, *, now=None, reader=None):
 
 def serve(api, connect, *, trusted_sha, stop, logger=print):
     """Explicit polling process; SIGTERM never releases a reservation."""
+    # One bounded, read-only snapshot per process; no extra Costs API request.
+    try:
+        from .budget_diagnostic import emit_snapshot
+    except ImportError:
+        from budget_diagnostic import emit_snapshot
+    try:
+        with connect() as diagnostic_conn:
+            emit_snapshot(diagnostic_conn, logger)
+    except Exception:
+        logger('BUDGET_DIAGNOSTIC: UNAVAILABLE')
     last = None
     while not stop.is_set():
         delay = 5
