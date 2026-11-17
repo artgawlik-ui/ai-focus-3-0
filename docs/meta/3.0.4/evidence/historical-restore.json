@@ -1,0 +1,10 @@
+{
+  "historical_encrypted_artifact_restored": true,
+  "manifest_counts_and_sha256_verified": true,
+  "existing_data_tables_unchanged_after_additive_migrations": 9,
+  "restored_tables": 10,
+  "tables_after_migration": 17,
+  "production_fresh_backup": false,
+  "production_current_integrity_verified": false,
+  "functional_tests_on_real_data": false
+}

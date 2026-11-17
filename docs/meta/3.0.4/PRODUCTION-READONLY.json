@@ -1,0 +1,110 @@
+{
+  "captured_at": "2026-11-01T11:49:08.975Z",
+  "service": {
+    "id": "srv-dbh1rk6tlv9c73dloq20",
+    "name": "ai-focus-3-0",
+    "url": "https://ai-focus-3-0.onrender.com",
+    "plan": "0.5c-512mb",
+    "auto_deploy": "no",
+    "branch": "main",
+    "region": "frankfurt"
+  },
+  "deploys": [
+    {
+      "id": "dep-dbjhl6jbc2fs73crj65g",
+      "commit": "d15265b26524d594bdbcb4bc6b63fcbc398a1424",
+      "status": "live",
+      "createdAt": "2026-11-01T10:55:22.870968Z",
+      "finishedAt": "2026-11-01T10:56:20.939148Z"
+    },
+    {
+      "id": "dep-dbj59qff3r2c73f077u0",
+      "commit": "cd22a44415732a1e25b558bfec38cf498115b90f",
+      "status": "deactivated",
+      "createdAt": "2026-10-31T20:51:53.359553Z",
+      "finishedAt": "2026-10-31T20:52:37.691068Z"
+    },
+    {
+      "id": "dep-dbj54fm7bikc73eep290",
+      "commit": "98ac75e382d77f95827ab3daa4877da40caa4213",
+      "status": "deactivated",
+      "createdAt": "2026-10-31T20:40:31.058131Z",
+      "finishedAt": "2026-10-31T20:41:35.540105Z"
+    },
+    {
+      "id": "dep-dbh64l0cuclc73cus7dg",
+      "commit": "df78fd7802c7e93d007b92ab0093ba7d33df8fee",
+      "status": "canceled",
+      "createdAt": "2026-10-28T21:00:04.951584Z",
+      "finishedAt": "2026-10-28T21:00:35.976513Z"
+    },
+    {
+      "id": "dep-dbh643d09sns738hqbe0",
+      "commit": "df78fd7802c7e93d007b92ab0093ba7d33df8fee",
+      "status": "deactivated",
+      "createdAt": "2026-10-28T20:58:54.800353Z",
+      "finishedAt": "2026-10-28T21:00:07.926987Z"
+    }
+  ],
+  "logs": {
+    "sample": {
+      "sample_size": 100,
+      "has_more": true,
+      "error_count": 0
+    },
+    "since_deployment_error_level": {
+      "count": 0,
+      "has_more": false,
+      "migrations": []
+    },
+    "migration_log_search": {
+      "count": 0,
+      "has_more": false,
+      "migrations": []
+    }
+  },
+  "metrics": [
+    {
+      "type": "cpu_usage",
+      "points": 12,
+      "min": 0.00446522,
+      "max": 0.006124567,
+      "start": "2026-11-01T10:40:01.319Z",
+      "end": "2026-11-01T11:40:01.319Z"
+    },
+    {
+      "type": "cpu_limit",
+      "points": 13,
+      "min": 0.5,
+      "max": 0.5,
+      "start": "2026-11-01T10:40:01.754Z",
+      "end": "2026-11-01T11:40:01.754Z"
+    },
+    {
+      "type": "memory_usage",
+      "points": 13,
+      "min": 154509310,
+      "max": 166170620,
+      "start": "2026-11-01T10:40:01.954Z",
+      "end": "2026-11-01T11:40:01.954Z"
+    },
+    {
+      "type": "memory_limit",
+      "points": 13,
+      "min": 536870900,
+      "max": 536870900,
+      "start": "2026-11-01T10:40:02.162Z",
+      "end": "2026-11-01T11:40:02.162Z"
+    }
+  ],
+  "postgres": {
+    "id": "dpg-dbh1b0gm7kps73f0p2m0-a",
+    "status": "available",
+    "version": "17",
+    "plan": "0.1c-256mb",
+    "max_connections_observed": 4,
+    "sql_validation": "BLOCKED: empty external IP allowlist; SSH blocked by environment TCP policy; no network setting changes"
+  },
+  "production_mutations": 0,
+  "real_meta_api_calls": 0
+}

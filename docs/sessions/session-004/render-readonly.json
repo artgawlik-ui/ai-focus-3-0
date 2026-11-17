@@ -1,0 +1,29 @@
+{
+  "service": {
+    "id": "srv-dbh1rk6tlv9c73dloq20",
+    "name": "ai-focus-3-0",
+    "ownerId": "tea-dbf80ee7bikc73ch8org",
+    "branch": "main",
+    "autoDeploy": "no",
+    "region": "frankfurt",
+    "url": "https://ai-focus-3-0.onrender.com",
+    "healthCheckPath": "/api/health",
+    "instances": 1,
+    "plan": "0.5c-512mb"
+  },
+  "live": {
+    "id": "dep-dbjhl6jbc2fs73crj65g",
+    "status": "live",
+    "commit": "d15265b26524d594bdbcb4bc6b63fcbc398a1424",
+    "finishedAt": "2026-11-01T10:56:20.939148Z"
+  },
+  "database": {
+    "id": "dpg-dbh1b0gm7kps73f0p2m0-a",
+    "status": "available",
+    "version": "17",
+    "region": "frankfurt",
+    "public_ip_allowlist_empty": true
+  },
+  "sql_read": "BLOCKED_BY_ALLOWLIST",
+  "mutations": 0
+}

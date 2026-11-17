@@ -1,0 +1,66 @@
+{
+  "tested_commit": "a11c8aa5dbee197183a719761bb9a06aaba48b50",
+  "environment": "local synthetic PostgreSQL 17; Chromium desktop and WebKit iPhone emulation, not physical iPhone",
+  "regression": {
+    "command": "pytest -q tests/test_browser_capture.py tests/test_native_pagination.py tests/test_native_planning.py tests/test_worker_lifecycle.py tests/test_visit_planner.py",
+    "passed": 102,
+    "failed": 0,
+    "skipped": 0,
+    "seconds": 58.61
+  },
+  "build": "npm run build --prefix frontend: PASS",
+  "npm_audit_known_vulnerabilities": 0,
+  "pip_audit_known_vulnerabilities": 0,
+  "browsers": [
+    {
+      "browser": "chromium-desktop",
+      "login": true,
+      "logout": true,
+      "private_data_not_in_service_worker_cache": true,
+      "crm_read": true,
+      "crm_write_on_isolated_copy": true,
+      "no_horizontal_scroll": true,
+      "pwa_manifest_icons": true,
+      "apple_standalone_meta": true,
+      "service_worker_offline_fallback": true,
+      "javascript_errors": [],
+      "native_pagination": {
+        "search_first_page_ms": 466.54,
+        "next_page_ms": 195.83,
+        "page_size": 20,
+        "records_in_test": 45
+      },
+      "capture_regression": {
+        "legacy_limit_reproduced": false,
+        "tiles": 63,
+        "document_device_height": 33100
+      },
+      "dashboard_capture_tiles": 8
+    },
+    {
+      "browser": "webkit-iphone",
+      "login": true,
+      "logout": true,
+      "private_data_not_in_service_worker_cache": true,
+      "crm_read": true,
+      "crm_write_on_isolated_copy": true,
+      "no_horizontal_scroll": true,
+      "pwa_manifest_icons": true,
+      "apple_standalone_meta": true,
+      "service_worker_offline_fallback": true,
+      "javascript_errors": [],
+      "native_pagination": {
+        "search_first_page_ms": 441.63,
+        "next_page_ms": 290.75,
+        "page_size": 20,
+        "records_in_test": 45
+      },
+      "capture_regression": {
+        "legacy_limit_reproduced": true,
+        "tiles": 83,
+        "document_device_height": 33121
+      },
+      "dashboard_capture_tiles": 53
+    }
+  ]
+}

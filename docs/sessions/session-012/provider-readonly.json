@@ -1,0 +1,9 @@
+{
+  "source": "Render get_deploy (GET)",
+  "observed_at": "2026-11-05T18:47:33.719Z",
+  "status": "live",
+  "commit": "d15265b26524d594bdbcb4bc6b63fcbc398a1424",
+  "artifact_eligibility": "not exposed",
+  "environment_snapshot": "not exposed",
+  "rpo60_proven": false
+}

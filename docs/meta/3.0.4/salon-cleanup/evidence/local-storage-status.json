@@ -1,0 +1,16 @@
+{
+  "plaintext_downloads_removed": true,
+  "retained_encrypted_files": {
+    "fresh-backup.enc": {
+      "bytes": 9046,
+      "sha256": "b35ae63c8553fc5cd5ce12ca715c851dd5c8390ff74bec3c003ec5e4a423f83f",
+      "mode": "0o600"
+    },
+    "undo.enc": {
+      "bytes": 25664,
+      "sha256": "6df1144a4c5c4c0d69cc81f9588912ad11f3134baf802494f01ea96131189e48",
+      "mode": "0o600"
+    }
+  },
+  "key_binding_private": true
+}

@@ -50,9 +50,18 @@ class AppointmentIn(BaseModel):
     starts_at: datetime
     minutes: int = Field(default=45,ge=15,le=480)
     status: Literal['proposed','confirmed'] = 'proposed'
+    confirmation_recorded: bool = False
     notes: str = Field(default='',max_length=2000)
 class AppointmentStatus(BaseModel):
     status: Literal['proposed','confirmed','completed','cancelled']
+    starts_at: datetime | None = None
+    minutes: int | None = Field(default=None,ge=15,le=480)
+    notes: str | None = Field(default=None,max_length=2000)
+    expected_revision: str | None = Field(default=None,max_length=64)
+    confirmation_recorded: bool = False
+class AddressVerificationIn(BaseModel):
+    address: str = Field(min_length=1,max_length=250)
+    city: str = Field(min_length=1,max_length=100)
 class JobIn(BaseModel):
     salon_id: str
     evidence: str = Field(default='',max_length=12000)

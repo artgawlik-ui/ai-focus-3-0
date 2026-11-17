@@ -1,0 +1,1 @@
+{"checks": {"meta_off": true, "owner_login": true, "restore_test": true, "rollback_test": true, "schema": true, "synthetic_profile": true, "technical_disabled": true, "version": true}, "cleanup_authorized": false, "deployment_authorized": false, "invalid_flags": [], "meta_activation_authorized": false, "production_verified": false, "status": "PASS_LOCAL"}

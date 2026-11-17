@@ -1,0 +1,17 @@
+import {useState} from 'react';
+import {Search,Plus} from 'lucide-react';
+type Place={label:string;latitude:number;longitude:number};
+export function DiscoveryPanel({api,act,busy,radiusEnabled,onAdd}:{api:(path:string)=>Promise<any>;act:(fn:()=>Promise<void>)=>Promise<void>;busy:boolean;radiusEnabled:boolean;onAdd:(item:any)=>void}){
+ const [city,setCity]=useState(''),[places,setPlaces]=useState<Place[]>([]),[chosen,setChosen]=useState(''),[radius,setRadius]=useState(10),[found,setFound]=useState<any[]>([]),[searched,setSearched]=useState(false),[placeSearchDone,setPlaceSearchDone]=useState(false);
+ const reset=(value:string)=>{setCity(value);setPlaces([]);setChosen('');setFound([]);setSearched(false);setPlaceSearchDone(false)};
+ return <section className="card padded"><h2>Odkryj salony w okolicy</h2><p>Publiczne dane OpenStreetMap. Zweryfikuj profil i dane przed zapisaniem do CRM.</p>
+ <form onSubmit={e=>{e.preventDefault();act(async()=>{setFound([]);setSearched(false);if(radiusEnabled){const result=await api('/discovery/places?city='+encodeURIComponent(city));setPlaces(result.items);setChosen('');setPlaceSearchDone(true)}else{setFound((await api('/discovery?city='+encodeURIComponent(city))).items);setSearched(true)}})}}>
+ <label>Miasto<input disabled={busy} required minLength={2} maxLength={80} value={city} onChange={e=>reset(e.target.value)} placeholder="np. Głogów"/></label><button className="secondary" disabled={busy}><Search size={17}/>{radiusEnabled?'Znajdź miejscowość':'Wyszukaj salony'}</button></form>
+ {radiusEnabled&&placeSearchDone&&places.length===0&&<p role="status">Nie znaleziono miejscowości w Polsce. Sprawdź nazwę.</p>}
+ {radiusEnabled&&places.length>0&&<form onSubmit={e=>{e.preventDefault();act(async()=>{const p=places[Number(chosen)];if(!p)return;const result=await api('/discovery?'+new URLSearchParams({city,radius_km:String(radius),latitude:String(p.latitude),longitude:String(p.longitude)}));setFound(result.items);setSearched(true)})}}>
+ <label>Miejscowość i centrum<select disabled={busy} required value={chosen} onChange={e=>{setChosen(e.target.value);setFound([]);setSearched(false)}}><option value="">Wybierz właściwą miejscowość</option>{places.map((p,i)=><option key={i} value={i}>{p.label}</option>)}</select></label>
+ <label>Promień (km)<input disabled={busy} type="number" min={1} max={50} step={1} required value={radius} onChange={e=>{setRadius(Number(e.target.value));setFound([]);setSearched(false)}}/></label><button className="secondary" disabled={busy||chosen===''}>Szukaj w promieniu</button><p className="muted">Odległość w linii prostej od wybranego centrum, nie długość trasy.</p></form>}
+ {searched&&found.length===0&&<p role="status">Brak wyników. Dane OSM mogą być niekompletne.</p>}
+ {found.map((s,i)=><div className="discovery-item" key={s.source_url||i}><div><strong>{s.name}</strong><small>{s.address||'Brak adresu'} · {s.city||'Brak miejscowości'}{s.distance_km!==undefined&&` · ${s.distance_km} km`}</small>{s.acquired_at&&<small>Odczyt: {new Date(s.acquired_at).toLocaleDateString('pl-PL')} · do weryfikacji</small>}<a href={s.source_url} target="_blank" rel="noreferrer">Źródło OSM ↗</a></div><button className="icon-btn" aria-label={'Sprawdź i dodaj '+s.name} onClick={()=>onAdd(s)}><Plus size={20}/></button></div>)}
+ <small className="muted">© OpenStreetMap contributors, ODbL. Brak wyniku nie oznacza braku salonów. Dodanie wymaga sprawdzenia formularza.</small></section>
+}

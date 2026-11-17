@@ -1,0 +1,84 @@
+{
+  "observed_at_utc": "2026-11-01T22:48:02.746168+00:00",
+  "requests": {
+    "exports": {
+      "http_status": 200,
+      "exports": [
+        {
+          "id": "dpg-dbh1b0gm7kps73f0p2m0-a/2026-11-01T18:25Z",
+          "createdAt": "2026-11-01T18:25:00Z",
+          "available_field_names": [
+            "createdAt",
+            "id",
+            "url"
+          ]
+        },
+        {
+          "id": "dpg-dbh1b0gm7kps73f0p2m0-a/2026-11-01T13:36Z",
+          "createdAt": "2026-11-01T13:36:00Z",
+          "available_field_names": [
+            "createdAt",
+            "id",
+            "url"
+          ]
+        },
+        {
+          "id": "dpg-dbh1b0gm7kps73f0p2m0-a/2026-11-01T12:41Z",
+          "createdAt": "2026-11-01T12:41:00Z",
+          "available_field_names": [
+            "createdAt",
+            "id",
+            "url"
+          ]
+        }
+      ]
+    },
+    "recovery": {
+      "http_status": 200,
+      "recovery": {
+        "startsAt": "2026-10-29T06:32:47Z"
+      }
+    },
+    "deploys": {
+      "http_status": 200,
+      "deploys": [
+        {
+          "id": "dep-dbjhl6jbc2fs73crj65g",
+          "status": "live",
+          "commit": "d15265b26524d594bdbcb4bc6b63fcbc398a1424",
+          "finishedAt": "2026-11-01T10:56:20.939148Z",
+          "rollback_eligibility_field_present": false
+        },
+        {
+          "id": "dep-dbj59qff3r2c73f077u0",
+          "status": "deactivated",
+          "commit": "cd22a44415732a1e25b558bfec38cf498115b90f",
+          "finishedAt": "2026-10-31T20:52:37.691068Z",
+          "rollback_eligibility_field_present": false
+        },
+        {
+          "id": "dep-dbj54fm7bikc73eep290",
+          "status": "deactivated",
+          "commit": "98ac75e382d77f95827ab3daa4877da40caa4213",
+          "finishedAt": "2026-10-31T20:41:35.540105Z",
+          "rollback_eligibility_field_present": false
+        },
+        {
+          "id": "dep-dbh64l0cuclc73cus7dg",
+          "status": "canceled",
+          "commit": "df78fd7802c7e93d007b92ab0093ba7d33df8fee",
+          "finishedAt": "2026-10-28T21:00:35.976513Z",
+          "rollback_eligibility_field_present": false
+        },
+        {
+          "id": "dep-dbh643d09sns738hqbe0",
+          "status": "deactivated",
+          "commit": "df78fd7802c7e93d007b92ab0093ba7d33df8fee",
+          "finishedAt": "2026-10-28T21:00:07.926987Z",
+          "rollback_eligibility_field_present": false
+        }
+      ]
+    }
+  },
+  "mutations": 0
+}

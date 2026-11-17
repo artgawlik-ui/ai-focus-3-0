@@ -1,0 +1,24 @@
+{
+  "baseline_sha": "d58b34db57de1872d9dd1a01e14a15ccaf78e5f3",
+  "policy_validation": "PASS",
+  "provider_metadata_validation": "PASS",
+  "export_rpo_threshold_check": "FAIL_OLDER_THAN_3600_SECONDS",
+  "pitr_rpo_evidence": "MISSING_LATEST_POINT_AND_PATH_TEST",
+  "production_mutations": 0,
+  "new_exports_render": 0,
+  "restore_operations_performed": 0,
+  "new_resources": 0,
+  "application_code_changes": false,
+  "commands": [
+    "GET /postgres/<id>",
+    "GET /postgres/<id>/recovery",
+    "GET /postgres/<id>/export",
+    "GET /owners/<workspace>",
+    "read official backups/compute/pricing/cron documentation",
+    "validate RPO policy and evidence JSON",
+    "git diff --check"
+  ],
+  "remaining_basic_sessions": 5,
+  "remaining_dm_min": 1,
+  "decision": "BLOCKED"
+}
