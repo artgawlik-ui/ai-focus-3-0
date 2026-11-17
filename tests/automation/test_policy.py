@@ -185,23 +185,74 @@ class DeduplicationTests(unittest.TestCase):
         response.read.assert_called_once_with(p.MAX_API_RESPONSE + 1)
 
     def test_repeated_claim_is_rejected(self):
-        api = FakeAPI(); first = p.claim(api, issue())
+        api = FakeAPI(); first = p.claim(api, issue(), expected_base=BASE)
         self.assertEqual(first['branch'], 'codex/issue-26')
         with self.assertRaisesRegex(p.Blocked, '422'):
-            p.claim(api, issue())
+            p.claim(api, issue(), expected_base=BASE)
         self.assertEqual(len(api.refs), 1)
 
     def test_twenty_concurrent_claims_one_winner(self):
         api = FakeAPI()
         def attempt(_):
             try:
-                return p.claim(api, issue())
+                return p.claim(api, issue(), expected_base=BASE)
             except p.Blocked:
                 return None
         with ThreadPoolExecutor(max_workers=20) as pool:
             results = list(pool.map(attempt, range(20)))
         self.assertEqual(sum(result is not None for result in results), 1)
         self.assertEqual(len(api.refs), 1)
+
+    def test_main_advanced_since_event_does_not_create_claim(self):
+        api = FakeAPI()
+        with self.assertRaisesRegex(p.Blocked, '^SOURCE_MAIN_CHANGED$'):
+            p.claim(api, issue(), expected_base='b' * 40)
+        self.assertEqual(api.refs, {})
+        self.assertFalse(any(method == 'POST' for method, path in api.calls))
+
+    def test_missing_or_invalid_event_sha_rejected_without_api(self):
+        for source in (None, '', 'main', 'A' * 40, 'a' * 39, 123):
+            api = FakeAPI()
+            with self.subTest(source=source), self.assertRaisesRegex(p.Blocked, '^INVALID_WORKFLOW_SOURCE$'):
+                p.claim(api, issue(), expected_base=source)
+            self.assertEqual(api.calls, [])
+
+    def test_real_admission_binds_event_source_and_stops_stale_event_before_artifacts(self):
+        # Reproduce incident68: event source stays a, but the API already sees b.
+        for current_base in (BASE, 'b' * 40):
+            with self.subTest(current_base=current_base), tempfile.TemporaryDirectory() as folder:
+                previous = Path.cwd()
+                api = FakeAPI()
+                original_call = api.call
+                def call(method, path, data=None):
+                    if path.endswith('/git/ref/heads/main'):
+                        api.calls.append((method, path))
+                        return {'object': {'sha': current_base}}
+                    return original_call(method, path, data)
+                api.call = call
+                try:
+                    os.chdir(folder)
+                    Path('event.json').write_text(json.dumps(event()))
+                    env = {'AUTOMATION_ENABLED': 'true', 'COSTS_APPROVED': 'true',
+                           'GITHUB_REPOSITORY': p.REPO, 'GITHUB_REF': 'refs/heads/main',
+                           'GITHUB_SHA': BASE, 'GITHUB_EVENT_PATH': 'event.json',
+                           'GITHUB_ACTOR': 'owner', 'GITHUB_TRIGGERING_ACTOR': 'owner',
+                           'GITHUB_OUTPUT': 'outputs'}
+                    with patch.dict(os.environ, env, clear=True), patch.object(p, 'API', return_value=api):
+                        if current_base != BASE:
+                            with self.assertRaisesRegex(p.Blocked, '^SOURCE_MAIN_CHANGED$'):
+                                p.admit()
+                            self.assertFalse(Path('task').exists())
+                            self.assertFalse(Path('outputs').exists())
+                            self.assertEqual(api.refs, {})
+                        else:
+                            p.admit()
+                            snapshot = json.loads(Path('task/snapshot.json').read_text())
+                            self.assertEqual(snapshot['base'], BASE)
+                            self.assertEqual(api.refs['refs/heads/codex/issue-26'], BASE)
+                            self.assertIn('base=' + BASE, Path('outputs').read_text())
+                finally:
+                    os.chdir(previous)
 
     def test_api_denial_does_not_fallback_to_other_executor(self):
         with patch.dict(os.environ, {'GH_TOKEN': 'synthetic'}, clear=True), patch.object(p, 'urlopen', side_effect=HTTPError('https://example.invalid', 403, 'synthetic', {}, None)):
